@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AURORA — Project & Cost Control Platform | Canadian Royalties / Nunavik Nickel</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#0b1622; --bg2:#0f1e2e; --panel:#13263a; --panel2:#172d44;
+    --line:#22405d; --ink:#e8f1fa; --ink2:#9fb6cc; --ink3:#6f8aa5;
+    --ice:#4fc3f7; --ice2:#2b9fe0; --teal:#36d3c4;
+    --green:#34d399; --amber:#fbbf24; --red:#f87171; --redbg:#3a1620;
+    --over:#f87171; --under:#34d399;
+    --shadow:0 10px 30px rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:
+     radial-gradient(1200px 600px at 80% -10%,rgba(79,195,247,.10),transparent 60%),
+     radial-gradient(900px 500px at -10% 110%,rgba(54,211,196,.08),transparent 55%),
+     var(--bg);color:var(--ink);line-height:1.45}
+  .app{display:flex;min-height:100vh}
+  /* Sidebar */
+  .side{width:248px;flex:0 0 248px;background:linear-gradient(180deg,#0c1a29,#0a1420);
+     border-right:1px solid var(--line);padding:18px 14px;position:sticky;top:0;height:100vh;overflow:auto}
+  .brand{display:flex;align-items:center;gap:10px;padding:6px 8px 14px}
+  .logo{width:34px;height:34px;border-radius:9px;background:conic-gradient(from 200deg,#4fc3f7,#36d3c4,#7c5cff,#4fc3f7);
+     box-shadow:0 0 18px rgba(79,195,247,.5);position:relative}
+  .logo::after{content:"";position:absolute;inset:7px;border-radius:6px;background:#0a1420}
+  .brand h1{font-size:17px;margin:0;letter-spacing:1px}
+  .brand small{color:var(--ink3);font-size:10.5px;letter-spacing:.5px}
+  .nav{display:flex;flex-direction:column;gap:3px;margin-top:8px}
+  .nav button{display:flex;align-items:center;gap:10px;background:transparent;border:0;color:var(--ink2);
+     text-align:left;padding:10px 11px;border-radius:9px;cursor:pointer;font-size:13.5px;width:100%;transition:.15s}
+  .nav button .ic{width:18px;text-align:center;opacity:.9}
+  .nav button:hover{background:var(--panel);color:var(--ink)}
+  .nav button.active{background:linear-gradient(90deg,rgba(79,195,247,.18),rgba(54,211,196,.06));
+     color:#fff;box-shadow:inset 2px 0 0 var(--ice)}
+  .side .foot{margin-top:18px;padding:12px 10px;border-top:1px solid var(--line);color:var(--ink3);font-size:11px}
+  .side .foot b{color:var(--ink2)}
+  /* Main */
+  .main{flex:1;min-width:0;padding:26px 34px 60px}
+  .topbar{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:22px}
+  .topbar h2{margin:0;font-size:23px;font-weight:650}
+  .topbar p{margin:4px 0 0;color:var(--ink2);font-size:13px;max-width:680px}
+  .pill{display:inline-flex;align-items:center;gap:7px;background:var(--panel);border:1px solid var(--line);
+     border-radius:30px;padding:7px 14px;font-size:12px;color:var(--ink2)}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green)}
+  .view{display:none;animation:fade .35s ease}
+  .view.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  /* KPI cards */
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;margin-bottom:22px}
+  .kpi{background:linear-gradient(160deg,var(--panel),var(--bg2));border:1px solid var(--line);
+     border-radius:14px;padding:16px 18px;position:relative;overflow:hidden;box-shadow:var(--shadow)}
+  .kpi .lab{color:var(--ink3);font-size:11.5px;text-transform:uppercase;letter-spacing:.6px}
+  .kpi .val{font-size:26px;font-weight:700;margin:7px 0 2px}
+  .kpi .sub{font-size:12px;color:var(--ink2)}
+  .kpi.warn{border-color:#5b2230}.kpi.warn .val{color:var(--red)}
+  .kpi.good .val{color:var(--green)}
+  .kpi .spark{position:absolute;right:-6px;top:-6px;font-size:54px;opacity:.06}
+  /* panels */
+  .grid{display:grid;gap:16px}
+  .g2{grid-template-columns:1.4fr 1fr}
+  .g2b{grid-template-columns:1fr 1fr}
+  @media(max-width:1050px){.g2,.g2b{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 18px 14px;box-shadow:var(--shadow)}
+  .card h3{margin:0 0 3px;font-size:15px}
+  .card .csub{color:var(--ink3);font-size:12px;margin-bottom:14px}
+  canvas{max-width:100%}
+  /* table */
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line)}
+  th{color:var(--ink3);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.4px;
+     position:sticky;top:0;background:var(--panel);cursor:pointer;user-select:none}
+  th:hover{color:var(--ice)}
+  td.num{text-align:right;font-variant-numeric:tabular-nums}
+  tbody tr:hover{background:var(--panel2)}
+  .tag{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600}
+  .t-over{background:var(--redbg);color:var(--red)}
+  .t-under{background:rgba(52,211,153,.12);color:var(--green)}
+  .t-emg{background:rgba(124,92,255,.16);color:#b6a4ff}
+  .t-warn{background:rgba(251,191,36,.14);color:var(--amber)}
+  .bar{height:7px;border-radius:6px;background:var(--line);overflow:hidden;min-width:60px}
+  .bar > i{display:block;height:100%;border-radius:6px}
+  .scroll{max-height:430px;overflow:auto;border-radius:10px;border:1px solid var(--line)}
+  .scroll table tbody tr:last-child td{border-bottom:0}
+  /* alerts */
+  .alert{display:flex;gap:13px;padding:13px 15px;border-radius:12px;border:1px solid var(--line);
+     background:var(--panel2);margin-bottom:10px;align-items:flex-start}
+  .alert .sev{width:38px;height:38px;border-radius:10px;flex:0 0 38px;display:grid;place-items:center;font-size:18px}
+  .sev.crit{background:var(--redbg);color:var(--red)}
+  .sev.high{background:rgba(251,191,36,.13);color:var(--amber)}
+  .sev.info{background:rgba(79,195,247,.12);color:var(--ice)}
+  .alert .body{flex:1}
+  .alert .body b{font-size:13.5px}
+  .alert .body p{margin:3px 0 0;color:var(--ink2);font-size:12.5px}
+  .alert .meta{color:var(--ink3);font-size:11px;white-space:nowrap}
+  /* arch */
+  .flow{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:6px 0 4px}
+  @media(max-width:900px){.flow{grid-template-columns:1fr 1fr}}
+  .node{background:linear-gradient(160deg,var(--panel2),var(--bg2));border:1px solid var(--line);
+     border-radius:12px;padding:14px}
+  .node .nh{font-size:13px;font-weight:650;margin-bottom:6px;color:#fff;display:flex;align-items:center;gap:8px}
+  .node ul{margin:0;padding-left:16px;color:var(--ink2);font-size:11.8px}
+  .node li{margin:3px 0}
+  .layer-lab{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--ice);margin:18px 0 6px;font-weight:700}
+  .stack{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+  .chip{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:7px 11px;font-size:12px;color:var(--ink2)}
+  .chip b{color:var(--ink)}
+  /* phases */
+  .phase{display:flex;gap:14px;margin-bottom:6px}
+  .phase .rail{display:flex;flex-direction:column;align-items:center}
+  .phase .num{width:30px;height:30px;border-radius:50%;background:var(--panel2);border:1px solid var(--ice);
+     color:var(--ice);display:grid;place-items:center;font-weight:700;font-size:13px;flex:0 0 30px}
+  .phase .ln{flex:1;width:2px;background:var(--line);margin:4px 0}
+  .phase .pc{padding-bottom:18px}
+  .phase .pc h4{margin:3px 0 4px;font-size:14px}
+  .phase .pc p{margin:0;color:var(--ink2);font-size:12.5px}
+  .phase .pc .when{color:var(--ice);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+  /* misc */
+  .lead{font-size:13.5px;color:var(--ink2);max-width:880px}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:900px){.two{grid-template-columns:1fr}}
+  .ctrl{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+  .ctrl input[type=range]{accent-color:var(--ice)}
+  .ctrl select,.ctrl input[type=text]{background:var(--panel2);border:1px solid var(--line);color:var(--ink);
+     border-radius:8px;padding:7px 10px;font-size:12.5px}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--ink2);margin-top:8px}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .sw{width:11px;height:11px;border-radius:3px;display:inline-block}
+  .note{background:rgba(79,195,247,.07);border:1px solid var(--line);border-left:3px solid var(--ice);
+     border-radius:10px;padding:12px 15px;color:var(--ink2);font-size:12.5px;margin-top:14px}
+  .roi{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px}
+  .roi .kpi .val{color:var(--teal)}
+  a.src{color:var(--ice);text-decoration:none}
+  .banner{background:linear-gradient(90deg,rgba(248,113,113,.10),transparent);border:1px solid #5b2230;
+     border-radius:12px;padding:12px 16px;margin-bottom:18px;font-size:13px;color:#ffd9d9;display:flex;gap:10px;align-items:center}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- SIDEBAR -->
+  <aside class="side">
+    <div class="brand">
+      <div class="logo"></div>
+      <div><h1>AURORA</h1><small>PROJECT &amp; COST CONTROL</small></div>
+    </div>
+    <nav class="nav" id="nav">
+      <button data-v="exec" class="active"><span class="ic">◧</span> Executive Dashboard</button>
+      <button data-v="cost"><span class="ic">$</span> Cost Control</button>
+      <button data-v="sched"><span class="ic">▦</span> Schedule &amp; Milestones</button>
+      <button data-v="emg"><span class="ic">⚑</span> Emergent Projects</button>
+      <button data-v="alerts"><span class="ic">!</span> Early-Warning Alerts</button>
+      <button data-v="arch"><span class="ic">⚙</span> System &amp; Tooling</button>
+      <button data-v="rollout"><span class="ic">➜</span> Rollout &amp; ROI</button>
+    </nav>
+    <div class="foot">
+      Prototype for <b>Canadian Royalties Inc. / Nunavik Nickel</b><br><br>
+      Prepared by <b>Alchemy&nbsp;M</b><br>
+      Data: Projects Dashboard &amp; Key Milestones 90D — 2 Jun 2026
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- ============ EXEC ============ -->
+    <section class="view active" id="v-exec">
+      <div class="topbar">
+        <div><h2>Executive Dashboard</h2>
+          <p>Live portfolio health across all active projects — capital exposure, budget variance, and schedule risk in one view.</p></div>
+        <div class="pill"><span class="dot"></span> 8 sites · 60+ active projects · data as of 02 Jun 2026</div>
+      </div>
+
+      <div class="banner">⚠ <div><b>Portfolio is forecast $120.3M (48%) over budget.</b> Five of eight sites are over; $15.1M of work is unbudgeted (emergent). Critical milestones are slipping up to 553 days vs baseline.</div></div>
+
+      <div class="kpis">
+        <div class="kpi warn"><div class="spark">$</div><div class="lab">Forecast at Completion</div><div class="val">$369.6M</div><div class="sub">Committed to date: $249.3M</div></div>
+        <div class="kpi warn"><div class="lab">Budget Variance (F/B)</div><div class="val">−$120.3M</div><div class="sub">48.3% over corporate budget</div></div>
+        <div class="kpi"><div class="lab">Approved Budget</div><div class="val">$249.3M</div><div class="sub">Across 8 sites</div></div>
+        <div class="kpi warn"><div class="lab">Emergent / Unbudgeted</div><div class="val">$15.1M</div><div class="sub">4 projects with $0 baseline</div></div>
+        <div class="kpi warn"><div class="lab">Sites Over Budget</div><div class="val">5 / 8</div><div class="sub">BD · Expo · UG Expo · Ivakkak · Mequillon</div></div>
+        <div class="kpi warn"><div class="lab">Worst Schedule Slip</div><div class="val">−553 d</div><div class="sub">470 — BD Dépoussiéreur</div></div>
+      </div>
+
+      <div class="grid g2" style="margin-bottom:16px">
+        <div class="card">
+          <h3>Forecast vs Budget by Site</h3>
+          <div class="csub">Where the $120M overrun lives. Bars above budget line = exposure.</div>
+          <canvas id="chartSite" height="150"></canvas>
+          <div class="legend">
+            <span><i class="sw" style="background:var(--ice)"></i> Forecast at completion</span>
+            <span><i class="sw" style="background:#3a5d7d"></i> Approved budget</span>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Overrun Concentration</h3>
+          <div class="csub">Share of the total $120.3M overrun by project.</div>
+          <canvas id="chartConc" height="180"></canvas>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Top exposures</h3>
+        <div class="csub">The projects driving portfolio risk right now.</div>
+        <table>
+          <thead><tr><th>Project</th><th>Site</th><th class="num">Forecast</th><th class="num">Budget</th><th class="num">Variance</th><th>Schedule</th></tr></thead>
+          <tbody id="topExp"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============ COST ============ -->
+    <section class="view" id="v-cost">
+      <div class="topbar">
+        <div><h2>Cost Control &amp; Variance</h2>
+          <p>The module the company lacks today: every project's committed cost vs forecast vs budget, with automatic over-budget flags so overspend is caught in days, not at year-end.</p></div>
+      </div>
+      <div class="ctrl">
+        <label style="color:var(--ink2);font-size:12.5px">Site</label>
+        <select id="fSite"><option value="">All sites</option></select>
+        <label style="color:var(--ink2);font-size:12.5px">Show</label>
+        <select id="fStatus">
+          <option value="">All</option>
+          <option value="over">Over budget only</option>
+          <option value="emg">Emergent (no budget)</option>
+          <option value="under">On / under budget</option>
+        </select>
+        <label style="color:var(--ink2);font-size:12.5px">Alert threshold</label>
+        <input type="range" id="fThresh" min="0" max="25" value="10">
+        <span id="threshLab" style="color:var(--ice);font-size:12.5px;font-weight:600">10% over</span>
+      </div>
+      <div class="card scroll" style="padding:0">
+        <table>
+          <thead><tr>
+            <th data-k="name">Project ▾</th><th data-k="site">Site</th>
+            <th data-k="committed" class="num">Committed</th>
+            <th data-k="forecast" class="num">Forecast</th>
+            <th data-k="budget" class="num">Budget</th>
+            <th data-k="delta" class="num">Variance $</th>
+            <th data-k="pct" class="num">Var %</th>
+            <th data-k="delta">Status</th>
+          </tr></thead>
+          <tbody id="costBody"></tbody>
+        </table>
+      </div>
+      <div class="note">In today's workflow there is no system linking committed POs to a live forecast against budget — so a project like <b>600 – Cell 4</b> can drift to <b>$104M over</b> before it surfaces. AURORA recalculates variance on every PO/commitment and flags any project crossing the threshold the moment it happens.</div>
+    </section>
+
+    <!-- ============ SCHEDULE ============ -->
+    <section class="view" id="v-sched">
+      <div class="topbar">
+        <div><h2>Schedule &amp; Milestones</h2>
+          <p>Baseline-vs-current tracking on key milestones. Negative variance = days behind the original plan. Most 2026 milestones are still 0% complete with end dates already past.</p></div>
+      </div>
+      <div class="grid g2b" style="margin-bottom:16px">
+        <div class="card"><h3>Schedule slippage by project</h3><div class="csub">Days behind baseline finish (most critical milestone).</div>
+          <canvas id="chartSlip" height="200"></canvas></div>
+        <div class="card"><h3>Completion vs time risk</h3><div class="csub">% complete against schedule health.</div>
+          <canvas id="chartComp" height="200"></canvas></div>
+      </div>
+      <div class="card scroll" style="padding:0">
+        <table>
+          <thead><tr><th>Milestone</th><th>Site</th><th class="num">End date</th><th class="num">Baseline</th><th class="num">Variance</th><th class="num">% Complete</th><th>Health</th></tr></thead>
+          <tbody id="schedBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============ EMERGENT ============ -->
+    <section class="view" id="v-emg">
+      <div class="topbar">
+        <div><h2>Emergent &amp; Reactive Projects</h2>
+          <p>Your core pain point, made visible. Without detailed upfront planning, unbudgeted work appears mid-year. AURORA isolates every project carrying a $0 baseline so leadership sees reactive spend the instant it is committed.</p></div>
+      </div>
+      <div class="kpis">
+        <div class="kpi warn"><div class="lab">Unbudgeted forecast</div><div class="val">$15.1M</div><div class="sub">4 projects with no approved budget</div></div>
+        <div class="kpi warn"><div class="lab">Largest single</div><div class="val">$9.94M</div><div class="sub">547 — MQ Ventilation Principale no2</div></div>
+        <div class="kpi"><div class="lab">% of total overrun</div><div class="val">13%</div><div class="sub">of the $120.3M variance</div></div>
+        <div class="kpi"><div class="lab">Detection today</div><div class="val">Year-end</div><div class="sub">AURORA: at commitment</div></div>
+      </div>
+      <div class="card">
+        <h3>Emergent project register</h3>
+        <div class="csub">Auto-flagged: forecast &gt; $0 against a $0 corporate budget.</div>
+        <table>
+          <thead><tr><th>Project</th><th>Site</th><th class="num">Forecast</th><th class="num">Budget</th><th>Why it's flagged</th></tr></thead>
+          <tbody id="emgBody"></tbody>
+        </table>
+      </div>
+      <div class="note">AURORA's lightweight <b>stage-gate intake</b> gives an SME the discipline of a large engineering team without the headcount: a 1-page scoping template forces a budget, sponsor and rough schedule before any PO can be raised — converting reactive work into planned, funded work.</div>
+    </section>
+
+    <!-- ============ ALERTS ============ -->
+    <section class="view" id="v-alerts">
+      <div class="topbar">
+        <div><h2>Early-Warning Alerts</h2>
+          <p>The engine running underneath every view. Rules fire automatically on cost, schedule and procurement signals — pushed to email / Teams so issues reach a manager the same week, not the next quarterly review.</p></div>
+        <div class="pill"><span class="dot" style="background:var(--red);box-shadow:0 0 8px var(--red)"></span> <span id="alertCount">0</span> active alerts</div>
+      </div>
+      <div id="alertFeed"></div>
+      <div class="note">Each alert is a configurable rule: <b>cost</b> (variance &gt; threshold, commitment &gt; budget), <b>schedule</b> (baseline slip &gt; N days, 0% complete past start), <b>procurement</b> (PO past sealift cut-off, long-lead item not ordered). Thresholds are owned by Finance &amp; the PMO, not hard-coded.</div>
+    </section>
+
+    <!-- ============ ARCH ============ -->
+    <section class="view" id="v-arch">
+      <div class="topbar">
+        <div><h2>System Design &amp; Tooling</h2>
+          <p>How AURORA is built — a lightweight, cloud-hosted controls layer that sits on top of your existing ERP and procurement data. No rip-and-replace; it reads what you already have and adds the control layer you're missing.</p></div>
+      </div>
+
+      <div class="card" style="margin-bottom:16px">
+        <h3>Architecture at a glance</h3>
+        <div class="csub">Data flows left to right — sources you already own feed a controls engine that drives the dashboards above.</div>
+        <div class="layer-lab">1 · Sources (existing)</div>
+        <div class="flow">
+          <div class="node"><div class="nh">📒 ERP / Finance</div><ul><li>Budget Corpo</li><li>Committed &amp; actual cost</li><li>Cost codes by project</li></ul></div>
+          <div class="node"><div class="nh">🧾 Procurement</div><ul><li>PO / Req status</li><li>Engaged cost</li><li>Vendor &amp; lead times</li></ul></div>
+          <div class="node"><div class="nh">🗓 Scheduling</div><ul><li>MS Project / P6 exports</li><li>Baseline vs actual</li><li>Milestone % complete</li></ul></div>
+          <div class="node"><div class="nh">🚢 Logistics</div><ul><li>Sealift windows</li><li>Freight tracking</li><li>Site inventory</li></ul></div>
+        </div>
+        <div class="layer-lab">2 · AURORA controls engine</div>
+        <div class="flow" style="grid-template-columns:repeat(3,1fr)">
+          <div class="node"><div class="nh">🔗 Data pipeline</div><ul><li>Nightly + on-commit sync</li><li>Maps cost codes → projects</li><li>Single source of truth</li></ul></div>
+          <div class="node"><div class="nh">🧮 Variance &amp; forecast engine</div><ul><li>Forecast = committed + ETC</li><li>F/B variance per project</li><li>Baseline schedule deltas</li></ul></div>
+          <div class="node"><div class="nh">🔔 Rules &amp; alerts</div><ul><li>Threshold rules</li><li>Email / Teams push</li><li>Stage-gate intake</li></ul></div>
+        </div>
+        <div class="layer-lab">3 · Delivery</div>
+        <div class="flow" style="grid-template-columns:repeat(3,1fr)">
+          <div class="node"><div class="nh">📊 Web dashboards</div><ul><li>Exec, cost, schedule</li><li>Drill-down to PO</li><li>Role-based access</li></ul></div>
+          <div class="node"><div class="nh">📧 Push &amp; digests</div><ul><li>Weekly control report</li><li>Real-time alerts</li><li>Board-ready exports</li></ul></div>
+          <div class="node"><div class="nh">📱 Field-light access</div><ul><li>Works on low bandwidth</li><li>Mobile read views</li><li>Offline-tolerant</li></ul></div>
+        </div>
+      </div>
+
+      <div class="two">
+        <div class="card">
+          <h3>Recommended tech stack</h3>
+          <div class="csub">Chosen for low cost, low IT overhead and Arctic-friendly bandwidth — right-sized for an SME.</div>
+          <div class="stack">
+            <div class="chip"><b>Frontend:</b> React + Chart.js</div>
+            <div class="chip"><b>Backend:</b> Python (FastAPI)</div>
+            <div class="chip"><b>Database:</b> PostgreSQL</div>
+            <div class="chip"><b>Pipeline:</b> Airbyte / dbt</div>
+            <div class="chip"><b>Hosting:</b> Azure (Canada region)</div>
+            <div class="chip"><b>Auth:</b> Microsoft Entra ID (SSO)</div>
+            <div class="chip"><b>Alerts:</b> Teams + SMTP</div>
+            <div class="chip"><b>BI export:</b> Power BI compatible</div>
+          </div>
+          <div class="note" style="margin-top:14px">Alternative <b>no-code path</b> for fastest start: Power BI + Power Automate + SharePoint lists. Same logic, lower build cost, slightly less flexible — a good Phase-0.</div>
+        </div>
+        <div class="card">
+          <h3>Core data model</h3>
+          <div class="csub">Five tables are enough to power every view in this prototype.</div>
+          <table style="font-size:12px">
+            <thead><tr><th>Entity</th><th>Key fields</th></tr></thead>
+            <tbody>
+              <tr><td><b>Project</b></td><td>id, name, site, sponsor, baseline_budget, status</td></tr>
+              <tr><td><b>Commitment</b></td><td>po_id, project_id, engaged_cost, actual_cost, vendor, lead_time</td></tr>
+              <tr><td><b>Forecast</b></td><td>project_id, etc, forecast_at_completion, period</td></tr>
+              <tr><td><b>Milestone</b></td><td>project_id, name, start, end, baseline_finish, pct_complete</td></tr>
+              <tr><td><b>AlertRule</b></td><td>type, metric, operator, threshold, owner, channel</td></tr>
+            </tbody>
+          </table>
+          <div class="note" style="margin-top:14px"><b>Variance = Budget − Forecast.</b> Forecast = committed cost + estimate-to-complete. Recomputed on every commitment, so the dashboard is never more than minutes stale.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ ROLLOUT ============ -->
+    <section class="view" id="v-rollout">
+      <div class="topbar">
+        <div><h2>Rollout &amp; ROI</h2>
+          <p>A phased path that delivers the highest-value control — live cost variance — first, then layers on schedule, logistics and prediction. Designed to run with your current team, no large hires.</p></div>
+      </div>
+
+      <div class="roi kpis">
+        <div class="kpi good"><div class="lab">Target overrun reduction</div><div class="val">8–12%</div><div class="sub">of annual capital spend</div></div>
+        <div class="kpi good"><div class="lab">Potential annual saving</div><div class="val">$10–20M</div><div class="sub">on a $250M budget base</div></div>
+        <div class="kpi good"><div class="lab">Earlier detection</div><div class="val">Quarters → days</div><div class="sub">overspend surfaced at commitment</div></div>
+        <div class="kpi good"><div class="lab">Time to first value</div><div class="val">6–8 wks</div><div class="sub">Phase 1 cost dashboard live</div></div>
+      </div>
+
+      <div class="two">
+        <div class="card">
+          <h3>Phased delivery</h3>
+          <div style="margin-top:8px">
+            <div class="phase"><div class="rail"><div class="num">1</div><div class="ln"></div></div>
+              <div class="pc"><div class="when">Weeks 1–8 · Foundation</div><h4>Cost control dashboard</h4>
+                <p>Connect ERP + procurement, build the variance engine and the live Forecast-vs-Budget view. Immediate visibility on the $120M exposure.</p></div></div>
+            <div class="phase"><div class="rail"><div class="num">2</div><div class="ln"></div></div>
+              <div class="pc"><div class="when">Weeks 9–16 · Control</div><h4>Alerts + emergent-work intake</h4>
+                <p>Turn on threshold alerts and the stage-gate template so unbudgeted projects get a sponsor and budget before any PO.</p></div></div>
+            <div class="phase"><div class="rail"><div class="num">3</div><div class="ln"></div></div>
+              <div class="pc"><div class="when">Weeks 17–24 · Schedule</div><h4>Milestone &amp; sealift tracking</h4>
+                <p>Integrate baseline schedules and Arctic logistics windows; flag long-lead items that risk missing the shipping season.</p></div></div>
+            <div class="phase"><div class="rail"><div class="num">4</div></div>
+              <div class="pc"><div class="when">Quarter 3+ · Predict</div><h4>Forecasting &amp; benchmarks</h4>
+                <p>Use accumulated data to predict at-risk projects earlier and benchmark estimating accuracy to improve future planning.</p></div></div>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Why this fits an Arctic SME</h3>
+          <div class="csub">Designed around the specific constraints you raised.</div>
+          <table style="font-size:12.5px">
+            <thead><tr><th>Your constraint</th><th>How AURORA answers it</th></tr></thead>
+            <tbody>
+              <tr><td>Can't afford big planning teams</td><td>Templates + stage-gate give planning discipline without headcount</td></tr>
+              <tr><td>Reactive, emergent projects</td><td>$0-budget auto-flag + intake gate converts them to funded work</td></tr>
+              <tr><td>No live cost tracking</td><td>Variance recomputed on every commitment; alerts in days</td></tr>
+              <tr><td>Arctic logistics risk</td><td>Sealift-window rules flag late long-lead orders</td></tr>
+              <tr><td>Limited IT capacity</td><td>Cloud-hosted, reads existing data, no rip-and-replace</td></tr>
+            </tbody>
+          </table>
+          <div class="note" style="margin-top:14px">Conservatively, recovering even <b>one-tenth</b> of the current overrun pays for the platform many times over in year one.</div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+/* ---------- REAL DATA (from Projects Dashboard & Key Milestones 90D, 02 Jun 2026) ---------- */
+const SITES = [
+  {site:'Allammaq',   forecast:465601,    budget:526833},
+  {site:'BD',         forecast:5571499,   budget:5019272},
+  {site:'Expo Site',  forecast:271659802, budget:158253716},
+  {site:'Inuksuk',    forecast:49451841,  budget:56530000},
+  {site:'Puimajuq',   forecast:344209,    budget:714000},
+  {site:'UG Expo',    forecast:597284,    budget:400000},
+  {site:'UG Ivakkak', forecast:17042442,  budget:13382295},
+  {site:'UG Mequillon',forecast:24504215, budget:14479679},
+];
+
+// project-level: committed, forecast, budget, schedule variance (days, worst milestone), %complete
+const PROJECTS = [
+  {name:'600 — EX · Cell 4 (tailings)',          site:'Expo Site',  committed:2782127,  forecast:215065143, budget:111000000, slip:-474, pct:25},
+  {name:'433 — UTEU Expo · Installation',         site:'Expo Site',  committed:7526227,  forecast:9576158,   budget:7332443,   slip:-517, pct:78},
+  {name:'Projects / Correctifs Environment',      site:'Expo Site',  committed:0,        forecast:8258720,   budget:300000,    slip:-14,  pct:6},
+  {name:'394 — Éoliennes · Wind Turbine Group',   site:'Expo Site',  committed:27671950, forecast:27723151,  budget:28449739,  slip:4,    pct:87},
+  {name:'394 — Éoliennes · Intégration & BESS',   site:'Expo Site',  committed:1913170,  forecast:4186969,   budget:5000000,   slip:-105, pct:25},
+  {name:'543 — EX · New tailing deposition line', site:'Expo Site',  committed:123732,   forecast:1831148,   budget:1200000,   slip:-130, pct:25},
+  {name:'492 — Fire protection · Mill dry',       site:'Expo Site',  committed:110953,   forecast:110953,    budget:150000,    slip:null, pct:0},
+  {name:'547 — MQ UG · Ventilation Principale no2',site:'UG Mequillon',committed:0,      forecast:9936000,   budget:0,         slip:null, pct:0},
+  {name:'490 — MQ UG · Ventilation Principale no1',site:'UG Mequillon',committed:4556705,forecast:4555184,   budget:3311916,   slip:-119, pct:96},
+  {name:'544 — MQ UG · Sorties de secours',       site:'UG Mequillon',committed:403047,  forecast:3501534,   budget:3530000,   slip:-99,  pct:64},
+  {name:'504 — MQ UG · Dépôts Explosifs',         site:'UG Mequillon',committed:0,       forecast:1075000,   budget:1100000,   slip:null, pct:59},
+  {name:'487 — MQ UG · Stations électrique',      site:'UG Mequillon',committed:0,       forecast:2000000,   budget:2000000,   slip:null, pct:51},
+  {name:'489 — MQ UG · Baie Maintenance & Fuel Bay',site:'UG Mequillon',committed:484882,forecast:557502,    budget:485392,    slip:null, pct:82},
+  {name:'715 — Inuksuk · Portail',                site:'Inuksuk',    committed:0,        forecast:2450000,   budget:0,         slip:-380, pct:21},
+  {name:'706 — Inuksuk · Électrique EX',          site:'Inuksuk',    committed:0,        forecast:10200000,  budget:8500000,   slip:null, pct:5},
+  {name:'704 — Inuksuk · Infrastructures Civiles',site:'Inuksuk',    committed:298490,   forecast:11598490,  budget:15600000,  slip:1,    pct:24},
+  {name:'705 — Inuksuk · Électrique MEQ',         site:'Inuksuk',    committed:3412359,  forecast:6047845,   budget:7000000,   slip:72,   pct:48},
+  {name:'712 — Inuksuk · Bureaux',                site:'Inuksuk',    committed:0,        forecast:1500000,   budget:450000,    slip:null, pct:7},
+  {name:'708 — Inuksuk · Water line IN-EX',       site:'Inuksuk',    committed:715539,   forecast:2485506,   budget:7000000,   slip:-93,  pct:30},
+  {name:'707 — Inuksuk · Diesel',                 site:'Inuksuk',    committed:0,        forecast:500000,    budget:1500000,   slip:null, pct:0},
+  {name:'716 — Inuksuk · Primary vent raise',     site:'Inuksuk',    committed:0,        forecast:6300000,   budget:6300000,   slip:null, pct:0},
+  {name:'470 — BD · Hall minerai Dépoussiéreur',  site:'BD',         committed:325248,   forecast:325248,    budget:419272,    slip:-553, pct:76},
+  {name:'471 — BD · Hall minerai Revêtement',     site:'BD',         committed:2294434,  forecast:1987704,   budget:1900000,   slip:null, pct:0},
+  {name:'542 — BD · Amélioration électrique',     site:'BD',         committed:522865,   forecast:1508548,   budget:1200000,   slip:-376, pct:44},
+  {name:'541 — BD · Balance replacement',         site:'BD',         committed:0,        forecast:250000,    budget:0,         slip:null, pct:15},
+  {name:'XXX — BD · Collection d\'eau',           site:'BD',         committed:0,        forecast:1500000,   budget:1500000,   slip:null, pct:8},
+  {name:'XXX — Fibre Optique BD · Wakeham Bay',   site:'Expo Site',  committed:0,        forecast:2500000,   budget:0,         slip:null, pct:0},
+  {name:'484 — IK UG · Ph1 Groupe électrogène',   site:'UG Ivakkak', committed:6657274,  forecast:6647860,   budget:5151656,   slip:-26,  pct:94},
+  {name:'484 — IK UG · Ph2 Ajout génératrice',    site:'UG Ivakkak', committed:218377,   forecast:3018377,   budget:1500000,   slip:0,    pct:20},
+  {name:'348 — IK · Digue Ivakkak',               site:'UG Ivakkak', committed:172856,   forecast:900579,    budget:451816,    slip:-361, pct:89},
+  {name:'519 — IK UG · Portails',                 site:'UG Ivakkak', committed:148416,   forecast:148416,    budget:120142,    slip:-380, pct:90},
+  {name:'518 — IK UG · Dénoyage & Alimentation',  site:'UG Ivakkak', committed:776403,   forecast:1231658,   budget:1248681,   slip:null, pct:55},
+  {name:'494 — IK UG · Dome Surface',             site:'UG Ivakkak', committed:902043,   forecast:900579,    budget:451816,    slip:-166, pct:92},
+  {name:'507 — PU · Dewatering Puimajuq',         site:'Puimajuq',   committed:413634,   forecast:344209,    budget:714000,    slip:null, pct:0},
+  {name:'472 — AL · Restauration Allammaq',       site:'Allammaq',   committed:526833,   forecast:465601,    budget:526833,    slip:-292, pct:93},
+];
+
+/* ---------- helpers ---------- */
+const fmt = n => (n<0?'-':'')+'$'+Math.abs(n).toLocaleString('en-US',{maximumFractionDigits:0});
+const fmtM = n => (n<0?'-':'')+'$'+(Math.abs(n)/1e6).toFixed(1)+'M';
+const variance = p => p.budget - p.forecast;            // negative = over
+const varPct = p => p.budget>0 ? (variance(p)/p.budget*100) : (p.forecast>0? -100 : 0);
+const isEmergent = p => p.budget===0 && p.forecast>0;
+const isOver = p => variance(p) < 0;
+
+/* ---------- nav ---------- */
+document.querySelectorAll('#nav button').forEach(b=>{
+  b.onclick=()=>{
+    document.querySelectorAll('#nav button').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    document.getElementById('v-'+b.dataset.v).classList.add('active');
+  };
+});
+
+/* ---------- EXEC ---------- */
+function statusTag(p){
+  if(isEmergent(p)) return '<span class="tag t-emg">Emergent</span>';
+  if(isOver(p)) return '<span class="tag t-over">Over '+Math.abs(varPct(p)).toFixed(0)+'%</span>';
+  return '<span class="tag t-under">On budget</span>';
+}
+function schedTag(p){
+  if(p.slip===null||p.slip===undefined) return '<span style="color:var(--ink3)">—</span>';
+  if(p.slip < -90) return '<span class="tag t-over">'+p.slip+' d</span>';
+  if(p.slip < 0)  return '<span class="tag t-warn">'+p.slip+' d</span>';
+  return '<span class="tag t-under">on time</span>';
+}
+
+// top exposures = biggest over-budget by $
+const topExp = [...PROJECTS].filter(isOver).sort((a,b)=>variance(a)-variance(b)).slice(0,8);
+document.getElementById('topExp').innerHTML = topExp.map(p=>`
+  <tr><td>${p.name}</td><td>${p.site}</td>
+  <td class="num">${fmtM(p.forecast)}</td><td class="num">${fmtM(p.budget)}</td>
+  <td class="num" style="color:var(--red)">${fmtM(variance(p))}</td>
+  <td>${schedTag(p)}</td></tr>`).join('');
+
+/* charts after DOM ready */
+window.addEventListener('load',()=>{
+  Chart.defaults.color='#9fb6cc'; Chart.defaults.font.family="'Segoe UI',sans-serif";
+  Chart.defaults.borderColor='rgba(34,64,93,.5)';
+
+  const sortedSites=[...SITES].sort((a,b)=>b.forecast-a.forecast);
+  new Chart(document.getElementById('chartSite'),{type:'bar',
+    data:{labels:sortedSites.map(s=>s.site),
+      datasets:[
+        {label:'Forecast',data:sortedSites.map(s=>s.forecast/1e6),backgroundColor:'#4fc3f7',borderRadius:5},
+        {label:'Budget',data:sortedSites.map(s=>s.budget/1e6),backgroundColor:'#3a5d7d',borderRadius:5}
+      ]},
+    options:{plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.dataset.label+': $'+c.raw.toFixed(1)+'M'}}},
+      scales:{y:{ticks:{callback:v=>'$'+v+'M'},grid:{color:'rgba(34,64,93,.4)'}},x:{grid:{display:false}}}}});
+
+  // concentration of overrun
+  const overs=[...PROJECTS].filter(isOver).map(p=>({name:p.name.split('·')[0].trim(),v:-variance(p)})).sort((a,b)=>b.v-a.v);
+  const top=overs.slice(0,5); const rest=overs.slice(5).reduce((s,x)=>s+x.v,0);
+  const concLabels=[...top.map(t=>t.name),'Other'];const concData=[...top.map(t=>t.v/1e6),rest/1e6];
+  new Chart(document.getElementById('chartConc'),{type:'doughnut',
+    data:{labels:concLabels,datasets:[{data:concData,
+      backgroundColor:['#f87171','#fb923c','#fbbf24','#4fc3f7','#36d3c4','#3a5d7d'],borderColor:'#13263a',borderWidth:2}]},
+    options:{cutout:'58%',plugins:{legend:{position:'right',labels:{boxWidth:11,font:{size:10.5}}},
+      tooltip:{callbacks:{label:c=>c.label+': $'+c.raw.toFixed(1)+'M'}}}}});
+
+  // schedule slip
+  const slips=PROJECTS.filter(p=>p.slip!==null&&p.slip<0).sort((a,b)=>a.slip-b.slip).slice(0,10);
+  new Chart(document.getElementById('chartSlip'),{type:'bar',
+    data:{labels:slips.map(p=>p.name.split('·')[0].trim()),
+      datasets:[{data:slips.map(p=>p.slip),backgroundColor:slips.map(p=>p.slip<-90?'#f87171':'#fbbf24'),borderRadius:4}]},
+    options:{indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.raw+' days behind baseline'}}},
+      scales:{x:{ticks:{callback:v=>v+'d'},grid:{color:'rgba(34,64,93,.4)'}},y:{grid:{display:false},ticks:{font:{size:10}}}}}});
+
+  // completion scatter-ish (bubble: x=pct, y=-slip risk)
+  const cmp=PROJECTS.filter(p=>p.slip!==null);
+  new Chart(document.getElementById('chartComp'),{type:'bubble',
+    data:{datasets:[{data:cmp.map(p=>({x:p.pct,y:Math.max(0,-p.slip),r:Math.max(5,Math.sqrt(p.forecast/1e6)*2),name:p.name})),
+      backgroundColor:cmp.map(p=>(-p.slip>90?'rgba(248,113,113,.6)':(-p.slip>0?'rgba(251,191,36,.6)':'rgba(52,211,153,.6)')))}]},
+    options:{plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.raw.name+' — '+c.raw.x+'% done, '+c.raw.y+'d behind'}}},
+      scales:{x:{title:{display:true,text:'% complete'},min:0,max:100,grid:{color:'rgba(34,64,93,.4)'}},
+              y:{title:{display:true,text:'days behind baseline'},grid:{color:'rgba(34,64,93,.4)'}}}}});
+});
+
+/* ---------- COST table ---------- */
+const fSite=document.getElementById('fSite');
+[...new Set(PROJECTS.map(p=>p.site))].sort().forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;fSite.appendChild(o);});
+let sortKey='delta',sortDir=1;
+function renderCost(){
+  const site=fSite.value, st=document.getElementById('fStatus').value;
+  const th=+document.getElementById('fThresh').value;
+  let rows=PROJECTS.filter(p=>!site||p.site===site).filter(p=>{
+    if(st==='over') return isOver(p)&&!isEmergent(p);
+    if(st==='emg') return isEmergent(p);
+    if(st==='under') return !isOver(p);
+    return true;
+  });
+  rows.sort((a,b)=>{
+    let va,vb;
+    if(sortKey==='delta'){va=variance(a);vb=variance(b);}
+    else if(sortKey==='pct'){va=varPct(a);vb=varPct(b);}
+    else if(sortKey==='name'||sortKey==='site'){va=a[sortKey];vb=b[sortKey];return va.localeCompare(vb)*sortDir;}
+    else {va=a[sortKey];vb=b[sortKey];}
+    return (va-vb)*sortDir;
+  });
+  document.getElementById('costBody').innerHTML=rows.map(p=>{
+    const v=variance(p), vp=varPct(p), flagged=isOver(p)&&Math.abs(vp)>=th;
+    const barColor=isOver(p)?'#f87171':'#34d399';
+    const ratio=p.budget>0?Math.min(150,p.forecast/p.budget*100):150;
+    return `<tr style="${flagged?'background:rgba(248,113,113,.06)':''}">
+      <td>${flagged?'<span style="color:var(--red)">● </span>':''}${p.name}</td>
+      <td style="color:var(--ink2)">${p.site}</td>
+      <td class="num">${fmt(p.committed)}</td>
+      <td class="num">${fmt(p.forecast)}</td>
+      <td class="num">${p.budget===0?'<span style="color:var(--ink3)">—</span>':fmt(p.budget)}</td>
+      <td class="num" style="color:${v<0?'var(--red)':'var(--green)'}">${fmt(v)}</td>
+      <td class="num">${p.budget===0?'—':(vp>0?'+':'')+vp.toFixed(0)+'%'}
+        <div class="bar" style="margin-top:4px"><i style="width:${Math.min(100,ratio)}%;background:${barColor}"></i></div></td>
+      <td>${statusTag(p)}</td></tr>`;
+  }).join('');
+}
+document.querySelectorAll('#v-cost th[data-k]').forEach(th=>th.onclick=()=>{
+  const k=th.dataset.k; if(sortKey===k)sortDir*=-1; else{sortKey=k;sortDir=(k==='delta'||k==='pct')?1:1;}
+  renderCost();
+});
+fSite.onchange=renderCost;
+document.getElementById('fStatus').onchange=renderCost;
+document.getElementById('fThresh').oninput=function(){document.getElementById('threshLab').textContent=this.value+'% over';renderCost();};
+renderCost();
+
+/* ---------- SCHEDULE table ---------- */
+const schedRows=PROJECTS.filter(p=>p.slip!==null).sort((a,b)=>a.slip-b.slip);
+const endDates={ '470':'19-Apr-26','433':'10-Aug-26','600':'22-Dec-29','542':'30-Oct-26','519':'—','348':'01-Nov-26',
+  '490':'13-Aug-26','394':'27-Nov-26','544':'20-Dec-27','715':'01-Jan-27','708':'30-Jul-27','705':'10-Aug-27',
+  '484':'01-Dec-26','494':'19-Jul-26','543':'09-Nov-26','472':'29-Aug-26','704':'13-Jul-27' };
+function healthTag(p){
+  if(p.slip<-300) return '<span class="tag t-over">Critical</span>';
+  if(p.slip<-90) return '<span class="tag t-over">High risk</span>';
+  if(p.slip<0) return '<span class="tag t-warn">Slipping</span>';
+  return '<span class="tag t-under">On track</span>';
+}
+document.getElementById('schedBody').innerHTML=schedRows.map(p=>{
+  const code=p.name.match(/\d{3}|XXX/)?.[0]||'';
+  return `<tr>
+    <td>${p.name}</td><td style="color:var(--ink2)">${p.site}</td>
+    <td class="num">${endDates[code]||'—'}</td>
+    <td class="num" style="color:var(--ink3)">baseline</td>
+    <td class="num" style="color:${p.slip<-90?'var(--red)':(p.slip<0?'var(--amber)':'var(--green)')}">${p.slip} d</td>
+    <td class="num">${p.pct}%<div class="bar" style="margin-top:4px"><i style="width:${p.pct}%;background:${p.pct>70?'#34d399':(p.pct>30?'#fbbf24':'#4fc3f7')}"></i></div></td>
+    <td>${healthTag(p)}</td></tr>`;
+}).join('');
+
+/* ---------- EMERGENT ---------- */
+const emg=PROJECTS.filter(isEmergent).sort((a,b)=>b.forecast-a.forecast);
+const emgReason={
+  '547 — MQ UG · Ventilation Principale no2':'New ventilation shaft added mid-year; $9.94M committed with no corporate budget line.',
+  '715 — Inuksuk · Portail':'Reactive portal works; $2.45M forecast, 0 budget, already 380 days behind baseline.',
+  'XXX — Fibre Optique BD · Wakeham Bay':'Newly scoped fibre link (no project number yet); $2.5M unbudgeted.',
+  '541 — BD · Balance replacement':'Replacement triggered by failure; $250K forecast against $0 budget.'
+};
+document.getElementById('emgBody').innerHTML=emg.map(p=>`
+  <tr><td><span class="tag t-emg">⚑</span> ${p.name}</td><td style="color:var(--ink2)">${p.site}</td>
+  <td class="num" style="color:var(--red)">${fmt(p.forecast)}</td>
+  <td class="num" style="color:var(--ink3)">$0</td>
+  <td style="color:var(--ink2);font-size:12px">${emgReason[p.name]||'Forecast committed against a $0 corporate budget.'}</td></tr>`).join('');
+
+/* ---------- ALERTS ---------- */
+const alerts=[];
+PROJECTS.forEach(p=>{
+  if(isEmergent(p)) alerts.push({sev:'crit',cat:'COST',title:p.name,
+    msg:`Unbudgeted commitment — ${fmt(p.forecast)} forecast against a $0 corporate budget. Requires sponsor approval & budget line.`,meta:p.site});
+  else if(isOver(p)&&Math.abs(varPct(p))>=20) alerts.push({sev:'crit',cat:'COST',title:p.name,
+    msg:`Forecast ${Math.abs(varPct(p)).toFixed(0)}% over budget (${fmt(variance(p))}). Exceeds 20% control threshold.`,meta:p.site});
+  if(p.slip!==null&&p.slip<-300) alerts.push({sev:'crit',cat:'SCHEDULE',title:p.name,
+    msg:`Critical baseline slip — ${Math.abs(p.slip)} days behind original finish at ${p.pct}% complete.`,meta:p.site});
+  else if(p.slip!==null&&p.slip<-90) alerts.push({sev:'high',cat:'SCHEDULE',title:p.name,
+    msg:`Schedule slip ${Math.abs(p.slip)} days behind baseline at ${p.pct}% complete.`,meta:p.site});
+});
+alerts.push({sev:'high',cat:'PROCUREMENT',title:'547 — Ventilation Principale no2',
+  msg:'Major mechanical package not yet ordered — long-lead items risk missing the 2026 sealift window.',meta:'UG Mequillon'});
+alerts.push({sev:'info',cat:'PORTFOLIO',title:'Portfolio variance',
+  msg:'Total forecast $369.6M vs $249.3M budget — portfolio 48% over. Recommend control review with Finance & PMO.',meta:'All sites'});
+const sevOrder={crit:0,high:1,info:2};
+alerts.sort((a,b)=>sevOrder[a.sev]-sevOrder[b.sev]);
+const icons={crit:'⛔',high:'▲',info:'ⓘ'};
+document.getElementById('alertCount').textContent=alerts.filter(a=>a.sev!=='info').length;
+document.getElementById('alertFeed').innerHTML=alerts.map(a=>`
+  <div class="alert"><div class="sev ${a.sev}">${icons[a.sev]}</div>
+   <div class="body"><b>${a.title}</b> &nbsp;<span class="tag ${a.cat==='COST'?'t-over':(a.cat==='SCHEDULE'?'t-warn':'t-emg')}" style="font-size:10px">${a.cat}</span>
+     <p>${a.msg}</p></div>
+   <div class="meta">${a.meta}</div></div>`).join('');
+</script>
+</body>
+</html>
