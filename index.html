@@ -136,6 +136,45 @@
   a.src{color:var(--ice);text-decoration:none}
   .banner{background:linear-gradient(90deg,rgba(248,113,113,.10),transparent);border:1px solid #5b2230;
      border-radius:12px;padding:12px 16px;margin-bottom:18px;font-size:13px;color:#ffd9d9;display:flex;gap:10px;align-items:center}
+  /* forum */
+  .composer{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-bottom:18px;box-shadow:var(--shadow)}
+  .composer .row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+  .composer input,.composer textarea,.composer select{background:var(--panel2);border:1px solid var(--line);
+     color:var(--ink);border-radius:9px;padding:9px 12px;font-size:13px;font-family:inherit;width:100%}
+  .composer textarea{min-height:64px;resize:vertical}
+  .composer .row > *{flex:1;min-width:140px}
+  .btn{background:linear-gradient(90deg,var(--ice2),var(--teal));border:0;color:#04121d;font-weight:700;
+     border-radius:9px;padding:9px 18px;font-size:13px;cursor:pointer;transition:.15s}
+  .btn:hover{filter:brightness(1.1)}
+  .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--ink2);font-weight:600}
+  .btn.ghost:hover{border-color:var(--ice);color:var(--ice)}
+  .me-bar{display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--ink2);margin-bottom:14px;flex-wrap:wrap}
+  .me-bar input{max-width:200px}
+  .fbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
+  .fbar .chipf{background:var(--panel);border:1px solid var(--line);color:var(--ink2);border-radius:20px;
+     padding:6px 13px;font-size:12px;cursor:pointer;transition:.15s}
+  .fbar .chipf:hover{color:var(--ink)}
+  .fbar .chipf.on{background:linear-gradient(90deg,rgba(79,195,247,.2),rgba(54,211,196,.08));color:#fff;border-color:var(--ice)}
+  .thread{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-bottom:12px;box-shadow:var(--shadow)}
+  .thread .th-head{display:flex;gap:12px;align-items:flex-start;cursor:pointer}
+  .avatar{width:38px;height:38px;border-radius:10px;flex:0 0 38px;display:grid;place-items:center;font-weight:700;font-size:14px;color:#04121d}
+  .thread .th-title{font-size:15px;font-weight:650;margin:0}
+  .thread .th-meta{color:var(--ink3);font-size:11.5px;margin-top:3px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .thread .th-body{color:var(--ink2);font-size:13px;margin:10px 0 0;padding-left:50px}
+  .th-tag{display:inline-block;padding:2px 9px;border-radius:20px;font-size:10.5px;font-weight:600;background:rgba(79,195,247,.12);color:var(--ice)}
+  .th-count{margin-left:auto;color:var(--ink3);font-size:12px;white-space:nowrap;display:flex;align-items:center;gap:5px}
+  .replies{padding-left:50px;margin-top:12px;border-top:1px solid var(--line);padding-top:12px;display:none}
+  .replies.open{display:block}
+  .reply{display:flex;gap:10px;margin-bottom:12px}
+  .reply .avatar{width:30px;height:30px;flex:0 0 30px;font-size:12px}
+  .reply .r-body{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:9px 12px;flex:1}
+  .reply .r-who{font-size:12px;font-weight:650;color:var(--ink)}
+  .reply .r-who small{font-weight:400;color:var(--ink3);margin-left:6px}
+  .reply .r-text{font-size:12.5px;color:var(--ink2);margin-top:3px}
+  .reply-box{display:flex;gap:8px;margin-top:8px}
+  .reply-box input{flex:1;background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:9px;padding:8px 12px;font-size:12.5px}
+  .vote{background:transparent;border:1px solid var(--line);color:var(--ink2);border-radius:8px;padding:3px 9px;font-size:11.5px;cursor:pointer}
+  .vote:hover{border-color:var(--teal);color:var(--teal)}
 </style>
 </head>
 <body>
@@ -152,6 +191,7 @@
       <button data-v="sched"><span class="ic">▦</span> Schedule &amp; Milestones</button>
       <button data-v="emg"><span class="ic">⚑</span> Emergent Projects</button>
       <button data-v="alerts"><span class="ic">!</span> Early-Warning Alerts</button>
+      <button data-v="forum"><span class="ic">💬</span> Team Forum</button>
       <button data-v="arch"><span class="ic">⚙</span> System &amp; Tooling</button>
       <button data-v="rollout"><span class="ic">➜</span> Rollout &amp; ROI</button>
     </nav>
@@ -300,6 +340,34 @@
       </div>
       <div id="alertFeed"></div>
       <div class="note">Each alert is a configurable rule: <b>cost</b> (variance &gt; threshold, commitment &gt; budget), <b>schedule</b> (baseline slip &gt; N days, 0% complete past start), <b>procurement</b> (PO past sealift cut-off, long-lead item not ordered). Thresholds are owned by Finance &amp; the PMO, not hard-coded.</div>
+    </section>
+
+    <!-- ============ FORUM ============ -->
+    <section class="view" id="v-forum">
+      <div class="topbar">
+        <div><h2>Team Forum</h2>
+          <p>An internal discussion space tied to projects and sites. Field crews, project controls, procurement and management can flag issues, ask questions and capture decisions — so context lives next to the numbers instead of in scattered emails.</p></div>
+        <div class="pill"><span class="dot"></span> <span id="forumStat">0 threads</span></div>
+      </div>
+
+      <div class="me-bar">
+        <span>Posting as</span>
+        <input type="text" id="meName" placeholder="Your name" maxlength="40">
+        <input type="text" id="meRole" placeholder="Role / dept (e.g. Project Controls)" maxlength="40">
+        <span style="color:var(--ink3)">— saved on this device</span>
+      </div>
+
+      <div class="composer">
+        <div class="row">
+          <input type="text" id="ntTitle" placeholder="Start a discussion — title…" maxlength="120" style="flex:2">
+          <select id="ntSite"></select>
+        </div>
+        <div class="row"><textarea id="ntBody" placeholder="What's the issue, question, or update? Be specific — reference project numbers where you can."></textarea></div>
+        <div style="display:flex;justify-content:flex-end;gap:10px"><button class="btn" id="ntPost">Post thread</button></div>
+      </div>
+
+      <div class="fbar" id="forumFilter"></div>
+      <div id="threadList"></div>
     </section>
 
     <!-- ============ ARCH ============ -->
@@ -661,6 +729,136 @@ document.getElementById('alertFeed').innerHTML=alerts.map(a=>`
    <div class="body"><b>${a.title}</b> &nbsp;<span class="tag ${a.cat==='COST'?'t-over':(a.cat==='SCHEDULE'?'t-warn':'t-emg')}" style="font-size:10px">${a.cat}</span>
      <p>${a.msg}</p></div>
    <div class="meta">${a.meta}</div></div>`).join('');
+
+/* ---------- TEAM FORUM ---------- */
+const FORUM_KEY='aurora_forum_v1', ME_KEY='aurora_forum_me';
+const SITE_LIST=['General','Logistics / Sealift','PMO',...[...new Set(PROJECTS.map(p=>p.site))].sort()];
+const AVCOL=['#4fc3f7','#36d3c4','#fbbf24','#f87171','#b6a4ff','#34d399','#fb923c'];
+const avColor=s=>AVCOL[[...s].reduce((a,c)=>a+c.charCodeAt(0),0)%AVCOL.length];
+const initials=s=>s.trim().split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase()||'?';
+const nowISO=()=>new Date().toISOString();
+function timeAgo(iso){
+  const d=(Date.now()-new Date(iso))/1000;
+  if(d<60)return'just now'; if(d<3600)return Math.floor(d/60)+'m ago';
+  if(d<86400)return Math.floor(d/3600)+'h ago'; if(d<2592000)return Math.floor(d/86400)+'d ago';
+  return new Date(iso).toLocaleDateString('en-CA',{month:'short',day:'numeric'});
+}
+const SEED=[
+  {id:'s1',title:'Cell 4 (600) forecast is $104M over budget — what is driving it?',
+   author:'Marc Tremblay',role:'Project Controls',site:'Expo Site',ts:'2026-05-26T14:10:00Z',votes:7,
+   body:'Forecast at completion is now $215M against a $111M budget. Need a clear breakdown — is this scope growth on Cell 4 itself, or geotech/quantity changes? Can we get the EISA revision and the latest quantities into AURORA so the variance is auditable before the board review?',
+   replies:[
+     {author:'Sophie Lavoie',role:'Geotech / Tailings',ts:'2026-05-26T16:02:00Z',body:'Most of it is increased fill quantities after the 2025 dam raise re-design. The original $111M baseline predates the revised deposition plan (543). I\'ll upload the revised quantity take-off.'},
+     {author:'David Kanak',role:'Finance',ts:'2026-05-27T12:20:00Z',body:'If the deposition-line change (543) is the driver, those two should be linked as one program so we stop double-counting. Flagging for the next controls review.'}
+   ]},
+  {id:'s2',title:'547 Ventilation Principale no2 has a $0 budget but $9.94M forecast — who approved this?',
+   author:'Julie Bélanger',role:'PMO',site:'UG Mequillon',ts:'2026-05-28T09:30:00Z',votes:11,
+   body:'This is the single biggest emergent item in the portfolio and it has no corporate budget line. Before any more POs go out it needs a sponsor and a funded budget through the stage-gate. Who is the project owner?',
+   replies:[
+     {author:'Robert Gagné',role:'UG Operations',ts:'2026-05-28T11:05:00Z',body:'It came out of the ventilation study late last year — second principal raise became mandatory for the deeper levels. Agreed it skipped the budgeting step. I can sponsor it; will submit the 1-pager today.'},
+     {author:'Julie Bélanger',role:'PMO',ts:'2026-05-28T13:40:00Z',body:'Thanks Robert. Long-lead fan + raisebore items are the schedule risk — please confirm whether they make the 2026 sealift window.'}
+   ]},
+  {id:'s3',title:'2026 sealift cut-off — which long-lead orders are still not placed?',
+   author:'Amélie Fortin',role:'Logistics',site:'Logistics / Sealift',ts:'2026-05-30T15:45:00Z',votes:9,
+   body:'Shipping window closes this fall. Anything not on a PO in the next few weeks risks slipping a full year. From the procurement report I see several "Not Started" packages on 547, 706 and 708. Can owners confirm order dates so I can build the consolidated sealift manifest?',
+   replies:[
+     {author:'Marc Tremblay',role:'Project Controls',ts:'2026-05-31T08:15:00Z',body:'AURORA can flag this automatically — any PO past the sealift cut-off raises a procurement alert. Suggest we set the cut-off date as a portfolio rule.'}
+   ]},
+  {id:'s4',title:'Proposal: standard 1-page stage-gate template for emergent projects',
+   author:'Julie Bélanger',role:'PMO',site:'PMO',ts:'2026-06-01T10:00:00Z',votes:6,
+   body:'We currently have $15.1M of unbudgeted work (547, 715, Fibre Optique, 541). Proposing a mandatory 1-page intake — sponsor, rough budget, schedule, sealift dependency — before any PO can be raised. Lightweight enough for our team size. Feedback welcome before we make it policy.',
+   replies:[
+     {author:'David Kanak',role:'Finance',ts:'2026-06-01T14:25:00Z',body:'Strong +1. Even a rough budget lets us catch overspend at commitment instead of year-end. Keep it to one page so the field actually fills it in.'}
+   ]},
+  {id:'s5',title:'470 Dépoussiéreur is 553 days behind baseline — root cause?',
+   author:'Robert Gagné',role:'UG Operations',site:'BD',ts:'2026-06-02T08:50:00Z',votes:4,
+   body:'Worst slip in the portfolio and it\'s only a depoussiereur. Is this a vendor delay, a re-scope, or just an unrealistic original baseline? If the baseline was never achievable we should re-baseline and stop it skewing the schedule KPIs.',
+   replies:[]}
+];
+
+function loadForum(){
+  try{const d=JSON.parse(localStorage.getItem(FORUM_KEY)); if(d&&d.length)return d;}catch(e){}
+  return JSON.parse(JSON.stringify(SEED));
+}
+function saveForum(){try{localStorage.setItem(FORUM_KEY,JSON.stringify(THREADS));}catch(e){}}
+let THREADS=loadForum();
+let forumFilter='All';
+
+// identity
+const meName=document.getElementById('meName'), meRole=document.getElementById('meRole');
+try{const m=JSON.parse(localStorage.getItem(ME_KEY)||'{}'); meName.value=m.name||''; meRole.value=m.role||'';}catch(e){}
+function saveMe(){try{localStorage.setItem(ME_KEY,JSON.stringify({name:meName.value,role:meRole.value}));}catch(e){}}
+meName.oninput=saveMe; meRole.oninput=saveMe;
+const who=()=>({name:meName.value.trim()||'Anonymous',role:meRole.value.trim()||'Team member'});
+
+// site dropdown + filter chips
+document.getElementById('ntSite').innerHTML=SITE_LIST.map(s=>`<option>${s}</option>`).join('');
+function renderFilters(){
+  const cats=['All',...SITE_LIST];
+  document.getElementById('forumFilter').innerHTML=cats.map(c=>
+    `<span class="chipf ${forumFilter===c?'on':''}" data-c="${c}">${c}</span>`).join('');
+  document.querySelectorAll('#forumFilter .chipf').forEach(ch=>ch.onclick=()=>{forumFilter=ch.dataset.c;renderFilters();renderThreads();});
+}
+
+function renderThreads(){
+  let list=THREADS.filter(t=>forumFilter==='All'||t.site===forumFilter);
+  list.sort((a,b)=>{
+    const la=a.replies.length?a.replies[a.replies.length-1].ts:a.ts;
+    const lb=b.replies.length?b.replies[b.replies.length-1].ts:b.ts;
+    return new Date(lb)-new Date(la);
+  });
+  document.getElementById('forumStat').textContent=THREADS.length+' threads · '+THREADS.reduce((s,t)=>s+t.replies.length,0)+' replies';
+  const el=document.getElementById('threadList');
+  if(!list.length){el.innerHTML='<div class="card" style="text-align:center;color:var(--ink3)">No threads in this category yet — start one above.</div>';return;}
+  el.innerHTML=list.map(t=>`
+    <div class="thread" data-id="${t.id}">
+      <div class="th-head" onclick="toggleThread('${t.id}')">
+        <div class="avatar" style="background:${avColor(t.author)}">${initials(t.author)}</div>
+        <div style="flex:1">
+          <p class="th-title">${esc(t.title)}</p>
+          <div class="th-meta"><span class="th-tag">${t.site}</span> · <b style="color:var(--ink2)">${esc(t.author)}</b> <small>${esc(t.role)}</small> · ${timeAgo(t.ts)}</div>
+        </div>
+        <div class="th-count">💬 ${t.replies.length}</div>
+      </div>
+      <p class="th-body">${esc(t.body)}</p>
+      <div style="padding-left:50px;margin-top:8px">
+        <button class="vote" onclick="voteThread('${t.id}')">▲ ${t.votes||0}</button>
+        <button class="btn ghost" style="padding:4px 12px;font-size:12px" onclick="toggleThread('${t.id}')">💬 Reply / view (${t.replies.length})</button>
+      </div>
+      <div class="replies" id="rep-${t.id}">
+        ${t.replies.map(r=>`
+          <div class="reply">
+            <div class="avatar" style="background:${avColor(r.author)}">${initials(r.author)}</div>
+            <div class="r-body"><div class="r-who">${esc(r.author)}<small>${esc(r.role)} · ${timeAgo(r.ts)}</small></div>
+              <div class="r-text">${esc(r.body)}</div></div>
+          </div>`).join('')}
+        <div class="reply-box">
+          <input type="text" id="ri-${t.id}" placeholder="Write a reply…" onkeydown="if(event.key==='Enter')addReply('${t.id}')">
+          <button class="btn" onclick="addReply('${t.id}')">Reply</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+function esc(s){return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+window.toggleThread=id=>document.getElementById('rep-'+id).classList.toggle('open');
+window.voteThread=id=>{const t=THREADS.find(x=>x.id===id);t.votes=(t.votes||0)+1;saveForum();renderThreads();};
+window.addReply=id=>{
+  const inp=document.getElementById('ri-'+id); const txt=inp.value.trim(); if(!txt)return;
+  const w=who(); THREADS.find(x=>x.id===id).replies.push({author:w.name,role:w.role,body:txt,ts:nowISO()});
+  saveMe();saveForum();renderThreads();
+  setTimeout(()=>{document.getElementById('rep-'+id).classList.add('open');},0);
+};
+document.getElementById('ntPost').onclick=()=>{
+  const title=document.getElementById('ntTitle').value.trim();
+  const body=document.getElementById('ntBody').value.trim();
+  if(!title){alert('Add a title for your thread.');return;}
+  const w=who();
+  THREADS.unshift({id:'u'+Date.now(),title,body,author:w.name,role:w.role,
+    site:document.getElementById('ntSite').value,ts:nowISO(),votes:0,replies:[]});
+  document.getElementById('ntTitle').value='';document.getElementById('ntBody').value='';
+  saveMe();saveForum();renderThreads();
+};
+renderFilters();renderThreads();
 </script>
 </body>
 </html>
