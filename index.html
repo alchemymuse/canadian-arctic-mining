@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AURORA — Project & Cost Control Platform | Canadian Royalties / Nunavik Nickel</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQvYpAnmCpLGAE3FZPUOfRrY2mKfW9E=" crossorigin="">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <style>
   :root{
     --bg:#0b1622; --bg2:#0f1e2e; --panel:#13263a; --panel2:#172d44;
@@ -36,6 +38,19 @@
   .nav button:hover{background:var(--panel);color:var(--ink)}
   .nav button.active{background:linear-gradient(90deg,rgba(79,195,247,.18),rgba(54,211,196,.06));
      color:#fff;box-shadow:inset 2px 0 0 var(--ice)}
+  .nav-group{border:1px solid rgba(34,64,93,.55);border-radius:12px;margin:7px 0;background:rgba(19,38,58,.28);overflow:hidden}
+  .nav-group-head{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;background:transparent;border:0;
+     color:var(--ink3);padding:9px 10px;border-radius:0;cursor:pointer;font-size:11px;font-weight:700;
+     text-transform:uppercase;letter-spacing:.7px;transition:.15s}
+  .nav-group-head:hover{background:rgba(19,38,58,.65);color:var(--ice)}
+  .nav-group-title{display:flex;align-items:center;gap:8px}
+  .nav-group-title .ic{width:16px;text-align:center;opacity:.9}
+  .nav-caret{font-size:10px;color:var(--ink3);transition:transform .18s ease}
+  .nav-group.collapsed .nav-caret{transform:rotate(-90deg)}
+  .nav-items{display:flex;flex-direction:column;gap:3px;padding:3px 5px 7px 8px}
+  .nav-group.collapsed .nav-items{display:none}
+  .nav-items button{padding-left:13px;font-size:13px}
+  .nav-items button .ic{width:20px}
   .side .foot{margin-top:18px;padding:12px 10px;border-top:1px solid var(--line);color:var(--ink3);font-size:11px}
   .side .foot b{color:var(--ink2)}
   /* Main */
@@ -134,6 +149,47 @@
   .roi{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px}
   .roi .kpi .val{color:var(--teal)}
   a.src{color:var(--ice);text-decoration:none}
+  /* ── Pareto ── */
+  .pareto-bar-wrap{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+  .pareto-label{width:220px;flex:0 0 220px;font-size:12px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pareto-bar-track{flex:1;height:20px;background:var(--line);border-radius:6px;overflow:visible;position:relative}
+  .pareto-bar-fill{height:100%;border-radius:6px;transition:width .6s cubic-bezier(.22,1,.36,1)}
+  .pareto-bar-val{position:absolute;right:-56px;top:1px;font-size:11.5px;font-variant-numeric:tabular-nums;color:var(--ink2);width:52px;text-align:right}
+  .pareto-cum-line{position:absolute;top:0;width:2px;height:20px;background:var(--amber);border-radius:2px;transition:left .6s cubic-bezier(.22,1,.36,1)}
+  .pct-axis{display:flex;justify-content:space-between;color:var(--ink3);font-size:11px;margin-bottom:4px;padding-right:58px}
+  .pareto-insight{background:linear-gradient(90deg,rgba(79,195,247,.08),transparent);border-left:3px solid var(--ice);border-radius:0 10px 10px 0;padding:11px 15px;font-size:13px;color:var(--ink2);margin-top:14px}
+  .pareto-insight b{color:var(--ice)}
+  .seg-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+  .seg-tab{background:var(--panel);border:1px solid var(--line);color:var(--ink2);border-radius:20px;padding:6px 14px;font-size:12px;cursor:pointer;transition:.15s}
+  .seg-tab:hover{color:var(--ink)}
+  .seg-tab.on{background:linear-gradient(90deg,rgba(79,195,247,.2),rgba(54,211,196,.08));color:#fff;border-color:var(--ice)}
+  .quad-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+  @media(max-width:900px){.quad-grid{grid-template-columns:1fr}}
+  .quad-label{font-size:10px;text-transform:uppercase;letter-spacing:.8px;font-weight:700;margin-bottom:8px}
+  /* ── What-If ── */
+  .wi-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:20px}
+  @media(max-width:1050px){.wi-grid{grid-template-columns:1fr}}
+  .wi-row{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--line)}
+  .wi-row:last-child{border-bottom:0}
+  .wi-name{flex:1;font-size:12.5px;color:var(--ink2);min-width:0}
+  .wi-name b{color:var(--ink);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px}
+  .wi-name small{font-size:11px;color:var(--ink3)}
+  .wi-slider{width:120px;accent-color:var(--ice)}
+  .wi-pct{width:42px;text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums;font-weight:700}
+  .wi-delta{width:72px;text-align:right;font-size:11.5px;font-variant-numeric:tabular-nums}
+  .meter{height:6px;border-radius:4px;background:var(--line);overflow:hidden;margin-top:3px}
+  .meter > i{display:block;height:100%;border-radius:4px;transition:width .4s ease}
+  .wi-kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px}
+  .wi-kpi{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px 16px;text-align:center}
+  .wi-kpi .wk-lab{color:var(--ink3);font-size:11px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+  .wi-kpi .wk-val{font-size:22px;font-weight:700;transition:color .3s}
+  .wi-kpi .wk-sub{color:var(--ink3);font-size:11px;margin-top:3px}
+  .scenario-btn{background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:7px 13px;font-size:12px;color:var(--ink2);cursor:pointer;transition:.15s}
+  .scenario-btn:hover{border-color:var(--ice);color:var(--ice)}
+  .wi-arrow{font-size:11px;color:var(--ink3);margin:0 2px}
+  .change-badge{display:inline-block;padding:1px 7px;border-radius:10px;font-size:11px;font-weight:600}
+  .cb-save{background:rgba(52,211,153,.14);color:var(--green)}
+  .cb-add{background:var(--redbg);color:var(--red)}
   .banner{background:linear-gradient(90deg,rgba(248,113,113,.10),transparent);border:1px solid #5b2230;
      border-radius:12px;padding:12px 16px;margin-bottom:18px;font-size:13px;color:#ffd9d9;display:flex;gap:10px;align-items:center}
   /* forum */
@@ -175,49 +231,152 @@
   .reply-box input{flex:1;background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:9px;padding:8px 12px;font-size:12.5px}
   .vote{background:transparent;border:1px solid var(--line);color:var(--ink2);border-radius:8px;padding:3px 9px;font-size:11.5px;cursor:pointer}
   .vote:hover{border-color:var(--teal);color:var(--teal)}
-  /* functional layer (reuses existing palette) */
-  .btnp{background:linear-gradient(90deg,var(--ice2),var(--teal));border:0;color:#04121d;font-weight:700;border-radius:8px;padding:8px 14px;font-size:12.5px;cursor:pointer;transition:.15s}
-  .btnp:hover{filter:brightness(1.1)}
-  .btns{background:var(--panel2);border:1px solid var(--line);color:var(--ink2);border-radius:8px;padding:8px 13px;font-size:12.5px;cursor:pointer;transition:.15s}
-  .btns:hover{border-color:var(--ice);color:var(--ice)}
-  .rowbtns{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
-  .rowbtns .hint{color:var(--ink3);font-size:12px;margin-left:4px}
-  tbody tr.clk{cursor:pointer}
-  tbody tr.clk:hover{background:var(--panel2)}
-  .modal-bg{position:fixed;inset:0;background:rgba(4,10,18,.66);display:none;z-index:100;align-items:flex-start;justify-content:center;overflow:auto;padding:42px 16px}
-  .modal-bg.open{display:flex}
-  .modal{background:var(--panel);border:1px solid var(--line);border-radius:16px;width:560px;max-width:100%;box-shadow:0 24px 60px rgba(0,0,0,.5);animation:fade .25s ease}
-  .modal .mh{display:flex;justify-content:space-between;align-items:center;padding:18px 22px;border-bottom:1px solid var(--line)}
-  .modal .mh h3{margin:0;font-size:16px}
-  .modal .mh .x{background:transparent;border:0;color:var(--ink3);font-size:24px;cursor:pointer;line-height:1}
-  .modal .mh .x:hover{color:var(--ink)}
-  .modal .mb{padding:20px 22px}
-  .modal .mf{padding:14px 22px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:10px}
-  .field{margin-bottom:14px}
-  .field label{display:block;font-size:11px;color:var(--ink3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}
-  .field input,.field select,.field textarea{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:9px;padding:9px 12px;font-size:13px;font-family:inherit}
-  .row2{display:flex;gap:12px}.row2>*{flex:1}
-  .kv{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--line);font-size:13px}
-  .kv span{color:var(--ink3)} .kv b{font-variant-numeric:tabular-nums}
-  .subhead{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--ice);font-weight:700;margin:16px 0 8px}
-  .txnlog{max-height:140px;overflow:auto;font-size:11.5px;color:var(--ink2);border:1px solid var(--line);border-radius:9px;padding:4px 10px}
-  .txnlog div{padding:5px 0;border-bottom:1px solid var(--line)}.txnlog div:last-child{border-bottom:0}
-  .rule{display:flex;align-items:center;gap:12px;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:11px 14px;margin-bottom:9px}
-  .rule .rinfo{flex:1}.rule .rinfo b{font-size:13px}.rule .rinfo p{margin:2px 0 0;font-size:11.5px;color:var(--ink3)}
-  .rule .rthr{width:64px;text-align:right;background:var(--panel);border:1px solid var(--line);color:var(--ink);border-radius:7px;padding:5px 8px;font-size:12px}
-  .switch{position:relative;width:40px;height:22px;flex:0 0 40px}
-  .switch input{opacity:0;width:0;height:0}
-  .slider{position:absolute;inset:0;background:var(--line);border-radius:22px;cursor:pointer;transition:.2s}
-  .slider::before{content:"";position:absolute;height:16px;width:16px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s}
-  .switch input:checked+.slider{background:var(--teal)}
-  .switch input:checked+.slider::before{transform:translateX(18px)}
-  .alert .acts{display:flex;gap:6px;margin-top:9px;flex-wrap:wrap}
-  .lc{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:700;margin-left:6px}
-  .lc-new{background:var(--redbg);color:var(--red)}.lc-ack{background:rgba(251,191,36,.14);color:var(--amber)}.lc-res{background:rgba(52,211,153,.12);color:var(--green)}
-  .simout{margin-top:12px}
-  .toast{position:fixed;bottom:22px;right:22px;z-index:200;background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--teal);border-radius:10px;padding:13px 16px;box-shadow:0 12px 30px rgba(0,0,0,.45);font-size:13px;color:var(--ink);max-width:340px;transform:translateY(20px);opacity:0;transition:.25s;pointer-events:none}
-  .toast.show{transform:none;opacity:1}
-  .toast.warn{border-left-color:var(--red)}
+
+  /* geographic risk map */
+  .map-wrap{display:grid;grid-template-columns:1.35fr .9fr;gap:16px;align-items:stretch}
+  @media(max-width:1050px){.map-wrap{grid-template-columns:1fr}}
+  #projectMap{height:560px;width:100%;min-width:0;border-radius:14px;border:1px solid var(--line);background:var(--bg2);box-shadow:var(--shadow);overflow:hidden;position:relative}
+  #projectMap .leaflet-container{height:100%;width:100%}
+  #projectMap .leaflet-tile{max-width:none!important;max-height:none!important}
+  #projectMap .leaflet-pane,#projectMap .leaflet-map-pane,#projectMap .leaflet-tile-pane,#projectMap .leaflet-overlay-pane,#projectMap .leaflet-marker-pane,#projectMap .leaflet-popup-pane{position:absolute!important}
+  .leaflet-container{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#0f1e2e}
+  .leaflet-control-attribution{background:rgba(10,20,32,.75)!important;color:#9fb6cc!important}
+  .leaflet-control-attribution a{color:#4fc3f7!important}
+  .map-marker{width:22px;height:22px;border-radius:50%;border:2px solid rgba(255,255,255,.92);box-shadow:0 0 0 6px rgba(79,195,247,.12),0 4px 14px rgba(0,0,0,.45)}
+  .mk-critical{background:#f87171;box-shadow:0 0 0 7px rgba(248,113,113,.16),0 4px 14px rgba(0,0,0,.45)}
+  .mk-watch{background:#fbbf24;box-shadow:0 0 0 7px rgba(251,191,36,.16),0 4px 14px rgba(0,0,0,.45)}
+  .mk-good{background:#34d399;box-shadow:0 0 0 7px rgba(52,211,153,.16),0 4px 14px rgba(0,0,0,.45)}
+  .mk-emg{background:#b6a4ff;box-shadow:0 0 0 7px rgba(182,164,255,.16),0 4px 14px rgba(0,0,0,.45)}
+  .map-side{display:flex;flex-direction:column;gap:12px}
+  .site-card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:13px 14px;cursor:pointer;transition:.15s}
+  .site-card:hover,.site-card.on{border-color:var(--ice);background:linear-gradient(90deg,rgba(79,195,247,.13),rgba(54,211,196,.04))}
+  .site-card .sh{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}
+  .site-card .sn{font-weight:700;font-size:13.5px}
+  .site-card .meta{font-size:11.5px;color:var(--ink3);margin-top:3px}
+  .risk-dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:7px}
+  .map-popup{min-width:230px;color:#102033}
+  .map-popup h4{margin:0 0 6px;color:#0b1622;font-size:14px}
+  .map-popup table{font-size:12px;color:#102033;border-collapse:collapse;width:100%}
+  .map-popup td{padding:3px 0;border:0;color:#102033}
+  .map-popup td:last-child{text-align:right;font-weight:700}
+  .map-popup .mp-risk{display:inline-block;margin-top:6px;padding:3px 8px;border-radius:12px;background:#0f1e2e;color:#fff;font-size:11px}
+  .map-legend{display:flex;gap:13px;flex-wrap:wrap;font-size:12px;color:var(--ink2);margin-top:10px}
+  .map-fallback{height:560px;border-radius:14px;border:1px dashed var(--line);display:grid;place-items:center;text-align:center;color:var(--ink2);padding:24px;background:var(--panel)}
+
+
+  /* ───────────────── Enterprise Shell Upgrade ───────────────── */
+  body.light{
+    --bg:#f4f7fb; --bg2:#ffffff; --panel:#ffffff; --panel2:#eef4fb;
+    --line:#d6e2ef; --ink:#0d1b2a; --ink2:#41576f; --ink3:#6b7f94;
+    --redbg:#ffe9ed; --shadow:0 10px 28px rgba(20,43,70,.10);
+  }
+  body.light .side{background:linear-gradient(180deg,#ffffff,#edf4fb)}
+  body.light .logo::after{background:#ffffff}
+  body.light .enterprise-top{background:rgba(255,255,255,.88)}
+  body.light .top-search input{background:#ffffff}
+  body.light .notif-panel{background:#ffffff}
+  .app{transition:all .24s ease}
+  .side{transition:width .24s ease, flex-basis .24s ease, padding .24s ease;z-index:20}
+  .main{transition:padding .24s ease;position:relative}
+  .sidebar-toggle{width:34px;height:34px;border:1px solid var(--line);border-radius:10px;background:var(--panel2);color:var(--ink);cursor:pointer;display:grid;place-items:center;font-size:18px;transition:.15s;flex:0 0 34px}
+  .sidebar-toggle:hover{border-color:var(--ice);color:var(--ice)}
+  /* Floating sidebar hide/show button pinned to the navigation edge */
+  .side-edge-toggle{position:absolute;right:-17px;top:20px;width:34px;height:34px;border-radius:10px;border:1px solid var(--ice);background:linear-gradient(135deg,var(--panel2),var(--bg2));color:var(--ink);cursor:pointer;display:grid;place-items:center;font-size:20px;line-height:1;box-shadow:0 8px 22px rgba(0,0,0,.32),0 0 0 3px rgba(79,195,247,.08);z-index:80;transition:transform .18s ease, background .18s ease, color .18s ease}
+  .side-edge-toggle:hover{color:#04121d;background:linear-gradient(90deg,var(--ice2),var(--teal));transform:translateX(2px)}
+  body.sidebar-collapsed .side-edge-toggle{right:-17px;transform:rotate(180deg)}
+  body.sidebar-collapsed .side-edge-toggle:hover{transform:rotate(180deg) translateX(-2px)}
+  .side-edge-toggle .tip{position:absolute;left:42px;top:50%;transform:translateY(-50%);background:var(--panel);border:1px solid var(--line);border-radius:8px;color:var(--ink2);font-size:11px;white-space:nowrap;padding:5px 8px;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:.15s}
+  .side-edge-toggle:hover .tip{opacity:1}
+  .enterprise-top{position:sticky;top:0;z-index:15;margin:-26px -34px 22px;padding:14px 34px;background:rgba(11,22,34,.86);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .et-title{display:flex;align-items:center;gap:10px;min-width:220px}
+  .et-title strong{font-size:15px;letter-spacing:.6px}.et-title span{font-size:11px;color:var(--ink3);display:block;margin-top:1px}
+  .top-search{flex:1;min-width:230px;position:relative}.top-search input{width:100%;background:var(--panel);border:1px solid var(--line);border-radius:12px;color:var(--ink);padding:10px 40px 10px 14px;font-size:13px;outline:none}.top-search input:focus{border-color:var(--ice);box-shadow:0 0 0 3px rgba(79,195,247,.08)}.top-search .mag{position:absolute;right:13px;top:9px;color:var(--ink3)}
+  .top-actions{display:flex;align-items:center;gap:9px}.icon-btn{width:36px;height:36px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--ink2);cursor:pointer;display:grid;place-items:center;position:relative}.icon-btn:hover{border-color:var(--ice);color:var(--ice)}.badge-dot{position:absolute;right:6px;top:5px;background:var(--red);color:#fff;border-radius:20px;font-size:9px;line-height:1;padding:3px 5px;border:1px solid var(--bg)}
+  .user-chip{display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:6px 10px;color:var(--ink2);font-size:12px}.user-chip b{color:var(--ink);font-size:12px}.user-avatar{width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--ice),var(--teal));color:#04121d;font-weight:800;display:grid;place-items:center;font-size:11px}
+  .notif-panel{position:fixed;right:24px;top:66px;width:min(360px,calc(100vw - 32px));background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:14px;z-index:60;display:none}.notif-panel.open{display:block}.notif-panel h3{margin:0 0 10px;font-size:14px}.notif-item{padding:10px;border-radius:10px;background:var(--panel2);border:1px solid var(--line);margin-bottom:8px;font-size:12px;color:var(--ink2)}.notif-item b{color:var(--ink)}
+  .search-results{position:absolute;left:0;right:0;top:42px;background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:8px;display:none;z-index:70}.search-results.open{display:block}.search-result{display:flex;align-items:center;gap:9px;padding:9px;border-radius:9px;cursor:pointer;color:var(--ink2);font-size:12.5px}.search-result:hover{background:var(--panel2);color:var(--ink)}.search-result .sr-ic{width:24px;text-align:center}.search-result small{color:var(--ink3);display:block;font-size:10.5px}
+  body.sidebar-collapsed .side{width:72px;flex-basis:72px;padding:16px 9px;overflow-x:hidden}
+  body.sidebar-collapsed .brand{justify-content:center;padding:6px 0 12px}.brand .brand-text{transition:opacity .15s ease}body.sidebar-collapsed .brand .brand-text{display:none}
+  body.sidebar-collapsed .nav-group{border-color:transparent;background:transparent;margin:5px 0;overflow:visible}body.sidebar-collapsed .nav-group-head{justify-content:center;padding:8px 0;border-radius:12px}body.sidebar-collapsed .nav-group-title{gap:0}body.sidebar-collapsed .nav-group-title .ic{font-size:18px;width:34px}body.sidebar-collapsed .nav-group-title .txt, body.sidebar-collapsed .nav-caret{display:none}body.sidebar-collapsed .nav-items{display:none!important}body.sidebar-collapsed .nav-group:hover .nav-items{display:flex!important;position:fixed;left:72px;min-width:235px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px;box-shadow:var(--shadow);z-index:50}body.sidebar-collapsed .nav-group:hover .nav-group-head{background:var(--panel2);color:var(--ice)}body.sidebar-collapsed .nav-items button{padding-left:10px;white-space:nowrap}body.sidebar-collapsed .side .foot{display:none}
+  body.sidebar-collapsed .nav-group[data-group="overview"]:hover .nav-items{top:82px}body.sidebar-collapsed .nav-group[data-group="controls"]:hover .nav-items{top:128px}body.sidebar-collapsed .nav-group[data-group="business"]:hover .nav-items{top:175px}body.sidebar-collapsed .nav-group[data-group="analytics"]:hover .nav-items{top:222px}body.sidebar-collapsed .nav-group[data-group="geography"]:hover .nav-items{top:269px}body.sidebar-collapsed .nav-group[data-group="platform"]:hover .nav-items{top:316px}
+  @media(max-width:820px){.side-edge-toggle{right:-18px;top:18px}.side-edge-toggle .tip{display:none}body.mobile-menu-open .side-edge-toggle{display:grid}body.mobile-menu-open.sidebar-collapsed .side-edge-toggle{transform:none}.side{position:fixed;left:0;top:0;bottom:0;transform:translateX(-100%);height:100vh}.main{padding:22px 18px 50px}.enterprise-top{margin:-22px -18px 18px;padding:12px 18px}.et-title{min-width:160px}body.mobile-menu-open .side{transform:translateX(0)}body.sidebar-collapsed .side{transform:translateX(-100%)}body.mobile-menu-open.sidebar-collapsed .side{transform:translateX(0);width:248px;flex-basis:248px;padding:18px 14px}body.mobile-menu-open.sidebar-collapsed .brand .brand-text{display:block}body.mobile-menu-open.sidebar-collapsed .nav-group-head{justify-content:space-between;padding:9px 10px}body.mobile-menu-open.sidebar-collapsed .nav-group-title{gap:8px}body.mobile-menu-open.sidebar-collapsed .nav-group-title .txt,body.mobile-menu-open.sidebar-collapsed .nav-caret{display:inline}body.mobile-menu-open.sidebar-collapsed .nav-items{position:static!important;display:flex!important;box-shadow:none;border:0;background:transparent;padding:3px 5px 7px 8px}body.mobile-menu-open.sidebar-collapsed .side .foot{display:block}}
+
+
+  /* Business Center */
+  .biz-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:16px}
+  @media(max-width:1050px){.biz-grid{grid-template-columns:1fr}}
+  .pipeline{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:10px;margin-bottom:16px}
+  .pipe-step{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px 13px}
+  .pipe-step b{display:block;font-size:18px;margin:5px 0 1px}.pipe-step span{color:var(--ink3);font-size:11px;text-transform:uppercase;letter-spacing:.45px}
+  .resource-card{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:10px}
+  .resource-card .r-left b{font-size:13px}.resource-card .r-left small{display:block;color:var(--ink3);font-size:11px;margin-top:2px}.resource-card .r-val{text-align:right;font-variant-numeric:tabular-nums}
+  .risk-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:7px}.risk-high{background:var(--red)}.risk-med{background:var(--amber)}.risk-low{background:var(--green)}
+
+
+  /* stable schematic map replacement: no external tile dependency */
+  #projectMap.aurora-schematic-map{background:radial-gradient(circle at 28% 38%,rgba(79,195,247,.12),transparent 32%),linear-gradient(135deg,#0b1622,#13263a);height:640px;overflow:hidden}
+  .aurora-map-canvas{position:relative;width:100%;height:100%;border-radius:14px;overflow:hidden;background:linear-gradient(180deg,rgba(15,30,46,.72),rgba(11,22,34,.96))}
+  .aurora-map-canvas svg{position:absolute;inset:0;width:100%;height:100%}
+  .aurora-region{fill:#10283d;stroke:#335b78;stroke-width:1.6;filter:drop-shadow(0 14px 24px rgba(0,0,0,.26))}
+  .aurora-water{fill:#183950;opacity:.9}.aurora-road{stroke:#6f8aa5;stroke-width:1.15;stroke-dasharray:4 6;opacity:.55;fill:none}.aurora-grid-line{stroke:#22405d;stroke-width:.8;opacity:.45}
+  .aurora-pin{position:absolute;transform:translate(-50%,-50%);display:flex;align-items:center;gap:8px;cursor:pointer;z-index:3}
+  .aurora-pin-dot{width:22px;height:22px;border-radius:50%;border:2px solid rgba(255,255,255,.92);box-shadow:0 0 0 7px rgba(79,195,247,.13),0 10px 24px rgba(0,0,0,.45)}
+  .aurora-pin-label{background:rgba(10,20,32,.86);border:1px solid rgba(79,195,247,.28);border-radius:10px;padding:6px 9px;box-shadow:0 8px 18px rgba(0,0,0,.35);min-width:130px}
+  .aurora-pin-label b{display:block;font-size:12px;color:#fff}.aurora-pin-label span{font-size:11px;color:var(--ink2)}
+  .aurora-pin.on .aurora-pin-dot{box-shadow:0 0 0 9px rgba(79,195,247,.24),0 0 26px rgba(79,195,247,.75)}
+  /* Selected site detail card is docked inside the map, bottom-left, so users do not need to scroll. */
+  .map-selected-card{position:absolute;left:18px;bottom:18px;width:min(560px,calc(100% - 36px));max-height:210px;overflow:auto;margin:0;background:linear-gradient(90deg,rgba(8,18,30,.96),rgba(15,34,52,.92));border:1px solid rgba(79,195,247,.45);border-left:3px solid var(--ice);border-radius:14px;padding:14px 16px;box-shadow:0 18px 36px rgba(0,0,0,.42);z-index:6;backdrop-filter:blur(10px)}
+  .map-selected-card:empty{display:none}
+  .map-selected-card .close-map-card{position:absolute;right:10px;top:8px;background:transparent;border:0;color:var(--ink3);font-size:18px;cursor:pointer}
+  .map-selected-card .close-map-card:hover{color:var(--ice)}
+  .aurora-map-popup{display:grid;grid-template-columns:minmax(160px,1fr) minmax(220px,1.6fr);gap:12px;align-items:start}
+  .aurora-map-popup h4{margin:0 0 5px;font-size:16px}.aurora-map-popup .meta{font-size:12px;color:var(--ink2);margin:3px 0}.aurora-map-popup .risk{display:inline-block;margin-top:8px}
+  @media(max-width:900px){.aurora-map-popup{grid-template-columns:1fr}}
+  .aurora-map-tools{position:absolute;left:16px;top:16px;z-index:4;display:flex;gap:8px;flex-wrap:wrap}.aurora-map-tools button{background:rgba(19,38,58,.92);border:1px solid var(--line);color:var(--ink2);border-radius:9px;padding:7px 10px;font-size:12px;cursor:pointer}.aurora-map-tools button:hover{border-color:var(--ice);color:var(--ice)}
+  .map-side{max-height:640px;overflow:auto}
+
+
+
+  /* ── Geographic map v3: match enterprise mockup layout ── */
+  .map-wrap.geo-command{grid-template-columns:minmax(720px,1.65fr) minmax(390px,.95fr);gap:16px;align-items:start}
+  @media(max-width:1250px){.map-wrap.geo-command{grid-template-columns:1fr}.map-side{max-height:none!important}}
+  .geo-left{display:flex;flex-direction:column;gap:0;min-width:0}
+  .geo-map-shell{position:relative;background:linear-gradient(160deg,var(--panel),var(--bg2));border:1px solid var(--line);border-radius:14px 14px 0 0;overflow:hidden;box-shadow:var(--shadow)}
+  .geo-map-shell #projectMap{height:430px;border:0;border-radius:14px 14px 0 0;box-shadow:none;background:transparent}
+  .geo-map-shell #projectMap.aurora-schematic-map{height:430px}
+  .geo-site-detail{display:block;min-height:0;background:linear-gradient(180deg,rgba(15,34,52,.96),rgba(8,18,30,.98));border:1px solid var(--amber);border-top:0;border-radius:0 0 14px 14px;padding:16px 18px;box-shadow:0 18px 36px rgba(0,0,0,.32);position:relative;margin-bottom:14px}
+  .geo-site-detail:empty{display:none}
+  .geo-detail-head{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:12px}
+  .geo-detail-head h3{margin:0;font-size:17px}.geo-detail-close{background:transparent;border:0;color:var(--ink3);font-size:20px;cursor:pointer}.geo-detail-close:hover{color:var(--ice)}
+  .geo-detail-grid{display:grid;grid-template-columns:1.05fr 1.05fr 1fr;gap:14px;border-top:1px solid rgba(34,64,93,.72);border-bottom:1px solid rgba(34,64,93,.72);padding:12px 0}
+  @media(max-width:900px){.geo-detail-grid{grid-template-columns:1fr}}
+  .geo-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .geo-metric{background:rgba(19,38,58,.65);border:1px solid rgba(34,64,93,.8);border-radius:10px;padding:10px}.geo-metric span{display:block;color:var(--ink3);font-size:11px}.geo-metric b{font-size:18px}.geo-metric.good b{color:var(--green)}.geo-metric.warn b{color:var(--amber)}.geo-metric.red b{color:var(--red)}
+  .geo-chartbox{background:rgba(19,38,58,.45);border:1px solid rgba(34,64,93,.75);border-radius:10px;padding:12px}.geo-chartbox h4{margin:0 0 10px;font-size:12px;color:#fff}.geo-axis{height:48px;border-left:1px solid rgba(159,182,204,.25);border-bottom:1px solid rgba(159,182,204,.25);position:relative;margin:8px 8px 18px 8px}.geo-budget-line{position:absolute;left:0;top:23px;width:100%;border-top:1px dashed var(--teal);opacity:.75}.geo-forecast-bar{position:absolute;left:0;top:14px;height:19px;border-radius:4px;background:linear-gradient(90deg,var(--green),rgba(52,211,153,.35))}.geo-trend{height:90px}.geo-trend svg{width:100%;height:100%}.geo-detail-foot{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:12px;color:var(--ink2);font-size:12px}.geo-detail-foot b{display:block;color:var(--ink);margin-bottom:2px}@media(max-width:900px){.geo-detail-foot{grid-template-columns:1fr 1fr}}
+  .map-left-overlay{position:absolute;left:16px;top:16px;width:190px;z-index:5;background:linear-gradient(180deg,rgba(8,18,30,.72),rgba(8,18,30,.28));border-right:1px solid rgba(34,64,93,.6);border-radius:12px;padding:14px 12px;backdrop-filter:blur(6px)}
+  .map-left-overlay .map-legend{margin:0 0 18px 0;display:flex;flex-direction:column;gap:8px}.map-left-overlay .legend-stat{display:flex;justify-content:space-between;border-top:1px solid rgba(34,64,93,.6);padding-top:10px;margin-top:8px;font-size:12px;color:var(--ink2)}.map-left-overlay .legend-stat b{color:#fff}
+  .map-zoom-control{position:absolute;right:16px;top:16px;z-index:5;display:flex;flex-direction:column;border:1px solid var(--line);border-radius:9px;overflow:hidden}.map-zoom-control button{width:32px;height:30px;background:rgba(19,38,58,.92);border:0;border-bottom:1px solid var(--line);color:var(--ink);font-size:18px;cursor:pointer}.map-zoom-control button:last-child{border-bottom:0}.map-zoom-control button:hover{color:var(--ice)}
+  .risk-intensity{position:absolute;right:16px;bottom:16px;z-index:5;background:rgba(8,18,30,.72);border:1px solid rgba(34,64,93,.7);border-radius:10px;padding:8px 10px;font-size:10.5px;color:var(--ink2)}.risk-intensity .dots{display:flex;gap:5px;margin-top:4px;align-items:center}.risk-intensity i{width:7px;height:7px;border-radius:50%;display:block}
+  .site-card .sh::after{content:'›';font-size:24px;color:var(--ink2);margin-left:8px}.site-card.on{box-shadow:inset 0 0 0 1px rgba(79,195,247,.35)}
+  .aurora-pin-label{min-width:148px}.aurora-pin-label b{font-size:12.2px}.aurora-pin-label span{font-size:11px}
+
+
+  /* concentration analytics */
+  .concentration-layout{display:grid;grid-template-columns:1.2fr .8fr;gap:16px;margin-bottom:16px}
+  @media(max-width:1100px){.concentration-layout{grid-template-columns:1fr}}
+  .treemap{height:330px;display:grid;grid-template-columns:2.3fr 1fr 1fr;grid-template-rows:1fr 1fr;gap:8px}
+  .treemap-tile{border:1px solid var(--line);border-radius:12px;padding:14px;position:relative;overflow:hidden;background:linear-gradient(145deg,rgba(79,195,247,.18),rgba(19,38,58,.9));display:flex;flex-direction:column;justify-content:flex-end;min-height:0}
+  .treemap-tile.big{grid-row:1/3;background:linear-gradient(145deg,rgba(248,113,113,.22),rgba(19,38,58,.92));border-color:#5b2230}
+  .treemap-tile .tm-name{font-weight:750;font-size:15px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .treemap-tile .tm-val{font-size:22px;font-weight:800;margin:3px 0;color:var(--ice)}
+  .treemap-tile.big .tm-val{font-size:34px;color:var(--red)}
+  .treemap-tile .tm-sub{font-size:11.5px;color:var(--ink2)}
+  .concentration-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+  .driver-card{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:13px 14px}
+  .driver-card b{display:block;color:#fff;font-size:13px;margin-bottom:6px}
+  .driver-card span{color:var(--ink2);font-size:12px}
+  .driver-score{height:7px;background:var(--line);border-radius:6px;overflow:hidden;margin-top:9px}.driver-score i{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,var(--ice),var(--teal))}
+
 </style>
 </head>
 <body>
@@ -226,17 +385,78 @@
   <aside class="side">
     <div class="brand">
       <div class="logo"></div>
-      <div><h1>AURORA</h1><small>PROJECT &amp; COST CONTROL</small></div>
+      <div class="brand-text"><h1>AURORA</h1><small>PROJECT &amp; COST CONTROL</small></div>
     </div>
+    <button class="side-edge-toggle" id="sideEdgeToggle" type="button" aria-label="Hide navigation" title="Hide navigation">‹<span class="tip">Hide Navigation</span></button>
     <nav class="nav" id="nav">
-      <button data-v="exec" class="active"><span class="ic">◧</span> Executive Dashboard</button>
-      <button data-v="cost"><span class="ic">$</span> Cost Control</button>
-      <button data-v="sched"><span class="ic">▦</span> Schedule &amp; Milestones</button>
-      <button data-v="emg"><span class="ic">⚑</span> Emergent Projects</button>
-      <button data-v="alerts"><span class="ic">!</span> Early-Warning Alerts</button>
-      <button data-v="forum"><span class="ic">💬</span> Team Forum</button>
-      <button data-v="arch"><span class="ic">⚙</span> System &amp; Tooling</button>
-      <button data-v="rollout"><span class="ic">➜</span> Rollout &amp; ROI</button>
+      <div class="nav-group" data-group="overview">
+        <button class="nav-group-head" type="button" aria-expanded="true">
+          <span class="nav-group-title"><span class="ic">◧</span> <span class="txt">Overview</span></span><span class="nav-caret">▾</span>
+        </button>
+        <div class="nav-items">
+          <button data-v="exec" class="active"><span class="ic">◧</span> Executive Dashboard</button>
+        </div>
+      </div>
+
+      <div class="nav-group" data-group="controls">
+        <button class="nav-group-head" type="button" aria-expanded="true">
+          <span class="nav-group-title"><span class="ic">▦</span> <span class="txt">Project Controls</span></span><span class="nav-caret">▾</span>
+        </button>
+        <div class="nav-items">
+          <button data-v="cost"><span class="ic">$</span> Cost Control</button>
+          <button data-v="sched"><span class="ic">▦</span> Schedule &amp; Milestones</button>
+          <button data-v="emg"><span class="ic">⚑</span> Emergent Projects</button>
+          <button data-v="alerts"><span class="ic">!</span> Early-Warning Alerts</button>
+          <button data-v="forum"><span class="ic">💬</span> Team Forum</button>
+        </div>
+      </div>
+
+
+
+      <div class="nav-group" data-group="business">
+        <button class="nav-group-head" type="button" aria-expanded="true">
+          <span class="nav-group-title"><span class="ic">▣</span> <span class="txt">Business Center</span></span><span class="nav-caret">▾</span>
+        </button>
+        <div class="nav-items">
+          <button data-v="business"><span class="ic">▣</span> Business Overview</button>
+          <button data-v="po"><span class="ic">PO</span> PO Analysis</button>
+          <button data-v="vendor"><span class="ic">V</span> Vendor Analysis</button>
+          <button data-v="resources"><span class="ic">R</span> Resource Analysis</button>
+        </div>
+      </div>
+
+      <div class="nav-group" data-group="analytics">
+        <button class="nav-group-head" type="button" aria-expanded="true">
+          <span class="nav-group-title"><span class="ic">◇</span> <span class="txt">Advanced Analytics</span></span><span class="nav-caret">▾</span>
+        </button>
+        <div class="nav-items">
+          <button data-v="concentration"><span class="ic">▧</span> Risk &amp; Concentration</button>
+          <button data-v="abc"><span class="ic">A</span> ABC Analysis</button>
+          <button data-v="dupont"><span class="ic">◇</span> DuPont Analysis</button>
+          <button data-v="eva"><span class="ic">EV</span> Earned Value</button>
+          <button data-v="pareto"><span class="ic">▲</span> Pareto Analysis</button>
+          <button data-v="whatif"><span class="ic">◈</span> What-If Simulator</button>
+        </div>
+      </div>
+
+      <div class="nav-group" data-group="geography">
+        <button class="nav-group-head" type="button" aria-expanded="true">
+          <span class="nav-group-title"><span class="ic">⌖</span> <span class="txt">Geographic View</span></span><span class="nav-caret">▾</span>
+        </button>
+        <div class="nav-items">
+          <button data-v="map"><span class="ic">⌖</span> Geographic Risk Map</button>
+        </div>
+      </div>
+
+      <div class="nav-group" data-group="platform">
+        <button class="nav-group-head" type="button" aria-expanded="true">
+          <span class="nav-group-title"><span class="ic">⚙</span> <span class="txt">Platform</span></span><span class="nav-caret">▾</span>
+        </button>
+        <div class="nav-items">
+          <button data-v="arch"><span class="ic">⚙</span> System &amp; Tooling</button>
+          <button data-v="rollout"><span class="ic">➜</span> Rollout &amp; ROI</button>
+        </div>
+      </div>
     </nav>
     <div class="foot">
       Prototype for <b>Canadian Royalties Inc. / Nunavik Nickel</b><br><br>
@@ -248,6 +468,27 @@
   <!-- MAIN -->
   <main class="main">
 
+    <!-- ============ ENTERPRISE TOP BAR ============ -->
+    <header class="enterprise-top">
+      <button class="sidebar-toggle" id="sidebarToggle" type="button" title="Show / hide navigation">☰</button>
+      <div class="et-title"><div><strong>AURORA </strong><span>Portfolio command center · Canadian Royalties / Nunavik Nickel</span></div></div>
+      <div class="top-search">
+        <input id="globalSearch" type="text" placeholder="Search modules, projects, sites, analytics…" autocomplete="off">
+        <span class="mag">⌕</span>
+        <div class="search-results" id="searchResults"></div>
+      </div>
+      <div class="top-actions">
+        <button class="icon-btn" id="themeToggle" type="button" title="Toggle dark / light mode">☾</button>
+        <button class="icon-btn" id="notifToggle" type="button" title="Notifications">🔔<span class="badge-dot">12</span></button>
+      </div>
+    </header>
+    <div class="notif-panel" id="notifPanel">
+      <h3>Notification Center</h3>
+      <div class="notif-item"><b>Critical cost alert</b><br>600 — EX Cell 4 remains the largest portfolio exposure.</div>
+      <div class="notif-item"><b>Schedule risk</b><br>470 — BD Dépoussiéreur has the worst baseline slip.</div>
+      <div class="notif-item"><b>Emergent project</b><br>$0 budget projects require stage-gate review.</div>
+    </div>
+
     <!-- ============ EXEC ============ -->
     <section class="view active" id="v-exec">
       <div class="topbar">
@@ -256,14 +497,14 @@
         <div class="pill"><span class="dot"></span> 8 sites · 60+ active projects · data as of 02 Jun 2026</div>
       </div>
 
-      <div class="banner" id="execBanner">⚠ <div><b>Portfolio is forecast $120.3M (48%) over budget.</b> Five of eight sites are over; $15.1M of work is unbudgeted (emergent). Critical milestones are slipping up to 553 days vs baseline.</div></div>
+      <div class="banner">⚠ <div><b>Portfolio is forecast $120.3M (48%) over budget.</b> Five of eight sites are over; $15.1M of work is unbudgeted (emergent). Critical milestones are slipping up to 553 days vs baseline.</div></div>
 
       <div class="kpis">
-        <div class="kpi warn"><div class="spark">$</div><div class="lab">Forecast at Completion</div><div class="val" id="kpiForecast">$369.6M</div><div class="sub" id="kpiCommitted">Committed to date: $249.3M</div></div>
-        <div class="kpi warn"><div class="lab">Budget Variance (F/B)</div><div class="val" id="kpiVar">−$120.3M</div><div class="sub" id="kpiVarSub">48.3% over corporate budget</div></div>
-        <div class="kpi"><div class="lab">Approved Budget</div><div class="val" id="kpiBudget">$249.3M</div><div class="sub" id="kpiBudgetSub">Across 8 sites</div></div>
-        <div class="kpi warn"><div class="lab">Emergent / Unbudgeted</div><div class="val" id="kpiEmg">$15.1M</div><div class="sub" id="kpiEmgSub">4 projects with $0 baseline</div></div>
-        <div class="kpi warn"><div class="lab">Sites Over Budget</div><div class="val" id="kpiSites">5 / 8</div><div class="sub">By forecast vs budget</div></div>
+        <div class="kpi warn"><div class="spark">$</div><div class="lab">Forecast at Completion</div><div class="val">$369.6M</div><div class="sub">Committed to date: $249.3M</div></div>
+        <div class="kpi warn"><div class="lab">Budget Variance (F/B)</div><div class="val">−$120.3M</div><div class="sub">48.3% over corporate budget</div></div>
+        <div class="kpi"><div class="lab">Approved Budget</div><div class="val">$249.3M</div><div class="sub">Across 8 sites</div></div>
+        <div class="kpi warn"><div class="lab">Emergent / Unbudgeted</div><div class="val">$15.1M</div><div class="sub">4 projects with $0 baseline</div></div>
+        <div class="kpi warn"><div class="lab">Sites Over Budget</div><div class="val">5 / 8</div><div class="sub">BD · Expo · UG Expo · Ivakkak · Mequillon</div></div>
         <div class="kpi warn"><div class="lab">Worst Schedule Slip</div><div class="val">−553 d</div><div class="sub">470 — BD Dépoussiéreur</div></div>
       </div>
 
@@ -299,13 +540,6 @@
       <div class="topbar">
         <div><h2>Cost Control &amp; Variance</h2>
           <p>The module the company lacks today: every project's committed cost vs forecast vs budget, with automatic over-budget flags so overspend is caught in days, not at year-end.</p></div>
-      </div>
-      <div class="rowbtns">
-        <button class="btnp" onclick="newProject()">+ New project</button>
-        <button class="btns" onclick="openCommit()">＋ Log commitment / PO</button>
-        <button class="btns" onclick="exportData()">⤓ Export data</button>
-        <button class="btns" onclick="resetData()">↺ Reset to baseline</button>
-        <span class="hint">Tip: click any project row to manage its budget, forecast & commitments.</span>
       </div>
       <div class="ctrl">
         <label style="color:var(--ink2);font-size:12.5px">Site</label>
@@ -365,16 +599,16 @@
           <p>Your core pain point, made visible. Without detailed upfront planning, unbudgeted work appears mid-year. AURORA isolates every project carrying a $0 baseline so leadership sees reactive spend the instant it is committed.</p></div>
       </div>
       <div class="kpis">
-        <div class="kpi warn"><div class="lab">Unbudgeted forecast</div><div class="val" id="emgKpiTotal">$15.1M</div><div class="sub" id="emgKpiCount">4 projects</div></div>
-        <div class="kpi warn"><div class="lab">Largest single</div><div class="val" id="emgKpiLargest">$9.94M</div><div class="sub" id="emgKpiLargestSub">547 — MQ Ventilation Principale no2</div></div>
-        <div class="kpi"><div class="lab">% of total overrun</div><div class="val" id="emgKpiPct">13%</div><div class="sub">of the portfolio variance</div></div>
+        <div class="kpi warn"><div class="lab">Unbudgeted forecast</div><div class="val">$15.1M</div><div class="sub">4 projects with no approved budget</div></div>
+        <div class="kpi warn"><div class="lab">Largest single</div><div class="val">$9.94M</div><div class="sub">547 — MQ Ventilation Principale no2</div></div>
+        <div class="kpi"><div class="lab">% of total overrun</div><div class="val">13%</div><div class="sub">of the $120.3M variance</div></div>
         <div class="kpi"><div class="lab">Detection today</div><div class="val">Year-end</div><div class="sub">AURORA: at commitment</div></div>
       </div>
       <div class="card">
         <h3>Emergent project register</h3>
         <div class="csub">Auto-flagged: forecast &gt; $0 against a $0 corporate budget.</div>
         <table>
-          <thead><tr><th>Project</th><th>Site</th><th class="num">Forecast</th><th class="num">Budget</th><th>Why it's flagged</th><th>Stage-gate</th></tr></thead>
+          <thead><tr><th>Project</th><th>Site</th><th class="num">Forecast</th><th class="num">Budget</th><th>Why it's flagged</th></tr></thead>
           <tbody id="emgBody"></tbody>
         </table>
       </div>
@@ -388,36 +622,8 @@
           <p>The engine running underneath every view. Rules fire automatically on cost, schedule and procurement signals — pushed to email / Teams so issues reach a manager the same week, not the next quarterly review.</p></div>
         <div class="pill"><span class="dot" style="background:var(--red);box-shadow:0 0 8px var(--red)"></span> <span id="alertCount">0</span> active alerts</div>
       </div>
-      <div class="rowbtns">
-        <button class="btnp" onclick="runCheck()">⟳ Run check now</button>
-        <label style="color:var(--ink2);font-size:12.5px">Show</label>
-        <select id="alFilter" onchange="renderAlerts()" style="background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:7px 10px;font-size:12.5px">
-          <option value="active">Active (new + acknowledged)</option>
-          <option value="all">All including resolved</option>
-          <option value="new">New only</option>
-          <option value="crit">Critical only</option>
-        </select>
-        <span class="hint">Acknowledge, assign or resolve each alert. State is saved.</span>
-      </div>
       <div id="alertFeed"></div>
-
-      <div class="grid g2b" style="margin-top:18px">
-        <div class="card">
-          <h3>Alert rules</h3>
-          <div class="csub">Toggle rules on/off and set thresholds. Owned by Finance &amp; the PMO — not hard-coded.</div>
-          <div id="ruleList"></div>
-        </div>
-        <div class="card">
-          <h3>What-if simulator</h3>
-          <div class="csub">Test a new commitment <i>before</i> it's raised — see which alerts it would trigger. Proactive, not reactive.</div>
-          <div class="field"><label>Project</label><select id="simProj"></select></div>
-          <div class="field"><label>New commitment amount ($)</label>
-            <div class="row2"><input type="number" id="simAmt" placeholder="e.g. 2000000" min="0">
-            <button class="btnp" onclick="runSim()">Simulate</button></div></div>
-          <div class="simout" id="simOut"></div>
-        </div>
-      </div>
-      <div class="note">Each alert is a configurable rule: <b>cost</b> (variance &gt; threshold, commitment &gt; budget), <b>schedule</b> (baseline slip &gt; N days), <b>emergent</b> (commitment against $0 budget). Rules and thresholds are managed above; in production these also push to email / Teams.</div>
+      <div class="note">Each alert is a configurable rule: <b>cost</b> (variance &gt; threshold, commitment &gt; budget), <b>schedule</b> (baseline slip &gt; N days, 0% complete past start), <b>procurement</b> (PO past sealift cut-off, long-lead item not ordered). Thresholds are owned by Finance &amp; the PMO, not hard-coded.</div>
     </section>
 
     <!-- ============ FORUM ============ -->
@@ -447,6 +653,442 @@
       <div class="fbar" id="forumFilter"></div>
       <div id="threadList"></div>
     </section>
+
+    <!-- ============ BUSINESS CENTER ============ -->
+    <section class="view" id="v-business">
+      <div class="topbar">
+        <div><h2>Business Center — PO &amp; Resource Intelligence</h2>
+          <p>A business-control layer for purchase orders, requisitions, change orders, contractors, materials, engineering, logistics and approvals. It connects project cost risk with the operational resources behind the numbers.</p></div>
+        <div class="pill"><span class="dot" style="background:var(--amber);box-shadow:0 0 8px var(--amber)"></span> PO · Resources · Vendors · Logistics</div>
+      </div>
+
+      <div class="kpis">
+        <div class="kpi warn"><div class="lab">Open PO / Req Exposure</div><div class="val" id="bizOpenCommit">—</div><div class="sub">Open package value monitored by Business Center</div></div>
+        <div class="kpi warn"><div class="lab">High-risk PO Packages</div><div class="val" id="bizHighRisk">—</div><div class="sub">Require management review</div></div>
+        <div class="kpi"><div class="lab">Resource Categories</div><div class="val">6</div><div class="sub">Vendor, labor, engineering, materials, logistics, approvals</div></div>
+        <div class="kpi"><div class="lab">Business Focus</div><div class="val">PO → Risk</div><div class="sub">From transaction tracking to decision support</div></div>
+      </div>
+
+      <div class="card" style="margin-bottom:16px">
+        <h3>Procurement Pipeline</h3>
+        <div class="csub">Tracks where each package is sitting: intake, requisition, issued PO, change order, fabrication, logistics or closeout.</div>
+        <div class="pipeline">
+          <div class="pipe-step"><span>Intake</span><b id="pipeIntake">—</b><small style="color:var(--ink3)">scope not yet controlled</small></div>
+          <div class="pipe-step"><span>Requisition</span><b id="pipeReq">—</b><small style="color:var(--ink3)">awaiting PO / approval</small></div>
+          <div class="pipe-step"><span>Issued / CO</span><b id="pipeIssued">—</b><small style="color:var(--ink3)">committed cost active</small></div>
+          <div class="pipe-step"><span>Fabrication</span><b id="pipeFab">—</b><small style="color:var(--ink3)">vendor execution</small></div>
+          <div class="pipe-step"><span>Logistics</span><b id="pipeLog">—</b><small style="color:var(--ink3)">delivery / sealift risk</small></div>
+          <div class="pipe-step"><span>Closed</span><b id="pipeDone">—</b><small style="color:var(--ink3)">closeout / documentation</small></div>
+        </div>
+      </div>
+
+      <div class="biz-grid" style="margin-bottom:16px">
+        <div class="card">
+          <h3>PO / Package Value by Site</h3>
+          <div class="csub">Shows where committed procurement exposure is concentrated.</div>
+          <canvas id="chartPoBySite" height="210"></canvas>
+        </div>
+        <div class="card">
+          <h3>Resource Mix</h3>
+          <div class="csub">Approximate operational resource load behind active projects.</div>
+          <canvas id="chartResourceMix" height="210"></canvas>
+        </div>
+      </div>
+
+      <div class="biz-grid">
+        <div class="card scroll" style="padding:0;max-height:480px">
+          <table>
+            <thead><tr><th>PO / Package</th><th>Project / Site</th><th>Resource</th><th class="num">Value</th><th>Stage</th><th>Risk</th></tr></thead>
+            <tbody id="poRiskBody"></tbody>
+          </table>
+        </div>
+        <div class="card">
+          <h3>Resource Intelligence</h3>
+          <div class="csub">Other resources that can be analyzed beyond PO cost.</div>
+          <div id="resourceCards"></div>
+          <div class="note">Recommended next data expansion: vendor master, PO dates, requisition dates, expected delivery dates, sealift window, contract owner, invoice status, receiving status, engineering approval status and document closeout status.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ PO ANALYSIS ============ -->
+    <section class="view" id="v-po">
+      <div class="topbar">
+        <div><h2>PO Analysis — Procurement Control Center</h2>
+          <p>Dedicated purchase-order intelligence: open commitments, stage aging, change orders, risk reasons and site exposure separated from vendor and resource views.</p></div>
+        <div class="pill"><span class="dot" style="background:var(--amber);box-shadow:0 0 8px var(--amber)"></span> PO · Req · CO · Closeout</div>
+      </div>
+      <div class="kpis">
+        <div class="kpi warn"><div class="lab">Open PO / Req Value</div><div class="val" id="poOpenValue">—</div><div class="sub">Excludes closed packages</div></div>
+        <div class="kpi warn"><div class="lab">High-risk Packages</div><div class="val" id="poHighRiskCount">—</div><div class="sub">Management review required</div></div>
+        <div class="kpi"><div class="lab">Total Packages</div><div class="val" id="poTotalCount">—</div><div class="sub">PO, requisition and CO records</div></div>
+        <div class="kpi"><div class="lab">Largest PO / Package</div><div class="val" id="poLargestValue">—</div><div class="sub" id="poLargestName">—</div></div>
+      </div>
+      <div class="card" style="margin-bottom:16px">
+        <h3>PO Pipeline by Stage</h3>
+        <div class="csub">A procurement workflow view from intake to closeout.</div>
+        <div class="pipeline" id="poPipelineDetailed"></div>
+      </div>
+      <div class="biz-grid" style="margin-bottom:16px">
+        <div class="card"><h3>PO Value by Site</h3><div class="csub">Where procurement commitment is concentrated.</div><canvas id="chartPoSiteDetail" height="220"></canvas></div>
+        <div class="card"><h3>PO Risk Mix</h3><div class="csub">High, medium and low risk package counts.</div><canvas id="chartPoRiskMix" height="220"></canvas></div>
+      </div>
+      <div class="card scroll" style="padding:0;max-height:520px">
+        <table><thead><tr><th>PO / Package</th><th>Project</th><th>Site</th><th>Stage</th><th class="num">Value</th><th>Risk</th><th>Control Action</th></tr></thead><tbody id="poDetailBody"></tbody></table>
+      </div>
+    </section>
+
+    <!-- ============ VENDOR ANALYSIS ============ -->
+    <section class="view" id="v-vendor">
+      <div class="topbar">
+        <div><h2>Vendor Analysis — Supplier & Contractor Intelligence</h2>
+          <p>Vendor-facing view for long-lead suppliers, contractors, engineering partners and logistics providers. It shows dependency concentration, risk level and follow-up actions.</p></div>
+        <div class="pill"><span class="dot"></span> Supplier risk · dependency · performance</div>
+      </div>
+      <div class="kpis">
+        <div class="kpi warn"><div class="lab">Vendor Exposure</div><div class="val" id="vendorExposure">—</div><div class="sub">PO value mapped to vendor groups</div></div>
+        <div class="kpi warn"><div class="lab">High Dependency Vendors</div><div class="val" id="vendorHighDep">—</div><div class="sub">Large value or critical path impact</div></div>
+        <div class="kpi"><div class="lab">Vendor Groups</div><div class="val" id="vendorCount">—</div><div class="sub">Current prototype vendor master</div></div>
+        <div class="kpi"><div class="lab">Top Vendor Share</div><div class="val" id="vendorTopShare">—</div><div class="sub" id="vendorTopName">—</div></div>
+      </div>
+      <div class="biz-grid" style="margin-bottom:16px">
+        <div class="card"><h3>Vendor Exposure Ranking</h3><div class="csub">Largest supplier / contractor dependency by committed package value.</div><canvas id="chartVendorExposure" height="240"></canvas></div>
+        <div class="card"><h3>Vendor Risk Profile</h3><div class="csub">Combines criticality, delivery sensitivity and document / approval dependency.</div><canvas id="chartVendorRisk" height="240"></canvas></div>
+      </div>
+      <div class="card scroll" style="padding:0;max-height:520px">
+        <table><thead><tr><th>Vendor / Resource Partner</th><th>Category</th><th class="num">Exposure</th><th>Criticality</th><th>Related PO / Project</th><th>Recommended Action</th></tr></thead><tbody id="vendorBody"></tbody></table>
+      </div>
+      <div class="note">In the production version, this module should connect to vendor master data, contract owner, delivery dates, quality issues, invoice status, expediting notes and document submittal status.</div>
+    </section>
+
+    <!-- ============ RESOURCE ANALYSIS ============ -->
+    <section class="view" id="v-resources">
+      <div class="topbar">
+        <div><h2>Resource Analysis — Labor, Materials, Engineering & Logistics</h2>
+          <p>Separates non-PO operational resources from procurement records: labor load, material categories, engineering approvals, logistics windows, documents and site support.</p></div>
+        <div class="pill"><span class="dot" style="background:var(--green);box-shadow:0 0 8px var(--green)"></span> Resource load · bottlenecks · capacity</div>
+      </div>
+      <div class="kpis">
+        <div class="kpi warn"><div class="lab">Largest Resource Load</div><div class="val" id="resLargestPct">—</div><div class="sub" id="resLargestName">—</div></div>
+        <div class="kpi warn"><div class="lab">Bottleneck Categories</div><div class="val" id="resBottlenecks">—</div><div class="sub">Above monitoring threshold</div></div>
+        <div class="kpi"><div class="lab">Resource Categories</div><div class="val" id="resCategoryCount">—</div><div class="sub">Tracked in this prototype</div></div>
+        <div class="kpi"><div class="lab">Control Objective</div><div class="val">Capacity</div><div class="sub">Match resources to project risk</div></div>
+      </div>
+      <div class="biz-grid" style="margin-bottom:16px">
+        <div class="card"><h3>Resource Load Mix</h3><div class="csub">Approximate share of operational load by resource category.</div><canvas id="chartResourceDetail" height="240"></canvas></div>
+        <div class="card"><h3>Resource Bottleneck Heatmap</h3><div class="csub">Higher values indicate categories that need active expediting or capacity planning.</div><div id="resourceHeatmap"></div></div>
+      </div>
+      <div class="card scroll" style="padding:0;max-height:520px">
+        <table><thead><tr><th>Resource Category</th><th>Scope Covered</th><th class="num">Load</th><th>Bottleneck Signal</th><th>Primary Risk</th><th>Recommended Control</th></tr></thead><tbody id="resourceDetailBody"></tbody></table>
+      </div>
+    </section>
+
+
+    <!-- ============ RISK & CONCENTRATION ANALYSIS ============ -->
+    <section class="view" id="v-concentration">
+      <div class="topbar">
+        <div><h2>Risk &amp; Concentration Analysis</h2>
+          <p>Executive concentration view for the portfolio: where exposure, vendors, PO value, resources and schedule delay are concentrated before drilling into Pareto or ABC priority lists.</p></div>
+        <div class="pill"><span class="dot" style="background:var(--amber);box-shadow:0 0 8px var(--amber)"></span> Portfolio concentration cockpit</div>
+      </div>
+
+      <div class="kpis">
+        <div class="kpi warn"><div class="lab">Dominant site exposure</div><div class="val" id="concTopSite">—</div><div class="sub" id="concTopSiteSub">—</div></div>
+        <div class="kpi warn"><div class="lab">Top project concentration</div><div class="val" id="concTopProjectPct">—</div><div class="sub" id="concTopProjectName">—</div></div>
+        <div class="kpi"><div class="lab">Top vendors spend share</div><div class="val" id="concVendorShare">—</div><div class="sub">Vendor concentration risk</div></div>
+        <div class="kpi"><div class="lab">Resource bottleneck</div><div class="val" id="concResourceTop">—</div><div class="sub" id="concResourceSub">—</div></div>
+      </div>
+
+      <div class="concentration-layout">
+        <div class="card">
+          <h3>Portfolio concentration treemap</h3>
+          <div class="csub">Tile size is proportional to site forecast exposure. This shows whether risk is structurally concentrated or distributed.</div>
+          <div class="treemap" id="concTreemap"></div>
+        </div>
+        <div class="card">
+          <h3>Exposure concentration by site</h3>
+          <div class="csub">Forecast share by site across the capital portfolio.</div>
+          <canvas id="chartConcSiteShare" height="260"></canvas>
+        </div>
+      </div>
+
+      <div class="grid g2" style="margin-bottom:16px">
+        <div class="card"><h3>Vendor / PO concentration</h3><div class="csub">Shows whether spend is concentrated in a few suppliers or packages.</div><canvas id="chartConcVendorPO" height="220"></canvas></div>
+        <div class="card"><h3>Resource concentration</h3><div class="csub">Approximate load share by resource category.</div><canvas id="chartConcResource" height="220"></canvas></div>
+      </div>
+
+      <div class="card" style="margin-bottom:16px">
+        <h3>Management interpretation</h3>
+        <div class="concentration-strip" id="concDriverCards"></div>
+      </div>
+
+      <div class="card scroll" style="padding:0;max-height:420px">
+        <table><thead><tr><th>Concentration area</th><th>Primary driver</th><th class="num">Value / Share</th><th>Risk signal</th><th>Recommended action</th></tr></thead><tbody id="concTableBody"></tbody></table>
+      </div>
+    </section>
+
+    <!-- ============ ABC ANALYSIS ============ -->
+    <section class="view" id="v-abc">
+      <div class="topbar">
+        <div><h2>ABC Analysis — Management Priority Classification</h2>
+          <p>Classifies over-budget and unbudgeted projects by cumulative contribution to total exposure. A = vital few driving 80% of the risk, B = next 15%, C = remaining tail.</p></div>
+        <div class="pill"><span class="dot" style="background:var(--amber);box-shadow:0 0 8px var(--amber)"></span> A / B / C risk segmentation</div>
+      </div>
+      <div class="kpis">
+        <div class="kpi warn"><div class="lab">A-class exposure</div><div class="val" id="abcAExposure">—</div><div class="sub">Top items requiring executive recovery</div></div>
+        <div class="kpi warn"><div class="lab">A-class projects</div><div class="val" id="abcACount">—</div><div class="sub">Vital few</div></div>
+        <div class="kpi"><div class="lab">B-class exposure</div><div class="val" id="abcBExposure">—</div><div class="sub">PMO monitoring group</div></div>
+        <div class="kpi good"><div class="lab">C-class exposure</div><div class="val" id="abcCExposure">—</div><div class="sub">Standard control</div></div>
+      </div>
+      <div class="grid g2" style="margin-bottom:16px">
+        <div class="card"><h3>ABC classes by overrun</h3><div class="csub">Dollar exposure grouped by ABC class.</div><canvas id="chartABCClass" height="180"></canvas></div>
+        <div class="card"><h3>Cumulative exposure curve</h3><div class="csub">Ranked projects accumulate quickly; this identifies the vital few.</div><canvas id="chartABCCurve" height="180"></canvas></div>
+      </div>
+      <div class="card scroll" style="padding:0">
+        <table><thead><tr><th>Class</th><th>Project</th><th>Site</th><th class="num">Exposure</th><th class="num">Share</th><th class="num">Cumulative</th><th>Management action</th></tr></thead><tbody id="abcModuleBody"></tbody></table>
+      </div>
+      <div class="note">Use this as the weekly management focus list: A-class items require named owners and recovery actions; B-class items stay under PMO watch; C-class items remain in standard cost control.</div>
+    </section>
+
+    <!-- ============ DUPONT ANALYSIS ============ -->
+    <section class="view" id="v-dupont">
+      <div class="topbar">
+        <div><h2>DuPont-style Cost Driver Analysis</h2>
+          <p>Translates portfolio variance into operational drivers: budget coverage, forecast pressure, committed-cost lock-in, and estimate-to-complete exposure.</p></div>
+        <div class="pill"><span class="dot"></span> Driver tree for cost performance</div>
+      </div>
+      <div class="kpis">
+        <div class="kpi warn"><div class="lab">Forecast pressure</div><div class="val" id="dpPressure">—</div><div class="sub">Forecast ÷ Budget</div></div>
+        <div class="kpi"><div class="lab">Budget coverage</div><div class="val" id="dpCoverage">—</div><div class="sub">Budget ÷ Forecast</div></div>
+        <div class="kpi warn"><div class="lab">Commitment lock-in</div><div class="val" id="dpLockin">—</div><div class="sub">Committed ÷ Forecast</div></div>
+        <div class="kpi"><div class="lab">ETC exposure</div><div class="val" id="dpETC">—</div><div class="sub">Forecast − Committed</div></div>
+      </div>
+      <div class="grid g2" style="margin-bottom:16px">
+        <div class="card"><h3>Cost driver decomposition by site</h3><div class="csub">Shows where forecast pressure is driven by weak budget coverage or remaining ETC exposure.</div><canvas id="chartDupontModule" height="190"></canvas></div>
+        <div class="card"><h3>DuPont driver tree</h3><div class="csub">Portfolio cost performance expressed as connected ratios.</div>
+          <div class="flow" style="grid-template-columns:1fr 1fr">
+            <div class="node"><div class="nh">① Forecast Pressure</div><ul><li id="dpNode1">Forecast / Budget = —</li><li>Higher than 100% means over budget.</li></ul></div>
+            <div class="node"><div class="nh">② Budget Coverage</div><ul><li id="dpNode2">Budget / Forecast = —</li><li>Shows how much of forecast is funded.</li></ul></div>
+            <div class="node"><div class="nh">③ Commitment Lock-in</div><ul><li id="dpNode3">Committed / Forecast = —</li><li>Already difficult to reverse.</li></ul></div>
+            <div class="node"><div class="nh">④ ETC Exposure</div><ul><li id="dpNode4">ETC = —</li><li>Remaining controllable forecast.</li></ul></div>
+          </div>
+        </div>
+      </div>
+      <div class="card scroll" style="padding:0"><table><thead><tr><th>Site</th><th class="num">Forecast</th><th class="num">Budget</th><th class="num">Variance</th><th class="num">Forecast Pressure</th><th class="num">Budget Coverage</th><th>Interpretation</th></tr></thead><tbody id="dupontBody"></tbody></table></div>
+    </section>
+
+    <!-- ============ EARNED VALUE ANALYSIS ============ -->
+    <section class="view" id="v-eva">
+      <div class="topbar">
+        <div><h2>Earned Value Analysis — Cost & Schedule Performance</h2>
+          <p>Combines physical progress with cost. EV = Budget × % Complete; AC = committed cost; PV is approximated from baseline schedule progress. CPI and SPI highlight execution efficiency.</p></div>
+        <div class="pill"><span class="dot" style="background:var(--green);box-shadow:0 0 8px var(--green)"></span> EV · AC · CPI · SPI</div>
+      </div>
+      <div class="kpis">
+        <div class="kpi"><div class="lab">Portfolio EV</div><div class="val" id="evaEV">—</div><div class="sub">Earned value to date</div></div>
+        <div class="kpi warn"><div class="lab">Portfolio AC</div><div class="val" id="evaAC">—</div><div class="sub">Committed cost</div></div>
+        <div class="kpi warn"><div class="lab">Cost Performance Index</div><div class="val" id="evaCPI">—</div><div class="sub">EV ÷ AC</div></div>
+        <div class="kpi warn"><div class="lab">Projects CPI &lt; 1.0</div><div class="val" id="evaBadCount">—</div><div class="sub">Require cost review</div></div>
+      </div>
+      <div class="grid g2" style="margin-bottom:16px">
+        <div class="card"><h3>Lowest CPI projects</h3><div class="csub">EV vs AC for projects with committed cost.</div><canvas id="chartEVAModule" height="210"></canvas></div>
+        <div class="card"><h3>CPI / SPI risk matrix</h3><div class="csub">Cost efficiency and schedule efficiency in one view.</div><canvas id="chartEVAMatrix" height="210"></canvas></div>
+      </div>
+      <div class="card scroll" style="padding:0"><table><thead><tr><th>Project</th><th>Site</th><th class="num">EV</th><th class="num">AC</th><th class="num">CV</th><th class="num">CPI</th><th class="num">SPI</th><th>Health</th></tr></thead><tbody id="evaBody"></tbody></table></div>
+      <div class="note">A project can look acceptable on budget variance alone but still have poor earned value if progress is low relative to committed cost. This module connects cost control to actual delivery performance.</div>
+    </section>
+
+    <!-- ============ PARETO ============ -->
+    <section class="view" id="v-pareto">
+      <div class="topbar">
+        <div><h2>Pareto Analysis — Where the Overrun Lives</h2>
+          <p>80/20 decomposition of the $120.3M portfolio overrun. Identify the vital few projects, sites, and categories driving the majority of cost exposure.</p></div>
+        <div class="pill"><span class="dot" style="background:var(--amber);box-shadow:0 0 8px var(--amber)"></span> 80% rule applied</div>
+      </div>
+
+      <!-- Segment selector -->
+      <div class="seg-tabs" id="paretoTabs">
+        <span class="seg-tab on" data-seg="project">By Project</span>
+        <span class="seg-tab" data-seg="site">By Site</span>
+        <span class="seg-tab" data-seg="type">By Variance Type</span>
+      </div>
+
+      <!-- KPIs -->
+      <div class="kpis" style="margin-bottom:20px">
+        <div class="kpi warn"><div class="lab">Total Overrun</div><div class="val" id="pk-total">$120.3M</div><div class="sub">Portfolio-wide</div></div>
+        <div class="kpi warn"><div class="lab">80% explained by</div><div class="val" id="pk-n80">— projects</div><div class="sub" id="pk-n80sub">of <span id="pk-total-n">—</span> total</div></div>
+        <div class="kpi warn"><div class="lab">Top 1 concentration</div><div class="val" id="pk-top1pct">—%</div><div class="sub" id="pk-top1name">—</div></div>
+        <div class="kpi"><div class="lab">80/20 ratio</div><div class="val" id="pk-ratio">—</div><div class="sub">Projects causing 80% of overrun</div></div>
+      </div>
+
+      <!-- Main pareto bar chart -->
+      <div class="card" style="margin-bottom:16px">
+        <h3 id="paretoTitle">Overrun by Project — ranked largest to smallest</h3>
+        <div class="csub">Orange line = cumulative % of total overrun. The 80% threshold is marked.</div>
+        <div style="padding:8px 0 4px 0">
+          <div class="pct-axis">
+            <span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span>
+          </div>
+          <div id="paretoChart"></div>
+        </div>
+        <div style="display:flex;gap:20px;margin-top:10px;font-size:12px;color:var(--ink2)">
+          <span><i class="sw" style="background:#f87171;border-radius:3px"></i> &nbsp;Over budget — crosses 80% line</span>
+          <span><i class="sw" style="background:#4fc3f7;border-radius:3px"></i> &nbsp;Over budget — tail</span>
+          <span><i class="sw" style="background:var(--line);border-radius:3px"></i> &nbsp;Under/on budget (excluded from overrun)</span>
+          <span style="display:flex;align-items:center;gap:5px"><span style="display:inline-block;width:10px;height:10px;background:var(--amber);border-radius:2px"></span> Cumulative % line</span>
+        </div>
+        <div id="paretoInsight" class="pareto-insight"></div>
+      </div>
+
+      <!-- Quadrant analysis -->
+      <div class="quad-grid">
+        <div class="card">
+          <h3>🎯 Vital Few vs Useful Many</h3>
+          <div class="csub">Projects split by their share of total overrun.</div>
+          <div id="vitalFewList"></div>
+        </div>
+        <div class="card">
+          <h3>📊 Cumulative Curve</h3>
+          <div class="csub">Classic Pareto S-curve — how quickly the overrun concentrates.</div>
+          <canvas id="chartParetoCurve" height="200"></canvas>
+        </div>
+      </div>
+
+      <!-- Site breakdown always visible -->
+      <div class="card" style="margin-top:16px">
+        <h3>Site-level Pareto summary</h3>
+        <div class="csub">How much of each site's overrun is driven by its top project.</div>
+        <table>
+          <thead><tr>
+            <th>Site</th>
+            <th class="num">Site Overrun $</th>
+            <th class="num">Largest Project</th>
+            <th class="num">Project Overrun $</th>
+            <th class="num">Concentration</th>
+            <th>Risk</th>
+          </tr></thead>
+          <tbody id="sitePareto"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============ WHAT-IF ============ -->
+    <section class="view" id="v-whatif">
+      <div class="topbar">
+        <div><h2>What-If Scenario Simulator</h2>
+          <p>Drag sliders to model recovery scenarios. See how budget approvals, scope reductions, and risk mitigations shift the portfolio forecast in real time.</p></div>
+        <div class="pill" style="gap:10px">
+          <span>Scenarios:</span>
+          <button class="scenario-btn" id="scnReset">↺ Reset all</button>
+          <button class="scenario-btn" id="scnBase">Optimistic</button>
+          <button class="scenario-btn" id="scnWorst">Worst case</button>
+          <button class="scenario-btn" id="scnMgmt">Management target</button>
+        </div>
+      </div>
+
+      <!-- Summary KPIs -->
+      <div class="wi-kpi-row">
+        <div class="wi-kpi">
+          <div class="wk-lab">Baseline Forecast</div>
+          <div class="wk-val" style="color:var(--red)">$369.6M</div>
+          <div class="wk-sub">Current (no intervention)</div>
+        </div>
+        <div class="wi-kpi">
+          <div class="wk-lab">Adjusted Forecast</div>
+          <div class="wk-val" id="wi-adj-forecast">$369.6M</div>
+          <div class="wk-sub">With your scenario applied</div>
+        </div>
+        <div class="wi-kpi">
+          <div class="wk-lab">Variance vs Budget</div>
+          <div class="wk-val" id="wi-variance">−$120.3M</div>
+          <div class="wk-sub">Budget: $249.3M &nbsp;|&nbsp; <span id="wi-varpct">−48.3%</span></div>
+        </div>
+      </div>
+
+      <div class="wi-grid">
+        <!-- Left: sliders -->
+        <div>
+          <div class="card" style="margin-bottom:14px">
+            <h3>🔴 High-risk projects — forecast reduction levers</h3>
+            <div class="csub">Each slider adjusts the forecast for that project. Negative = savings vs current forecast.</div>
+            <div id="wi-sliders-over"></div>
+          </div>
+          <div class="card">
+            <h3>⚑ Emergent projects — budget approval / scope</h3>
+            <div class="csub">Toggle how much of the unbudgeted spend gets formally approved or cut.</div>
+            <div id="wi-sliders-emg"></div>
+          </div>
+        </div>
+
+        <!-- Right: live results -->
+        <div>
+          <div class="card" style="margin-bottom:14px">
+            <h3>Live impact by project</h3>
+            <div class="csub">How your scenario changes each project's forecast vs budget.</div>
+            <canvas id="wi-chart-delta" height="280"></canvas>
+          </div>
+          <div class="card">
+            <h3>Scenario summary</h3>
+            <div class="csub">Portfolio-level outcome under current slider settings.</div>
+            <table style="font-size:12.5px">
+              <thead><tr><th>Metric</th><th class="num">Baseline</th><th class="num">Scenario</th><th class="num">Change</th></tr></thead>
+              <tbody id="wi-summary-rows"></tbody>
+            </table>
+            <div id="wi-narrative" class="pareto-insight" style="margin-top:14px"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ GEOGRAPHIC RISK MAP ============ -->
+    <section class="view" id="v-map">
+      <div class="topbar">
+        <div><h2>Geographic Risk Map</h2>
+          <p>Spatial view of project exposure across the Nunavik Nickel portfolio. Marker color reflects the dominant site risk: budget overrun, emergent work, schedule delay, or controlled status.</p></div>
+        <div class="pill"><span class="dot" style="background:var(--ice);box-shadow:0 0 8px var(--ice)"></span> Interactive site-level risk layer</div>
+      </div>
+
+      <div class="kpis">
+        <div class="kpi warn"><div class="lab">Highest geographic exposure</div><div class="val">Expo Site</div><div class="sub">$113.4M forecast over budget</div></div>
+        <div class="kpi warn"><div class="lab">Most concentrated risk</div><div class="val">Cell 4</div><div class="sub">Main driver inside Expo Site</div></div>
+        <div class="kpi warn"><div class="lab">Emergent locations</div><div class="val">4</div><div class="sub">Sites/projects with $0 baseline budget</div></div>
+        <div class="kpi"><div class="lab">Map purpose</div><div class="val">Risk routing</div><div class="sub">Prioritize site reviews and field follow-up</div></div>
+      </div>
+
+      <div class="map-wrap geo-command">
+        <div class="geo-left">
+          <div class="geo-map-shell">
+            <div id="projectMap"></div>
+            <div id="mapFallback" class="map-fallback" style="display:none">
+              <div><b>Map library unavailable.</b><br>The schematic risk map still summarizes geographic exposure.</div>
+            </div>
+          </div>
+          <div id="schematicSelectedCard" class="geo-site-detail"></div>
+          <div class="note">Coordinates are illustrative placeholders for dashboard prototyping. Replace them with surveyed GPS coordinates or GIS layers before using this as an operational field map.</div>
+        </div>
+
+        <div class="map-side">
+          <div class="card">
+            <h3>Site risk register</h3>
+            <div class="csub">Click a site to zoom the map and review its cost / schedule profile.</div>
+            <div id="siteMapCards"></div>
+          </div>
+          <div class="card">
+            <h3>How to use this map</h3>
+            <div class="csub">Recommended operational workflow.</div>
+            <table style="font-size:12.5px">
+              <tbody>
+                <tr><td><b>1 · Start with red markers</b></td><td>Review top budget exposure first.</td></tr>
+                <tr><td><b>2 · Check purple markers</b></td><td>Confirm sponsor, budget approval, and scope gate.</td></tr>
+                <tr><td><b>3 · Overlay schedule</b></td><td>Use milestone slippage to plan site visits.</td></tr>
+                <tr><td><b>4 · Link to actions</b></td><td>Open project forum / alerts from the site card.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
 
     <!-- ============ ARCH ============ -->
     <section class="view" id="v-arch">
@@ -566,9 +1208,6 @@
   </main>
 </div>
 
-<div class="modal-bg" id="modalBg"><div class="modal" id="modalCard"></div></div>
-<div class="toast" id="toast"></div>
-
 <script>
 /* ---------- REAL DATA (from Projects Dashboard & Key Milestones 90D, 02 Jun 2026) ---------- */
 const SITES = [
@@ -629,51 +1268,250 @@ const varPct = p => p.budget>0 ? (variance(p)/p.budget*100) : (p.forecast>0? -10
 const isEmergent = p => p.budget===0 && p.forecast>0;
 const isOver = p => variance(p) < 0;
 
-/* ---------- nav ---------- */
-document.querySelectorAll('#nav button').forEach(b=>{
-  b.onclick=()=>{
-    document.querySelectorAll('#nav button').forEach(x=>x.classList.remove('active'));
-    document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
-    b.classList.add('active');
-    document.getElementById('v-'+b.dataset.v).classList.add('active');
+
+
+
+/* ---------- BUSINESS CENTER data & rendering ---------- */
+const PO_PACKAGES = [
+  {po:'PO-CRI-600-CELL4-001', project:'600 — EX · Cell 4', site:'Expo Site', resource:'Civil / Earthworks', value:2782127, stage:'Issued', risk:'High', reason:'Largest forecast exposure; scope and ETC must be challenged'},
+  {po:'CO-CRI-433-UTE-029', project:'433 — UTEU Expo · Installation', site:'Expo Site', resource:'Construction / Mechanical', value:1677281, stage:'CO Issued', risk:'High', reason:'Change order package linked to delayed installation work'},
+  {po:'PO-CRI-394-WTG-010', project:'394 — Wind Turbine Group', site:'Expo Site', resource:'Vendor / Long-lead', value:27671950, stage:'Fabrication', risk:'Medium', reason:'High committed value; logistics and delivery windows are critical'},
+  {po:'PO-CRI-490-VNT-004', project:'490 — MQ Ventilation Principal no1', site:'UG Mequillon', resource:'Ventilation / Electrical', value:4556705, stage:'Issued', risk:'High', reason:'Schedule slip and over-budget condition'},
+  {po:'REQ-547-VNT-002', project:'547 — MQ Ventilation Principal no2', site:'UG Mequillon', resource:'Engineering / Vendor', value:9936000, stage:'Intake', risk:'High', reason:'Emergent package with no approved budget'},
+  {po:'PO-CRI-484-GEN-006', project:'484 — IK UG Generator Group', site:'UG Ivakkak', resource:'Power / Generator', value:6657274, stage:'Logistics', risk:'Medium', reason:'High site dependency; delivery timing matters'},
+  {po:'PO-CRI-705-ELEC-003', project:'705 — Inuksuk Electrical MEQ', site:'Inuksuk', resource:'Electrical / Contractor', value:3412359, stage:'Issued', risk:'Low', reason:'Under budget but capacity must be monitored'},
+  {po:'REQ-715-PORTAL-001', project:'715 — Inuksuk Portal', site:'Inuksuk', resource:'Engineering / Civil', value:2450000, stage:'Requisition', risk:'High', reason:'Unbudgeted project and delayed milestone'},
+  {po:'PO-CRI-542-ELEC-002', project:'542 — BD Electrical Improvement', site:'BD', resource:'Electrical / Contractor', value:522865, stage:'Issued', risk:'High', reason:'Over budget with major schedule slip'},
+  {po:'PO-CRI-472-REST-001', project:'472 — Allammaq Restoration', site:'Allammaq', resource:'Construction / Site Services', value:526833, stage:'Closed', risk:'Medium', reason:'Late baseline variance; verify closeout documentation'}
+];
+const RESOURCE_CATEGORIES = [
+  {name:'Vendors / Long-lead', value:36.2, note:'turbines, ventilation, generators'},
+  {name:'Construction Labor', value:18.6, note:'civil, mechanical, site crews'},
+  {name:'Engineering', value:12.4, note:'design, drawings, approvals'},
+  {name:'Materials', value:24.8, note:'electrical, piping, steel, fuel systems'},
+  {name:'Logistics', value:8.9, note:'sealift, freight, site delivery'},
+  {name:'Documents / Approvals', value:5.1, note:'RFIs, contracts, closeout'}
+];
+const VENDOR_GROUPS = [
+  {name:'Long-lead OEM / Fabricator', category:'Equipment / Fabrication', exposure:27671950, criticality:'High', po:'PO-CRI-394-WTG-010', project:'394 — Wind Turbine Group', action:'Weekly expediting, logistics readiness and delivery-window review'},
+  {name:'Ventilation System Supplier', category:'Ventilation / Electrical', exposure:14492705, criticality:'High', po:'REQ-547-VNT-002 / PO-CRI-490-VNT-004', project:'MQ UG Ventilation', action:'Convert emergent scope into approved budget and lock technical package'},
+  {name:'Civil & Earthworks Contractor', category:'Civil / Earthworks', exposure:5232127, criticality:'High', po:'PO-CRI-600-CELL4-001 / REQ-715-PORTAL-001', project:'Cell 4 / Inuksuk Portal', action:'Challenge ETC, split controllable scope and confirm crew capacity'},
+  {name:'Power / Generator Supplier', category:'Power Systems', exposure:6657274, criticality:'Medium', po:'PO-CRI-484-GEN-006', project:'IK UG Generator Group', action:'Track logistics milestone and commissioning support'},
+  {name:'Electrical Contractor Pool', category:'Electrical / Contractor', exposure:3935224, criticality:'Medium', po:'PO-CRI-705-ELEC-003 / PO-CRI-542-ELEC-002', project:'Inuksuk / BD Electrical', action:'Review labor productivity and change-order exposure'},
+  {name:'Site Services Contractor', category:'Construction / Site Services', exposure:526833, criticality:'Low', po:'PO-CRI-472-REST-001', project:'Allammaq Restoration', action:'Verify closeout, documentation and lessons learned'}
+];
+function renderPOAnalysis(){
+  const openValue = PO_PACKAGES.filter(x=>x.stage!=='Closed').reduce((s,x)=>s+x.value,0);
+  const highRisk = PO_PACKAGES.filter(x=>x.risk==='High').length;
+  const largest = [...PO_PACKAGES].sort((a,b)=>b.value-a.value)[0];
+  const setText=(id,txt)=>{const el=document.getElementById(id); if(el) el.textContent=txt;};
+  setText('poOpenValue', fmtM(openValue)); setText('poHighRiskCount', highRisk); setText('poTotalCount', PO_PACKAGES.length);
+  setText('poLargestValue', fmtM(largest.value)); setText('poLargestName', largest.po);
+  const stages=['Intake','Requisition','Issued','CO Issued','Fabrication','Logistics','Closed'];
+  const pipe=document.getElementById('poPipelineDetailed');
+  if(pipe) pipe.innerHTML=stages.map(st=>{
+    const items=PO_PACKAGES.filter(x=>x.stage===st); const val=items.reduce((s,x)=>s+x.value,0);
+    return `<div class="pipe-step"><span>${st}</span><b>${items.length}</b><small style="color:var(--ink3)">${fmtM(val)}</small></div>`;
+  }).join('');
+  const riskClass={High:'risk-high',Medium:'risk-med',Low:'risk-low'};
+  const body=document.getElementById('poDetailBody');
+  if(body) body.innerHTML=[...PO_PACKAGES].sort((a,b)=>b.value-a.value).map(x=>`<tr><td><b>${x.po}</b><div style="color:var(--ink3);font-size:11px">${x.resource}</div></td><td>${x.project}</td><td>${x.site}</td><td><span class="tag t-emg">${x.stage}</span></td><td class="num">${fmt(x.value)}</td><td><span class="risk-dot ${riskClass[x.risk]}"></span>${x.risk}</td><td>${x.reason}</td></tr>`).join('');
+}
+function renderVendorAnalysis(){
+  const total=VENDOR_GROUPS.reduce((s,x)=>s+x.exposure,0);
+  const high=VENDOR_GROUPS.filter(x=>x.criticality==='High').length;
+  const top=[...VENDOR_GROUPS].sort((a,b)=>b.exposure-a.exposure)[0];
+  const setText=(id,txt)=>{const el=document.getElementById(id); if(el) el.textContent=txt;};
+  setText('vendorExposure', fmtM(total)); setText('vendorHighDep', high); setText('vendorCount', VENDOR_GROUPS.length);
+  setText('vendorTopShare', (top.exposure/total*100).toFixed(0)+'%'); setText('vendorTopName', top.name);
+  const riskClass={High:'risk-high',Medium:'risk-med',Low:'risk-low'};
+  const body=document.getElementById('vendorBody');
+  if(body) body.innerHTML=[...VENDOR_GROUPS].sort((a,b)=>b.exposure-a.exposure).map(v=>`<tr><td><b>${v.name}</b></td><td>${v.category}</td><td class="num">${fmt(v.exposure)}</td><td><span class="risk-dot ${riskClass[v.criticality]}"></span>${v.criticality}</td><td><b>${v.po}</b><div style="color:var(--ink3);font-size:11px">${v.project}</div></td><td>${v.action}</td></tr>`).join('');
+}
+function renderResourceAnalysis(){
+  const top=[...RESOURCE_CATEGORIES].sort((a,b)=>b.value-a.value)[0];
+  const bottlenecks=RESOURCE_CATEGORIES.filter(r=>r.value>=12).length;
+  const setText=(id,txt)=>{const el=document.getElementById(id); if(el) el.textContent=txt;};
+  setText('resLargestPct', top.value.toFixed(1)+'%'); setText('resLargestName', top.name);
+  setText('resBottlenecks', bottlenecks); setText('resCategoryCount', RESOURCE_CATEGORIES.length);
+  const heat=document.getElementById('resourceHeatmap');
+  if(heat) heat.innerHTML=RESOURCE_CATEGORIES.map(r=>`<div class="resource-card"><div class="r-left"><b>${r.name}</b><small>${r.note}</small><div class="bar" style="margin-top:6px"><i style="width:${Math.min(100,r.value*2.4)}%;background:${r.value>25?'#f87171':(r.value>=12?'#fbbf24':'#34d399')}"></i></div></div><div class="r-val"><b>${r.value.toFixed(1)}%</b><br><small style="color:var(--ink3)">${r.value>25?'Critical':(r.value>=12?'Watch':'Normal')}</small></div></div>`).join('');
+  const primary={
+    'Vendors / Long-lead':'Late fabrication or missed sealift window',
+    'Construction Labor':'Crew availability and productivity',
+    'Engineering':'Design approval and change delay',
+    'Materials':'Material availability and price escalation',
+    'Logistics':'Freight, winter road or sealift delay',
+    'Documents / Approvals':'RFI, contract, inspection or closeout blockage'
+  };
+  const control={
+    'Vendors / Long-lead':'Expediting calendar and vendor milestone review',
+    'Construction Labor':'Weekly manpower plan vs baseline',
+    'Engineering':'Approval SLA and design-freeze checklist',
+    'Materials':'Material reservation and alternate-source review',
+    'Logistics':'Delivery cut-off tracker by site',
+    'Documents / Approvals':'Document register with owner and due date'
+  };
+  const body=document.getElementById('resourceDetailBody');
+  if(body) body.innerHTML=RESOURCE_CATEGORIES.map(r=>`<tr><td><b>${r.name}</b></td><td>${r.note}</td><td class="num">${r.value.toFixed(1)}%</td><td><span class="tag ${r.value>25?'t-over':(r.value>=12?'t-warn':'t-under')}">${r.value>25?'Critical':(r.value>=12?'Watch':'Normal')}</span></td><td>${primary[r.name]||'Resource constraint'}</td><td>${control[r.name]||'Assign owner and monitor weekly'}</td></tr>`).join('');
+}
+function renderBusinessCenter(){
+  const openCommit = PO_PACKAGES.filter(x=>x.stage!=='Closed').reduce((s,x)=>s+x.value,0);
+  const highRisk = PO_PACKAGES.filter(x=>x.risk==='High').length;
+  const byStage = ['Intake','Requisition','Issued','CO Issued','Fabrication','Logistics','Closed'].reduce((m,s)=>(m[s]=PO_PACKAGES.filter(x=>x.stage===s).length,m),{});
+  const setText=(id,txt)=>{const el=document.getElementById(id); if(el) el.textContent=txt;};
+  setText('bizOpenCommit', fmtM(openCommit)); setText('bizHighRisk', highRisk);
+  setText('pipeIntake', byStage['Intake']||0); setText('pipeReq', byStage['Requisition']||0);
+  setText('pipeIssued', (byStage['Issued']||0)+(byStage['CO Issued']||0)); setText('pipeFab', byStage['Fabrication']||0);
+  setText('pipeLog', byStage['Logistics']||0); setText('pipeDone', byStage['Closed']||0);
+  const riskClass={High:'risk-high',Medium:'risk-med',Low:'risk-low'};
+  const body=document.getElementById('poRiskBody');
+  if(body) body.innerHTML=PO_PACKAGES.sort((a,b)=>b.value-a.value).map(x=>`<tr>
+    <td><b>${x.po}</b><div style="color:var(--ink3);font-size:11px">${x.reason}</div></td>
+    <td>${x.project}<div style="color:var(--ink3);font-size:11px">${x.site}</div></td>
+    <td>${x.resource}</td><td class="num">${fmt(x.value)}</td><td><span class="tag t-emg">${x.stage}</span></td>
+    <td><span class="risk-dot ${riskClass[x.risk]}"></span>${x.risk}</td></tr>`).join('');
+  const cards=document.getElementById('resourceCards');
+  if(cards) cards.innerHTML=RESOURCE_CATEGORIES.map(r=>`<div class="resource-card"><div class="r-left"><b>${r.name}</b><small>${r.note}</small><div class="bar" style="margin-top:6px"><i style="width:${Math.min(100,r.value*2.2)}%;background:${r.value>25?'#f87171':(r.value>10?'#fbbf24':'#34d399')}"></i></div></div><div class="r-val"><b>${r.value.toFixed(1)}%</b><br><small style="color:var(--ink3)">resource load</small></div></div>`).join('');
+}
+window.addEventListener('load',()=>{
+  renderBusinessCenter();
+  renderPOAnalysis();
+  renderVendorAnalysis();
+  renderResourceAnalysis();
+  const resCtx=document.getElementById('chartResourceMix');
+  if(resCtx) new Chart(resCtx,{type:'doughnut',data:{labels:RESOURCE_CATEGORIES.map(r=>r.name),datasets:[{data:RESOURCE_CATEGORIES.map(r=>r.value),backgroundColor:['#4fc3f7','#fbbf24','#36d3c4','#f87171','#7c5cff','#3a5d7d'],borderColor:'#13263a',borderWidth:2}]},options:{cutout:'58%',plugins:{legend:{position:'right',labels:{boxWidth:11,font:{size:10.5}}},tooltip:{callbacks:{label:c=>c.label+': '+c.raw.toFixed(1)+'%'}}}}});
+  const bySite={}; PO_PACKAGES.forEach(x=>bySite[x.site]=(bySite[x.site]||0)+x.value);
+  const poCtx=document.getElementById('chartPoBySite');
+  if(poCtx) new Chart(poCtx,{type:'bar',data:{labels:Object.keys(bySite),datasets:[{label:'Committed PO value',data:Object.values(bySite).map(v=>v/1e6),backgroundColor:'#4fc3f7',borderRadius:5}]},options:{plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'$'+c.raw.toFixed(1)+'M'}}},scales:{y:{ticks:{callback:v=>'$'+v+'M'},grid:{color:'rgba(34,64,93,.4)'}},x:{grid:{display:false}}}}});
+
+  const poDetailCtx=document.getElementById('chartPoSiteDetail');
+  if(poDetailCtx) new Chart(poDetailCtx,{type:'bar',data:{labels:Object.keys(bySite),datasets:[{label:'PO value',data:Object.values(bySite).map(v=>v/1e6),backgroundColor:'#4fc3f7',borderRadius:5}]},options:{plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'$'+c.raw.toFixed(1)+'M'}}},scales:{y:{ticks:{callback:v=>'$'+v+'M'}},x:{grid:{display:false}}}}});
+  const riskCounts=['High','Medium','Low'].map(r=>PO_PACKAGES.filter(x=>x.risk===r).length);
+  const poRiskCtx=document.getElementById('chartPoRiskMix');
+  if(poRiskCtx) new Chart(poRiskCtx,{type:'doughnut',data:{labels:['High','Medium','Low'],datasets:[{data:riskCounts,backgroundColor:['#f87171','#fbbf24','#34d399'],borderColor:'#13263a',borderWidth:2}]},options:{cutout:'58%',plugins:{legend:{position:'right'}}}});
+  const vendCtx=document.getElementById('chartVendorExposure');
+  if(vendCtx) new Chart(vendCtx,{type:'bar',data:{labels:VENDOR_GROUPS.map(v=>v.name),datasets:[{data:VENDOR_GROUPS.map(v=>v.exposure/1e6),backgroundColor:'#36d3c4',borderRadius:5}]},options:{indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'$'+c.raw.toFixed(1)+'M'}}},scales:{x:{ticks:{callback:v=>'$'+v+'M'}},y:{grid:{display:false},ticks:{font:{size:10}}}}}});
+  const vendRiskCtx=document.getElementById('chartVendorRisk');
+  if(vendRiskCtx) new Chart(vendRiskCtx,{type:'doughnut',data:{labels:['High','Medium','Low'],datasets:[{data:['High','Medium','Low'].map(r=>VENDOR_GROUPS.filter(v=>v.criticality===r).length),backgroundColor:['#f87171','#fbbf24','#34d399'],borderColor:'#13263a',borderWidth:2}]},options:{cutout:'58%',plugins:{legend:{position:'right'}}}});
+  const resDetailCtx=document.getElementById('chartResourceDetail');
+  if(resDetailCtx) new Chart(resDetailCtx,{type:'bar',data:{labels:RESOURCE_CATEGORIES.map(r=>r.name),datasets:[{data:RESOURCE_CATEGORIES.map(r=>r.value),backgroundColor:'#4fc3f7',borderRadius:5}]},options:{plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.raw.toFixed(1)+'%'}}},scales:{y:{ticks:{callback:v=>v+'%'}},x:{grid:{display:false},ticks:{font:{size:10}}}}}});
+});
+
+/* ---------- enterprise shell ---------- */
+const MODULE_INDEX = [
+  {v:'exec', ic:'◧', title:'Executive Dashboard', group:'Overview'},
+  {v:'cost', ic:'$', title:'Cost Control', group:'Project Controls'},
+  {v:'sched', ic:'▦', title:'Schedule & Milestones', group:'Project Controls'},
+  {v:'emg', ic:'⚑', title:'Emergent Projects', group:'Project Controls'},
+  {v:'alerts', ic:'!', title:'Early-Warning Alerts', group:'Project Controls'},
+  {v:'forum', ic:'💬', title:'Team Forum', group:'Project Controls'},
+  {v:'business', ic:'▣', title:'Business Overview', group:'Business Center'},
+  {v:'po', ic:'PO', title:'PO Analysis', group:'Business Center'},
+  {v:'vendor', ic:'V', title:'Vendor Analysis', group:'Business Center'},
+  {v:'resources', ic:'R', title:'Resource Analysis', group:'Business Center'},
+  {v:'concentration', ic:'▧', title:'Risk & Concentration Analysis', group:'Advanced Analytics'},
+  {v:'abc', ic:'A', title:'ABC Analysis', group:'Advanced Analytics'},
+  {v:'dupont', ic:'◇', title:'DuPont Analysis', group:'Advanced Analytics'},
+  {v:'eva', ic:'EV', title:'Earned Value', group:'Advanced Analytics'},
+  {v:'pareto', ic:'▲', title:'Pareto Analysis', group:'Advanced Analytics'},
+  {v:'whatif', ic:'◈', title:'What-If Simulator', group:'Advanced Analytics'},
+  {v:'map', ic:'⌖', title:'Geographic Risk Map', group:'Geographic View'},
+  {v:'arch', ic:'⚙', title:'System & Tooling', group:'Platform'},
+  {v:'rollout', ic:'➜', title:'Rollout & ROI', group:'Platform'}
+];
+function activateView(viewId){
+  const btn = document.querySelector(`#nav .nav-items button[data-v="${viewId}"]`);
+  if(btn) btn.click();
+}
+const sidebarToggle = document.getElementById('sidebarToggle');
+const sideEdgeToggle = document.getElementById('sideEdgeToggle');
+function syncSidebarButtons(){
+  const collapsed = document.body.classList.contains('sidebar-collapsed');
+  if(sidebarToggle) sidebarToggle.textContent = collapsed ? '☰' : '☰';
+  if(sideEdgeToggle){
+    sideEdgeToggle.setAttribute('aria-label', collapsed ? 'Show navigation' : 'Hide navigation');
+    sideEdgeToggle.setAttribute('title', collapsed ? 'Show navigation' : 'Hide navigation');
+    const tip = sideEdgeToggle.querySelector('.tip');
+    if(tip) tip.textContent = collapsed ? 'Show Navigation' : 'Hide Navigation';
+  }
+}
+function toggleSidebarNav(){
+  if(window.matchMedia('(max-width:820px)').matches){
+    document.body.classList.toggle('mobile-menu-open');
+    document.body.classList.remove('sidebar-collapsed');
+  }else{
+    document.body.classList.toggle('sidebar-collapsed');
+    localStorage.setItem('auroraSidebarCollapsed', document.body.classList.contains('sidebar-collapsed')?'1':'0');
+  }
+  syncSidebarButtons();
+  setTimeout(()=>{ if(window.auroraMap && window.auroraMap.invalidateSize) window.auroraMap.invalidateSize(); }, 260);
+}
+if(sidebarToggle) sidebarToggle.onclick = toggleSidebarNav;
+if(sideEdgeToggle) sideEdgeToggle.onclick = toggleSidebarNav;
+if(localStorage.getItem('auroraSidebarCollapsed')==='1') document.body.classList.add('sidebar-collapsed');
+syncSidebarButtons();
+const themeToggle = document.getElementById('themeToggle');
+if(themeToggle){
+  const savedTheme = localStorage.getItem('auroraTheme');
+  if(savedTheme==='light'){ document.body.classList.add('light'); themeToggle.textContent='☀'; }
+  themeToggle.onclick=()=>{
+    document.body.classList.toggle('light');
+    const light = document.body.classList.contains('light');
+    themeToggle.textContent = light ? '☀' : '☾';
+    localStorage.setItem('auroraTheme', light?'light':'dark');
+  };
+}
+const notifToggle=document.getElementById('notifToggle'), notifPanel=document.getElementById('notifPanel');
+if(notifToggle && notifPanel){
+  notifToggle.onclick=(e)=>{ e.stopPropagation(); notifPanel.classList.toggle('open'); };
+  document.addEventListener('click',e=>{ if(!notifPanel.contains(e.target) && e.target!==notifToggle) notifPanel.classList.remove('open'); });
+}
+const searchInput=document.getElementById('globalSearch'), searchResults=document.getElementById('searchResults');
+function renderSearch(q=''){
+  if(!searchResults) return;
+  const query=q.trim().toLowerCase();
+  const matches = MODULE_INDEX.filter(m=>!query || (m.title+' '+m.group+' '+m.v).toLowerCase().includes(query)).slice(0,8);
+  searchResults.innerHTML = matches.map(m=>`<div class="search-result" data-v="${m.v}"><span class="sr-ic">${m.ic}</span><div>${m.title}<small>${m.group}</small></div></div>`).join('');
+  searchResults.classList.toggle('open', matches.length>0 && (query || document.activeElement===searchInput));
+  searchResults.querySelectorAll('.search-result').forEach(r=>r.onclick=()=>{activateView(r.dataset.v); searchResults.classList.remove('open'); searchInput.value=''; document.body.classList.remove('mobile-menu-open');});
+}
+if(searchInput){
+  searchInput.addEventListener('focus',()=>renderSearch(searchInput.value));
+  searchInput.addEventListener('input',e=>renderSearch(e.target.value));
+  searchInput.addEventListener('keydown',e=>{ if(e.key==='Escape') searchResults.classList.remove('open'); });
+  document.addEventListener('click',e=>{ if(searchResults && !searchResults.contains(e.target) && e.target!==searchInput) searchResults.classList.remove('open'); });
+}
+
+/* ---------- tree nav ---------- */
+document.querySelectorAll('#nav .nav-group-head').forEach(head=>{
+  head.onclick=()=>{
+    const group = head.closest('.nav-group');
+    const willCollapse = !group.classList.contains('collapsed');
+    group.classList.toggle('collapsed', willCollapse);
+    head.setAttribute('aria-expanded', String(!willCollapse));
   };
 });
 
-/* ================= STATE + PERSISTENCE ================= */
-const SEED_PROJECTS = JSON.parse(JSON.stringify(PROJECTS));
-const STATE_KEY='aurora_state_v2';
-let TXNS=[];                 // audit log of every change
-let ALERT_STATE={};          // alertId -> {status:'new|ack|res', assignee}
-const DEFAULT_RULES=[
-  {id:'r_emg',   name:'Unbudgeted commitment', desc:'Forecast &gt; 0 against a $0 approved budget', sev:'crit', cat:'COST',     enabled:true},
-  {id:'r_over',  name:'Cost variance over threshold', desc:'Forecast exceeds budget by ≥ threshold', sev:'crit', cat:'COST', enabled:true, threshold:20, unit:'%'},
-  {id:'r_commit',name:'Commitment exceeds budget', desc:'Committed cost has passed approved budget', sev:'high', cat:'COST', enabled:true},
-  {id:'r_slipC', name:'Critical schedule slip', desc:'Baseline slip beyond critical days', sev:'crit', cat:'SCHEDULE', enabled:true, threshold:300, unit:'d'},
-  {id:'r_slipH', name:'Schedule slip warning', desc:'Baseline slip beyond warning days', sev:'high', cat:'SCHEDULE', enabled:true, threshold:90, unit:'d'},
-];
-let RULES=JSON.parse(JSON.stringify(DEFAULT_RULES));
-const stamp=()=>new Date().toISOString();
-function fmtTs(iso){return new Date(iso).toLocaleString('en-CA',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});}
-function saveState(){try{localStorage.setItem(STATE_KEY,JSON.stringify({projects:PROJECTS,txns:TXNS,rules:RULES,alertState:ALERT_STATE}));}catch(e){}}
-(function loadState(){
-  try{const d=JSON.parse(localStorage.getItem(STATE_KEY));
-    if(d&&d.projects&&d.projects.length){PROJECTS.length=0;d.projects.forEach(p=>PROJECTS.push(p));
-      TXNS=d.txns||[]; ALERT_STATE=d.alertState||{};
-      if(d.rules&&d.rules.length){ // keep rule defs current, restore enabled/threshold
-        RULES.forEach(r=>{const s=d.rules.find(x=>x.id===r.id); if(s){r.enabled=s.enabled;if('threshold'in s)r.threshold=s.threshold;}});
-      }}
-  }catch(e){}
-})();
-function logTxn(project,action){TXNS.unshift({project,action,ts:stamp()});}
-function setText(id,t){const el=document.getElementById(id); if(el) el.textContent=t;}
+document.querySelectorAll('#nav .nav-items button[data-v]').forEach(b=>{
+  b.onclick=()=>{
+    document.querySelectorAll('#nav .nav-items button[data-v]').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    const target = document.getElementById('v-'+b.dataset.v);
+    if(target) target.classList.add('active');
+    if(b.dataset.v==='map') setTimeout(()=>{ if(window.auroraMap && window.auroraMap.invalidateSize) window.auroraMap.invalidateSize(); }, 120);
+    document.body.classList.remove('mobile-menu-open');
+    const group = b.closest('.nav-group');
+    if(group){
+      group.classList.remove('collapsed');
+      const head = group.querySelector('.nav-group-head');
+      if(head) head.setAttribute('aria-expanded','true');
+    }
+  };
+});
 
-/* toast */
-let toastT;
-function toast(msg,warn){const el=document.getElementById('toast'); if(!el)return;
-  el.className='toast'+(warn?' warn':''); el.innerHTML=msg; requestAnimationFrame(()=>el.classList.add('show'));
-  clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove('show'),3800);}
-
-/* ---------- tag helpers (unchanged styling) ---------- */
+/* ---------- EXEC ---------- */
 function statusTag(p){
   if(isEmergent(p)) return '<span class="tag t-emg">Emergent</span>';
   if(isOver(p)) return '<span class="tag t-over">Over '+Math.abs(varPct(p)).toFixed(0)+'%</span>';
@@ -686,92 +1524,60 @@ function schedTag(p){
   return '<span class="tag t-under">on time</span>';
 }
 
-/* ---------- EXEC (live) ---------- */
-function portfolioStats(){
-  let f=0,b=0,c=0; PROJECTS.forEach(p=>{f+=p.forecast;b+=p.budget;c+=p.committed;});
-  const emg=PROJECTS.filter(isEmergent); const emgSum=emg.reduce((s,p)=>s+p.forecast,0);
-  const sites=[...new Set(PROJECTS.map(p=>p.site))];
-  const overSites=sites.filter(s=>{const sf=PROJECTS.filter(p=>p.site===s);
-    return sf.reduce((a,p)=>a+p.forecast,0) > sf.reduce((a,p)=>a+p.budget,0);});
-  return {f,b,c,emg,emgSum,sites,overSites,delta:b-f};
-}
-function renderExec(){
-  const s=portfolioStats(), overPct=s.b>0?Math.round((s.f-s.b)/s.b*100):0;
-  setText('kpiForecast',fmtM(s.f)); setText('kpiCommitted','Committed to date: '+fmtM(s.c));
-  setText('kpiVar',(s.delta<0?'−':'')+'$'+(Math.abs(s.delta)/1e6).toFixed(1)+'M');
-  setText('kpiVarSub',overPct+'% over corporate budget');
-  setText('kpiBudget',fmtM(s.b)); setText('kpiBudgetSub','Across '+s.sites.length+' sites');
-  setText('kpiEmg',fmtM(s.emgSum)); setText('kpiEmgSub',s.emg.length+' projects with $0 baseline');
-  setText('kpiSites',s.overSites.length+' / '+s.sites.length);
-  const banner=document.getElementById('execBanner');
-  if(banner) banner.innerHTML='⚠ <div><b>Portfolio is forecast '+fmtM(Math.abs(s.delta))+' ('+overPct+'%) over budget.</b> '+
-    s.overSites.length+' of '+s.sites.length+' sites are over; '+fmtM(s.emgSum)+' of work is unbudgeted (emergent). Critical milestones are slipping up to 553 days vs baseline.</div>';
-  const topExp=[...PROJECTS].filter(isOver).sort((a,b)=>variance(a)-variance(b)).slice(0,8);
-  document.getElementById('topExp').innerHTML=topExp.map(p=>`
-    <tr class="clk" onclick="openProject('${esc2(p.name)}')"><td>${p.name}</td><td>${p.site}</td>
-    <td class="num">${fmtM(p.forecast)}</td><td class="num">${fmtM(p.budget)}</td>
-    <td class="num" style="color:var(--red)">${fmtM(variance(p))}</td>
-    <td>${schedTag(p)}</td></tr>`).join('');
-}
-const esc2=s=>(s||'').replace(/'/g,"\\'").replace(/"/g,'&quot;');
+// top exposures = biggest over-budget by $
+const topExp = [...PROJECTS].filter(isOver).sort((a,b)=>variance(a)-variance(b)).slice(0,8);
+document.getElementById('topExp').innerHTML = topExp.map(p=>`
+  <tr><td>${p.name}</td><td>${p.site}</td>
+  <td class="num">${fmtM(p.forecast)}</td><td class="num">${fmtM(p.budget)}</td>
+  <td class="num" style="color:var(--red)">${fmtM(variance(p))}</td>
+  <td>${schedTag(p)}</td></tr>`).join('');
 
-/* charts — rebuildable so they reflect live edits */
-let chSite,chConc,chSlip,chComp,chartsReady=false;
-function renderCharts(){
-  if(typeof Chart==='undefined'||!document.getElementById('chartSite'))return;
+/* charts after DOM ready */
+window.addEventListener('load',()=>{
   Chart.defaults.color='#9fb6cc'; Chart.defaults.font.family="'Segoe UI',sans-serif";
   Chart.defaults.borderColor='rgba(34,64,93,.5)';
-  [chSite,chConc,chSlip,chComp].forEach(c=>{if(c)c.destroy();});
 
-  // site aggregates from live PROJECTS
-  const sites=[...new Set(PROJECTS.map(p=>p.site))].map(s=>{
-    const sf=PROJECTS.filter(p=>p.site===s);
-    return {site:s,forecast:sf.reduce((a,p)=>a+p.forecast,0),budget:sf.reduce((a,p)=>a+p.budget,0)};
-  }).sort((a,b)=>b.forecast-a.forecast);
-  chSite=new Chart(document.getElementById('chartSite'),{type:'bar',
-    data:{labels:sites.map(s=>s.site),
+  const sortedSites=[...SITES].sort((a,b)=>b.forecast-a.forecast);
+  new Chart(document.getElementById('chartSite'),{type:'bar',
+    data:{labels:sortedSites.map(s=>s.site),
       datasets:[
-        {label:'Forecast',data:sites.map(s=>s.forecast/1e6),backgroundColor:'#4fc3f7',borderRadius:5},
-        {label:'Budget',data:sites.map(s=>s.budget/1e6),backgroundColor:'#3a5d7d',borderRadius:5}
+        {label:'Forecast',data:sortedSites.map(s=>s.forecast/1e6),backgroundColor:'#4fc3f7',borderRadius:5},
+        {label:'Budget',data:sortedSites.map(s=>s.budget/1e6),backgroundColor:'#3a5d7d',borderRadius:5}
       ]},
     options:{plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.dataset.label+': $'+c.raw.toFixed(1)+'M'}}},
       scales:{y:{ticks:{callback:v=>'$'+v+'M'},grid:{color:'rgba(34,64,93,.4)'}},x:{grid:{display:false}}}}});
 
+  // concentration of overrun
   const overs=[...PROJECTS].filter(isOver).map(p=>({name:p.name.split('·')[0].trim(),v:-variance(p)})).sort((a,b)=>b.v-a.v);
   const top=overs.slice(0,5); const rest=overs.slice(5).reduce((s,x)=>s+x.v,0);
-  chConc=new Chart(document.getElementById('chartConc'),{type:'doughnut',
-    data:{labels:[...top.map(t=>t.name),'Other'],datasets:[{data:[...top.map(t=>t.v/1e6),rest/1e6],
+  const concLabels=[...top.map(t=>t.name),'Other'];const concData=[...top.map(t=>t.v/1e6),rest/1e6];
+  new Chart(document.getElementById('chartConc'),{type:'doughnut',
+    data:{labels:concLabels,datasets:[{data:concData,
       backgroundColor:['#f87171','#fb923c','#fbbf24','#4fc3f7','#36d3c4','#3a5d7d'],borderColor:'#13263a',borderWidth:2}]},
     options:{cutout:'58%',plugins:{legend:{position:'right',labels:{boxWidth:11,font:{size:10.5}}},
       tooltip:{callbacks:{label:c=>c.label+': $'+c.raw.toFixed(1)+'M'}}}}});
 
+  // schedule slip
   const slips=PROJECTS.filter(p=>p.slip!==null&&p.slip<0).sort((a,b)=>a.slip-b.slip).slice(0,10);
-  chSlip=new Chart(document.getElementById('chartSlip'),{type:'bar',
+  new Chart(document.getElementById('chartSlip'),{type:'bar',
     data:{labels:slips.map(p=>p.name.split('·')[0].trim()),
       datasets:[{data:slips.map(p=>p.slip),backgroundColor:slips.map(p=>p.slip<-90?'#f87171':'#fbbf24'),borderRadius:4}]},
     options:{indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.raw+' days behind baseline'}}},
       scales:{x:{ticks:{callback:v=>v+'d'},grid:{color:'rgba(34,64,93,.4)'}},y:{grid:{display:false},ticks:{font:{size:10}}}}}});
 
+  // completion scatter-ish (bubble: x=pct, y=-slip risk)
   const cmp=PROJECTS.filter(p=>p.slip!==null);
-  chComp=new Chart(document.getElementById('chartComp'),{type:'bubble',
+  new Chart(document.getElementById('chartComp'),{type:'bubble',
     data:{datasets:[{data:cmp.map(p=>({x:p.pct,y:Math.max(0,-p.slip),r:Math.max(5,Math.sqrt(p.forecast/1e6)*2),name:p.name})),
       backgroundColor:cmp.map(p=>(-p.slip>90?'rgba(248,113,113,.6)':(-p.slip>0?'rgba(251,191,36,.6)':'rgba(52,211,153,.6)')))}]},
     options:{plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.raw.name+' — '+c.raw.x+'% done, '+c.raw.y+'d behind'}}},
       scales:{x:{title:{display:true,text:'% complete'},min:0,max:100,grid:{color:'rgba(34,64,93,.4)'}},
               y:{title:{display:true,text:'days behind baseline'},grid:{color:'rgba(34,64,93,.4)'}}}}});
-  chartsReady=true;
-}
-window.addEventListener('load',()=>{renderCharts();});
+});
 
-/* ---------- COST table (interactive ledger) ---------- */
+/* ---------- COST table ---------- */
 const fSite=document.getElementById('fSite');
-function populateCostSites(){
-  const cur=fSite.value;
-  fSite.innerHTML='<option value="">All sites</option>'+
-    [...new Set(PROJECTS.map(p=>p.site))].sort().map(s=>`<option>${s}</option>`).join('');
-  fSite.value=cur;
-}
-populateCostSites();
+[...new Set(PROJECTS.map(p=>p.site))].sort().forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;fSite.appendChild(o);});
 let sortKey='delta',sortDir=1;
 function renderCost(){
   const site=fSite.value, st=document.getElementById('fStatus').value;
@@ -794,7 +1600,7 @@ function renderCost(){
     const v=variance(p), vp=varPct(p), flagged=isOver(p)&&Math.abs(vp)>=th;
     const barColor=isOver(p)?'#f87171':'#34d399';
     const ratio=p.budget>0?Math.min(150,p.forecast/p.budget*100):150;
-    return `<tr class="clk" onclick="openProject('${esc2(p.name)}')" style="${flagged?'background:rgba(248,113,113,.06)':''}">
+    return `<tr style="${flagged?'background:rgba(248,113,113,.06)':''}">
       <td>${flagged?'<span style="color:var(--red)">● </span>':''}${p.name}</td>
       <td style="color:var(--ink2)">${p.site}</td>
       <td class="num">${fmt(p.committed)}</td>
@@ -807,14 +1613,16 @@ function renderCost(){
   }).join('');
 }
 document.querySelectorAll('#v-cost th[data-k]').forEach(th=>th.onclick=()=>{
-  const k=th.dataset.k; if(sortKey===k)sortDir*=-1; else{sortKey=k;sortDir=1;}
+  const k=th.dataset.k; if(sortKey===k)sortDir*=-1; else{sortKey=k;sortDir=(k==='delta'||k==='pct')?1:1;}
   renderCost();
 });
 fSite.onchange=renderCost;
 document.getElementById('fStatus').onchange=renderCost;
 document.getElementById('fThresh').oninput=function(){document.getElementById('threshLab').textContent=this.value+'% over';renderCost();};
+renderCost();
 
 /* ---------- SCHEDULE table ---------- */
+const schedRows=PROJECTS.filter(p=>p.slip!==null).sort((a,b)=>a.slip-b.slip);
 const endDates={ '470':'19-Apr-26','433':'10-Aug-26','600':'22-Dec-29','542':'30-Oct-26','519':'—','348':'01-Nov-26',
   '490':'13-Aug-26','394':'27-Nov-26','544':'20-Dec-27','715':'01-Jan-27','708':'30-Jul-27','705':'10-Aug-27',
   '484':'01-Dec-26','494':'19-Jul-26','543':'09-Nov-26','472':'29-Aug-26','704':'13-Jul-27' };
@@ -824,237 +1632,56 @@ function healthTag(p){
   if(p.slip<0) return '<span class="tag t-warn">Slipping</span>';
   return '<span class="tag t-under">On track</span>';
 }
-function renderSched(){
-  const schedRows=PROJECTS.filter(p=>p.slip!==null).sort((a,b)=>a.slip-b.slip);
-  document.getElementById('schedBody').innerHTML=schedRows.map(p=>{
-    const code=p.name.match(/\d{3}|XXX/)?.[0]||'';
-    return `<tr class="clk" onclick="openProject('${esc2(p.name)}')">
-      <td>${p.name}</td><td style="color:var(--ink2)">${p.site}</td>
-      <td class="num">${endDates[code]||'—'}</td>
-      <td class="num" style="color:var(--ink3)">baseline</td>
-      <td class="num" style="color:${p.slip<-90?'var(--red)':(p.slip<0?'var(--amber)':'var(--green)')}">${p.slip} d</td>
-      <td class="num">${p.pct}%<div class="bar" style="margin-top:4px"><i style="width:${p.pct}%;background:${p.pct>70?'#34d399':(p.pct>30?'#fbbf24':'#4fc3f7')}"></i></div></td>
-      <td>${healthTag(p)}</td></tr>`;
-  }).join('');
-}
+document.getElementById('schedBody').innerHTML=schedRows.map(p=>{
+  const code=p.name.match(/\d{3}|XXX/)?.[0]||'';
+  return `<tr>
+    <td>${p.name}</td><td style="color:var(--ink2)">${p.site}</td>
+    <td class="num">${endDates[code]||'—'}</td>
+    <td class="num" style="color:var(--ink3)">baseline</td>
+    <td class="num" style="color:${p.slip<-90?'var(--red)':(p.slip<0?'var(--amber)':'var(--green)')}">${p.slip} d</td>
+    <td class="num">${p.pct}%<div class="bar" style="margin-top:4px"><i style="width:${p.pct}%;background:${p.pct>70?'#34d399':(p.pct>30?'#fbbf24':'#4fc3f7')}"></i></div></td>
+    <td>${healthTag(p)}</td></tr>`;
+}).join('');
 
 /* ---------- EMERGENT ---------- */
+const emg=PROJECTS.filter(isEmergent).sort((a,b)=>b.forecast-a.forecast);
 const emgReason={
   '547 — MQ UG · Ventilation Principale no2':'New ventilation shaft added mid-year; $9.94M committed with no corporate budget line.',
   '715 — Inuksuk · Portail':'Reactive portal works; $2.45M forecast, 0 budget, already 380 days behind baseline.',
   'XXX — Fibre Optique BD · Wakeham Bay':'Newly scoped fibre link (no project number yet); $2.5M unbudgeted.',
   '541 — BD · Balance replacement':'Replacement triggered by failure; $250K forecast against $0 budget.'
 };
-function renderEmergent(){
-  const emg=PROJECTS.filter(isEmergent).sort((a,b)=>b.forecast-a.forecast);
-  const total=emg.reduce((s,p)=>s+p.forecast,0);
-  const largest=emg.length?emg[0].forecast:0;
-  const s=portfolioStats(); const overTotal=s.f-s.b;
-  setText('emgKpiTotal',fmtM(total)); setText('emgKpiLargest',fmtM(largest));
-  setText('emgKpiLargestSub',emg.length?emg[0].name.split('·').slice(-1)[0].trim():'—');
-  setText('emgKpiPct',overTotal>0?Math.round(total/overTotal*100)+'%':'—');
-  setText('emgKpiCount',emg.length+' projects');
-  document.getElementById('emgBody').innerHTML=emg.length?emg.map(p=>`
-    <tr><td><span class="tag t-emg">⚑</span> ${p.name}</td><td style="color:var(--ink2)">${p.site}</td>
-    <td class="num" style="color:var(--red)">${fmt(p.forecast)}</td>
-    <td class="num" style="color:var(--ink3)">$0</td>
-    <td style="color:var(--ink2);font-size:12px">${emgReason[p.name]||'Forecast committed against a $0 corporate budget.'}</td>
-    <td><button class="btnp" style="padding:5px 11px;font-size:11.5px" onclick="openProject('${esc2(p.name)}')">Approve &amp; fund</button></td></tr>`).join('')
-    : '<tr><td colspan="6" style="text-align:center;color:var(--ink3);padding:18px">No emergent projects — all work is funded. ✓</td></tr>';
-}
+document.getElementById('emgBody').innerHTML=emg.map(p=>`
+  <tr><td><span class="tag t-emg">⚑</span> ${p.name}</td><td style="color:var(--ink2)">${p.site}</td>
+  <td class="num" style="color:var(--red)">${fmt(p.forecast)}</td>
+  <td class="num" style="color:var(--ink3)">$0</td>
+  <td style="color:var(--ink2);font-size:12px">${emgReason[p.name]||'Forecast committed against a $0 corporate budget.'}</td></tr>`).join('');
 
-/* ================= ALERT ENGINE ================= */
-const ruleById=id=>RULES.find(r=>r.id===id);
-function computeAlerts(projects){
-  const out=[], pr=projects||PROJECTS;
-  const rOver=ruleById('r_over'),rSlipC=ruleById('r_slipC'),rSlipH=ruleById('r_slipH'),rEmg=ruleById('r_emg'),rCom=ruleById('r_commit');
-  pr.forEach(p=>{
-    if(rEmg.enabled&&isEmergent(p)) out.push({id:'r_emg|'+p.name,sev:rEmg.sev,cat:'COST',title:p.name,meta:p.site,
-      msg:`Unbudgeted commitment — ${fmt(p.forecast)} forecast against a $0 corporate budget. Requires sponsor approval &amp; budget line.`});
-    else if(rOver.enabled&&p.budget>0&&isOver(p)&&Math.abs(varPct(p))>=rOver.threshold) out.push({id:'r_over|'+p.name,sev:rOver.sev,cat:'COST',title:p.name,meta:p.site,
-      msg:`Forecast ${Math.abs(varPct(p)).toFixed(0)}% over budget (${fmt(variance(p))}). Exceeds ${rOver.threshold}% control threshold.`});
-    if(rCom.enabled&&p.budget>0&&p.committed>p.budget) out.push({id:'r_commit|'+p.name,sev:rCom.sev,cat:'COST',title:p.name,meta:p.site,
-      msg:`Committed cost ${fmt(p.committed)} has passed approved budget ${fmt(p.budget)}.`});
-    if(p.slip!=null){
-      if(rSlipC.enabled&&p.slip<=-rSlipC.threshold) out.push({id:'r_slipC|'+p.name,sev:rSlipC.sev,cat:'SCHEDULE',title:p.name,meta:p.site,
-        msg:`Critical baseline slip — ${Math.abs(p.slip)} days behind at ${p.pct}% complete.`});
-      else if(rSlipH.enabled&&p.slip<=-rSlipH.threshold) out.push({id:'r_slipH|'+p.name,sev:rSlipH.sev,cat:'SCHEDULE',title:p.name,meta:p.site,
-        msg:`Schedule slip ${Math.abs(p.slip)} days behind baseline at ${p.pct}% complete.`});
-    }
-  });
-  return out;
-}
-const alStatus=id=>(ALERT_STATE[id]&&ALERT_STATE[id].status)||'new';
-function renderAlerts(){
-  let list=computeAlerts();
-  const s=portfolioStats(), overPct=s.b>0?Math.round((s.f-s.b)/s.b*100):0;
-  list.push({id:'sys_portfolio',sev:'info',cat:'PORTFOLIO',title:'Portfolio variance',meta:'All sites',
-    msg:`Total forecast ${fmtM(s.f)} vs ${fmtM(s.b)} budget — portfolio ${overPct}% over. Recommend control review with Finance &amp; PMO.`});
-  if(PROJECTS.some(p=>p.name.indexOf('547')===0)) list.push({id:'sys_sealift',sev:'high',cat:'PROCUREMENT',title:'547 — Ventilation Principale no2',meta:'UG Mequillon',
-    msg:'Major mechanical package not yet ordered — long-lead items risk missing the 2026 sealift window.'});
-  const filt=document.getElementById('alFilter')?document.getElementById('alFilter').value:'active';
-  let view=list.filter(a=>{const st=alStatus(a.id);
-    if(filt==='all')return true; if(filt==='new')return st==='new';
-    if(filt==='crit')return a.sev==='crit'&&st!=='res'; return st!=='res';});
-  const sevOrder={crit:0,high:1,info:2}, stOrder={new:0,ack:1,res:2};
-  view.sort((a,b)=> (sevOrder[a.sev]-sevOrder[b.sev]) || (stOrder[alStatus(a.id)]-stOrder[alStatus(b.id)]));
-  const icons={crit:'⛔',high:'▲',info:'ⓘ'};
-  setText('alertCount',list.filter(a=>a.sev!=='info'&&alStatus(a.id)!=='res').length);
-  document.getElementById('alertFeed').innerHTML = view.length? view.map(a=>{
-    const st=alStatus(a.id), asn=ALERT_STATE[a.id]&&ALERT_STATE[a.id].assignee;
-    const lc=st==='new'?'<span class="lc lc-new">NEW</span>':st==='ack'?'<span class="lc lc-ack">ACK'+(asn?' · '+asn:'')+'</span>':'<span class="lc lc-res">RESOLVED</span>';
-    let acts;
-    if(st==='new')acts=`<button class="btns" onclick="setAlert('${a.id}','ack')">Acknowledge</button><button class="btns" onclick="assignAlert('${a.id}')">Assign</button><button class="btns" onclick="setAlert('${a.id}','res')">Resolve</button>`;
-    else if(st==='ack')acts=`<button class="btns" onclick="assignAlert('${a.id}')">Reassign</button><button class="btns" onclick="setAlert('${a.id}','res')">Resolve</button>`;
-    else acts=`<button class="btns" onclick="setAlert('${a.id}','new')">Reopen</button>`;
-    return `<div class="alert"><div class="sev ${a.sev}">${icons[a.sev]}</div>
-     <div class="body"><b>${a.title}</b> <span class="tag ${a.cat==='COST'?'t-over':(a.cat==='SCHEDULE'?'t-warn':'t-emg')}" style="font-size:10px">${a.cat}</span>${lc}
-       <p>${a.msg}</p><div class="acts">${acts}</div></div>
-     <div class="meta">${a.meta}</div></div>`;
-  }).join('') : '<div class="card" style="text-align:center;color:var(--ink3)">No alerts match this filter.</div>';
-}
-function setAlert(id,st){ALERT_STATE[id]=Object.assign({},ALERT_STATE[id],{status:st});saveState();renderAlerts();
-  toast(st==='res'?'Alert resolved ✓':st==='ack'?'Alert acknowledged':'Alert reopened');}
-function assignAlert(id){const who=prompt('Assign this alert to (name / role):'); if(who){ALERT_STATE[id]=Object.assign({},ALERT_STATE[id],{status:'ack',assignee:who});saveState();renderAlerts();toast('Assigned to '+who);}}
-function runCheck(){renderAlerts();toast('Rules evaluated — '+document.getElementById('alertCount').textContent+' active alerts');}
-function critCount(){return computeAlerts().filter(a=>a.sev==='crit'&&alStatus(a.id)!=='res').length;}
-
-/* rules panel */
-function renderRules(){
-  const el=document.getElementById('ruleList'); if(!el)return;
-  el.innerHTML=RULES.map(r=>`
-   <div class="rule">
-     <label class="switch"><input type="checkbox" ${r.enabled?'checked':''} onchange="toggleRule('${r.id}',this.checked)"><span class="slider"></span></label>
-     <div class="rinfo"><b>${r.name}</b> <span class="tag ${r.sev==='crit'?'t-over':'t-warn'}" style="font-size:9.5px">${r.sev.toUpperCase()}</span><p>${r.desc}</p></div>
-     ${r.unit?`<input class="rthr" type="number" value="${r.threshold}" onchange="setThreshold('${r.id}',this.value)"><span style="color:var(--ink3);font-size:12px">${r.unit}</span>`:''}
-   </div>`).join('');
-}
-function toggleRule(id,on){ruleById(id).enabled=on;saveState();renderAlerts();renderExec();toast('Rule '+(on?'enabled':'disabled'));}
-function setThreshold(id,vv){ruleById(id).threshold=Math.abs(parseFloat(vv)||0);saveState();renderAlerts();toast('Threshold updated');}
-
-/* what-if simulator */
-function populateSim(){const el=document.getElementById('simProj'); if(!el)return; const cur=el.value;
-  el.innerHTML=PROJECTS.map(p=>`<option>${p.name.replace(/"/g,'&quot;')}</option>`).join(''); if(cur)el.value=cur;}
-function runSim(){
-  const name=document.getElementById('simProj').value, amt=parseFloat(document.getElementById('simAmt').value)||0;
-  const out=document.getElementById('simOut'), p=PROJECTS.find(x=>x.name===name); if(!p){out.innerHTML='';return;}
-  const before=computeAlerts().map(a=>a.id);
-  const clone=PROJECTS.map(x=>Object.assign({},x)), cp=clone.find(x=>x.name===name);
-  cp.committed+=amt; if(cp.committed>cp.forecast)cp.forecast=cp.committed;
-  const fresh=computeAlerts(clone).filter(a=>!before.includes(a.id));
-  const vv=cp.budget-cp.forecast;
-  let html=`<div class="kv"><span>New committed</span><b>${fmt(cp.committed)}</b></div>
-    <div class="kv"><span>New forecast</span><b>${fmt(cp.forecast)}</b></div>
-    <div class="kv"><span>Variance vs budget</span><b style="color:${vv<0?'var(--red)':'var(--green)'}">${fmt(vv)}</b></div>`;
-  if(fresh.length) html+=`<div class="subhead" style="color:var(--red)">⚠ Would trigger ${fresh.length} new alert(s)</div>`+
-    fresh.map(a=>`<div class="alert" style="margin-bottom:8px"><div class="sev ${a.sev}">${a.sev==='crit'?'⛔':'▲'}</div><div class="body"><b>${a.title}</b><p>${a.msg}</p></div></div>`).join('');
-  else html+=`<div class="subhead" style="color:var(--green)">✓ No new alerts — within current thresholds</div>`;
-  out.innerHTML=html;
-}
-
-/* ================= MODAL: project editing, commitments, stage-gate ================= */
-const valOf=id=>parseFloat(document.getElementById(id).value)||0;
-function mOpen(html){document.getElementById('modalCard').innerHTML=html;document.getElementById('modalBg').classList.add('open');}
-function mClose(){document.getElementById('modalBg').classList.remove('open');mPending=[];}
-let mPid=null,mPending=[];
-function openProject(name){
-  mPending=[]; const p=PROJECTS.find(x=>x.name===name); if(!p)return; mPid=name;
-  const hist=TXNS.filter(t=>t.project===name).slice(0,12);
-  mOpen(`
-   <div class="mh"><h3>${p.name}</h3><button class="x" onclick="mClose()">×</button></div>
-   <div class="mb">
-     <div style="color:var(--ink3);font-size:12px;margin-bottom:14px">${p.site}${isEmergent(p)?' · <span class="tag t-emg">Emergent — set a budget to fund via stage-gate</span>':''}</div>
-     <div class="row2">
-       <div class="field"><label>Approved budget ($)</label><input type="number" id="mBudget" value="${p.budget}" oninput="mRecalc()"></div>
-       <div class="field"><label>Forecast at completion ($)</label><input type="number" id="mForecast" value="${p.forecast}" oninput="mRecalc()"></div>
-     </div>
-     <div class="row2">
-       <div class="field"><label>Committed to date ($)</label><input type="number" id="mCommitted" value="${p.committed}" oninput="mRecalc()"></div>
-       <div class="field"><label>% complete</label><input type="number" id="mPct" value="${p.pct}" min="0" max="100"></div>
-     </div>
-     <div class="kv"><span>Variance (budget − forecast)</span><b id="mVar"></b></div>
-     <div class="subhead">Log a commitment / PO</div>
-     <div class="row2"><input type="number" id="mcAmt" placeholder="Amount ($)"><input type="text" id="mcDesc" placeholder="Vendor / PO description"></div>
-     <button class="btns" style="margin-top:8px" onclick="mAddCommit()">＋ Add to committed</button>
-     ${hist.length?`<div class="subhead">Recent activity</div><div class="txnlog">${hist.map(t=>`<div>${fmtTs(t.ts)} — ${t.action}</div>`).join('')}</div>`:''}
-   </div>
-   <div class="mf"><button class="btns" onclick="mClose()">Cancel</button><button class="btnp" onclick="mSaveProject()">Save changes</button></div>`);
-  mRecalc();
-}
-function mRecalc(){const el=document.getElementById('mVar'); if(!el)return; const d=valOf('mBudget')-valOf('mForecast');
-  el.textContent=fmt(d); el.style.color=d<0?'var(--red)':'var(--green)';}
-function mAddCommit(){const amt=valOf('mcAmt'); if(amt<=0)return;
-  const c=document.getElementById('mCommitted'); c.value=(parseFloat(c.value)||0)+amt;
-  const f=document.getElementById('mForecast'); if(parseFloat(c.value)>parseFloat(f.value))f.value=c.value;
-  mPending.push({amt,desc:document.getElementById('mcDesc').value||'Commitment'});
-  document.getElementById('mcAmt').value='';document.getElementById('mcDesc').value='';mRecalc();toast('Commitment staged — Save to confirm');}
-function mSaveProject(){
-  const p=PROJECTS.find(x=>x.name===mPid); if(!p)return; const pre=critCount();
-  const nb=valOf('mBudget'),nf=valOf('mForecast'),nc=valOf('mCommitted'),np=Math.max(0,Math.min(100,valOf('mPct')));
-  if(nb!==p.budget)logTxn(p.name,`Budget set to ${fmt(nb)} (was ${fmt(p.budget)})`);
-  if(nf!==p.forecast)logTxn(p.name,`Forecast re-estimated to ${fmt(nf)} (was ${fmt(p.forecast)})`);
-  mPending.forEach(c=>logTxn(p.name,`Commitment logged: ${fmt(c.amt)} — ${c.desc}`));
-  if(nc!==p.committed&&!mPending.length)logTxn(p.name,`Committed adjusted to ${fmt(nc)}`);
-  p.budget=nb;p.forecast=nf;p.committed=nc;p.pct=np;
-  mClose();refreshAll(); const post=critCount();
-  toast(post>pre?('Saved — ⚠ '+(post-pre)+' new critical alert(s)'):'Saved ✓ — variance &amp; alerts updated',post>pre);
-}
-function newProject(){
-  mPending=[];mPid=null; const sites=[...new Set(PROJECTS.map(p=>p.site))].sort();
-  mOpen(`<div class="mh"><h3>New project</h3><button class="x" onclick="mClose()">×</button></div>
-   <div class="mb">
-     <div class="field"><label>Project name</label><input type="text" id="nName" placeholder="e.g. 720 — Inuksuk · New workshop"></div>
-     <div class="field"><label>Site</label><select id="nSite" onchange="document.getElementById('nSiteNew').style.display=this.value==='＋ New site…'?'block':'none'">${sites.map(s=>`<option>${s}</option>`).join('')}<option>＋ New site…</option></select></div>
-     <input type="text" id="nSiteNew" placeholder="New site name" style="display:none;width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:9px;padding:9px 12px;font-size:13px;margin-bottom:14px">
-     <div class="row2"><div class="field"><label>Approved budget ($)</label><input type="number" id="nBudget" placeholder="0 = emergent"></div>
-       <div class="field"><label>Forecast ($)</label><input type="number" id="nForecast" placeholder="0"></div></div>
-     <div class="field"><label>Committed to date ($)</label><input type="number" id="nCommitted" placeholder="0"></div>
-   </div>
-   <div class="mf"><button class="btns" onclick="mClose()">Cancel</button><button class="btnp" onclick="mCreateProject()">Create project</button></div>`);
-}
-function mCreateProject(){
-  const name=(document.getElementById('nName').value||'').trim(); if(!name){toast('Enter a project name',true);return;}
-  if(PROJECTS.some(p=>p.name===name)){toast('A project with that name already exists',true);return;}
-  let site=document.getElementById('nSite').value; if(site==='＋ New site…')site=(document.getElementById('nSiteNew').value||'New site').trim();
-  PROJECTS.push({name,site,committed:valOf('nCommitted'),forecast:valOf('nForecast'),budget:valOf('nBudget'),slip:null,pct:0});
-  logTxn(name,`Project created (budget ${fmt(valOf('nBudget'))}, forecast ${fmt(valOf('nForecast'))})`);
-  mClose();refreshAll();toast('Project created ✓');
-}
-function openCommit(){
-  mOpen(`<div class="mh"><h3>Log commitment / PO</h3><button class="x" onclick="mClose()">×</button></div>
-   <div class="mb">
-     <div class="field"><label>Project</label><select id="cProj">${PROJECTS.map(p=>`<option>${p.name.replace(/"/g,'&quot;')}</option>`).join('')}</select></div>
-     <div class="row2"><div class="field"><label>Amount ($)</label><input type="number" id="cAmt" placeholder="0"></div>
-       <div class="field"><label>Vendor / description</label><input type="text" id="cDesc" placeholder="e.g. PO-1453 — fans"></div></div>
-     <div class="field"><label style="text-transform:none;letter-spacing:0;color:var(--ink2)"><input type="checkbox" id="cBump" checked style="width:auto;margin-right:7px;vertical-align:middle">Raise forecast if commitment exceeds it</label></div>
-   </div>
-   <div class="mf"><button class="btns" onclick="mClose()">Cancel</button><button class="btnp" onclick="mDoCommit()">Log commitment</button></div>`);
-}
-function mDoCommit(){
-  const name=document.getElementById('cProj').value, amt=valOf('cAmt'), p=PROJECTS.find(x=>x.name===name);
-  if(!p||amt<=0){toast('Enter an amount',true);return;}
-  const pre=critCount(); p.committed+=amt;
-  if(document.getElementById('cBump').checked&&p.committed>p.forecast)p.forecast=p.committed;
-  logTxn(name,`Commitment logged: ${fmt(amt)} — ${document.getElementById('cDesc').value||'PO'}`);
-  mClose();refreshAll(); const post=critCount();
-  toast(post>pre?'Commitment logged — ⚠ new critical alert':'Commitment logged ✓',post>pre);
-}
-function exportData(){
-  const blob=new Blob([JSON.stringify({projects:PROJECTS,txns:TXNS,rules:RULES},null,2)],{type:'application/json'});
-  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
-  a.download='aurora-data-'+new Date().toISOString().slice(0,10)+'.json'; a.click(); toast('Data exported as JSON');
-}
-function resetData(){ if(!confirm('Reset all projects, edits, commitments and alerts to the original baseline?'))return;
-  PROJECTS.length=0;SEED_PROJECTS.forEach(p=>PROJECTS.push(JSON.parse(JSON.stringify(p))));
-  TXNS=[];ALERT_STATE={};RULES=JSON.parse(JSON.stringify(DEFAULT_RULES));
-  refreshAll();toast('Reset to baseline ✓');
-}
-
-/* ================= REFRESH + INIT ================= */
-function refreshAll(){populateCostSites();renderExec();renderCost();renderSched();renderEmergent();renderRules();populateSim();renderAlerts();renderCharts();saveState();}
-document.getElementById('modalBg').onclick=e=>{if(e.target.id==='modalBg')mClose();};
-document.addEventListener('keydown',e=>{if(e.key==='Escape')mClose();});
-refreshAll();
+/* ---------- ALERTS ---------- */
+const alerts=[];
+PROJECTS.forEach(p=>{
+  if(isEmergent(p)) alerts.push({sev:'crit',cat:'COST',title:p.name,
+    msg:`Unbudgeted commitment — ${fmt(p.forecast)} forecast against a $0 corporate budget. Requires sponsor approval & budget line.`,meta:p.site});
+  else if(isOver(p)&&Math.abs(varPct(p))>=20) alerts.push({sev:'crit',cat:'COST',title:p.name,
+    msg:`Forecast ${Math.abs(varPct(p)).toFixed(0)}% over budget (${fmt(variance(p))}). Exceeds 20% control threshold.`,meta:p.site});
+  if(p.slip!==null&&p.slip<-300) alerts.push({sev:'crit',cat:'SCHEDULE',title:p.name,
+    msg:`Critical baseline slip — ${Math.abs(p.slip)} days behind original finish at ${p.pct}% complete.`,meta:p.site});
+  else if(p.slip!==null&&p.slip<-90) alerts.push({sev:'high',cat:'SCHEDULE',title:p.name,
+    msg:`Schedule slip ${Math.abs(p.slip)} days behind baseline at ${p.pct}% complete.`,meta:p.site});
+});
+alerts.push({sev:'high',cat:'PROCUREMENT',title:'547 — Ventilation Principale no2',
+  msg:'Major mechanical package not yet ordered — long-lead items risk missing the 2026 sealift window.',meta:'UG Mequillon'});
+alerts.push({sev:'info',cat:'PORTFOLIO',title:'Portfolio variance',
+  msg:'Total forecast $369.6M vs $249.3M budget — portfolio 48% over. Recommend control review with Finance & PMO.',meta:'All sites'});
+const sevOrder={crit:0,high:1,info:2};
+alerts.sort((a,b)=>sevOrder[a.sev]-sevOrder[b.sev]);
+const icons={crit:'⛔',high:'▲',info:'ⓘ'};
+document.getElementById('alertCount').textContent=alerts.filter(a=>a.sev!=='info').length;
+document.getElementById('alertFeed').innerHTML=alerts.map(a=>`
+  <div class="alert"><div class="sev ${a.sev}">${icons[a.sev]}</div>
+   <div class="body"><b>${a.title}</b> &nbsp;<span class="tag ${a.cat==='COST'?'t-over':(a.cat==='SCHEDULE'?'t-warn':'t-emg')}" style="font-size:10px">${a.cat}</span>
+     <p>${a.msg}</p></div>
+   <div class="meta">${a.meta}</div></div>`).join('');
 
 /* ---------- TEAM FORUM ---------- */
 const FORUM_KEY='aurora_forum_v1', ME_KEY='aurora_forum_me';
@@ -1185,6 +1812,859 @@ document.getElementById('ntPost').onclick=()=>{
   saveMe();saveForum();renderThreads();
 };
 renderFilters();renderThreads();
+
+
+
+/* ══════════════════════════════════════════════
+   ABC / DUPONT / EARNED VALUE MODULES
+══════════════════════════════════════════════ */
+(function(){
+  const portfolioBudget = SITES.reduce((s,x)=>s+x.budget,0);
+  const portfolioForecast = SITES.reduce((s,x)=>s+x.forecast,0);
+  const portfolioCommitted = PROJECTS.reduce((s,p)=>s+p.committed,0);
+  const portfolioETC = portfolioForecast - portfolioCommitted;
+
+  const exposureProjects = PROJECTS
+    .filter(p => (p.budget > 0 && p.forecast > p.budget) || (p.budget === 0 && p.forecast > 0))
+    .map(p => ({...p, exposure: p.budget === 0 ? p.forecast : p.forecast - p.budget}))
+    .sort((a,b)=>b.exposure-a.exposure);
+  const totalExposure = exposureProjects.reduce((s,p)=>s+p.exposure,0);
+
+  let abcChart1=null, abcChart2=null, dpChart=null, evaChart1=null, evaChart2=null;
+  const pctText = x => (x*100).toFixed(1)+'%';
+  const ratioText = x => x.toFixed(2)+'x';
+  const classTagMod = c => c==='A' ? '<span class="tag t-over">A</span>' : c==='B' ? '<span class="tag t-warn">B</span>' : '<span class="tag t-under">C</span>';
+
+  let cum=0;
+  const abc = exposureProjects.map(p=>{
+    cum += p.exposure;
+    const cumShare = cum / totalExposure;
+    const cls = cumShare <= .80 ? 'A' : (cumShare <= .95 ? 'B' : 'C');
+    return {...p, share:p.exposure/totalExposure, cumShare, cls};
+  });
+
+  function renderABCModule(){
+    const classAgg = {A:0,B:0,C:0};
+    abc.forEach(p=>classAgg[p.cls]+=p.exposure);
+    document.getElementById('abcAExposure').textContent = fmtM(classAgg.A);
+    document.getElementById('abcACount').textContent = abc.filter(p=>p.cls==='A').length;
+    document.getElementById('abcBExposure').textContent = fmtM(classAgg.B);
+    document.getElementById('abcCExposure').textContent = fmtM(classAgg.C);
+
+    document.getElementById('abcModuleBody').innerHTML = abc.map(r=>`
+      <tr><td>${classTagMod(r.cls)}</td><td>${r.name}</td><td style="color:var(--ink2)">${r.site}</td>
+      <td class="num" style="color:var(--red)">${fmtM(r.exposure)}</td>
+      <td class="num">${pctText(r.share)}</td><td class="num">${pctText(r.cumShare)}</td>
+      <td>${r.cls==='A'?'Executive recovery plan':r.cls==='B'?'PMO watchlist':'Standard control'}</td></tr>`).join('');
+
+    const ctx1=document.getElementById('chartABCClass').getContext('2d');
+    if(abcChart1) abcChart1.destroy();
+    abcChart1 = new Chart(ctx1,{type:'doughnut',data:{labels:['A Class','B Class','C Class'],datasets:[{data:[classAgg.A/1e6,classAgg.B/1e6,classAgg.C/1e6],backgroundColor:['#f87171','#fbbf24','#34d399'],borderColor:'#13263a',borderWidth:2}]},options:{plugins:{legend:{position:'bottom'},tooltip:{callbacks:{label:c=>c.label+': $'+c.raw.toFixed(1)+'M'}}}}});
+
+    const top=abc.slice(0,12);
+    const ctx2=document.getElementById('chartABCCurve').getContext('2d');
+    if(abcChart2) abcChart2.destroy();
+    abcChart2 = new Chart(ctx2,{type:'bar',data:{labels:top.map(p=>p.name.split('·')[0].trim()),datasets:[{type:'bar',label:'Exposure',data:top.map(p=>p.exposure/1e6),backgroundColor:top.map(p=>p.cls==='A'?'#f87171':p.cls==='B'?'#fbbf24':'#34d399'),borderRadius:4},{type:'line',label:'Cumulative %',data:top.map(p=>p.cumShare*100),yAxisID:'y1',borderColor:'#36d3c4',backgroundColor:'#36d3c4',tension:.25}]},options:{plugins:{legend:{position:'bottom'}},scales:{y:{ticks:{callback:v=>'$'+v+'M'}},y1:{position:'right',min:0,max:100,ticks:{callback:v=>v+'%'},grid:{drawOnChartArea:false}},x:{ticks:{font:{size:10}},grid:{display:false}}}}});
+  }
+
+  function renderDupontModule(){
+    const pressure = portfolioForecast / portfolioBudget;
+    const coverage = portfolioBudget / portfolioForecast;
+    const lockin = portfolioCommitted / portfolioForecast;
+    document.getElementById('dpPressure').textContent = ratioText(pressure);
+    document.getElementById('dpCoverage').textContent = pctText(coverage);
+    document.getElementById('dpLockin').textContent = pctText(lockin);
+    document.getElementById('dpETC').textContent = fmtM(portfolioETC);
+    document.getElementById('dpNode1').textContent = 'Forecast / Budget = '+ratioText(pressure);
+    document.getElementById('dpNode2').textContent = 'Budget / Forecast = '+pctText(coverage);
+    document.getElementById('dpNode3').textContent = 'Committed / Forecast = '+pctText(lockin);
+    document.getElementById('dpNode4').textContent = 'ETC = '+fmtM(portfolioETC);
+
+    const sites=[...SITES].sort((a,b)=>(b.forecast/b.budget)-(a.forecast/a.budget));
+    document.getElementById('dupontBody').innerHTML = sites.map(s=>{
+      const v=s.budget-s.forecast, fp=s.forecast/s.budget, bc=s.budget/s.forecast;
+      const interp = fp>1.5 ? '<span class="tag t-over">Structural overrun</span>' : fp>1 ? '<span class="tag t-warn">Pressure</span>' : '<span class="tag t-under">Covered</span>';
+      return `<tr><td>${s.site}</td><td class="num">${fmtM(s.forecast)}</td><td class="num">${fmtM(s.budget)}</td><td class="num" style="color:${v<0?'var(--red)':'var(--green)'}">${fmtM(v)}</td><td class="num">${ratioText(fp)}</td><td class="num">${pctText(bc)}</td><td>${interp}</td></tr>`;
+    }).join('');
+
+    const ctx=document.getElementById('chartDupontModule').getContext('2d');
+    if(dpChart) dpChart.destroy();
+    dpChart = new Chart(ctx,{type:'bar',data:{labels:sites.map(s=>s.site),datasets:[{label:'Forecast Pressure',data:sites.map(s=>s.forecast/s.budget*100),backgroundColor:'#f87171',borderRadius:4},{label:'Budget Coverage',data:sites.map(s=>s.budget/s.forecast*100),backgroundColor:'#4fc3f7',borderRadius:4}]},options:{plugins:{legend:{position:'bottom'},tooltip:{callbacks:{label:c=>c.dataset.label+': '+c.raw.toFixed(0)+'%'}}},scales:{y:{ticks:{callback:v=>v+'%'}},x:{grid:{display:false}}}}});
+  }
+
+  function calcEVAProject(p){
+    const ev = p.budget * (p.pct/100);
+    const ac = p.committed;
+    const cpi = ac > 0 ? ev/ac : null;
+    const cv = ev - ac;
+    const pvPct = p.slip === null || p.slip === undefined ? Math.min(100, p.pct + 10) : Math.max(5, Math.min(100, p.pct + Math.abs(Math.min(0,p.slip))/6));
+    const pv = p.budget * (pvPct/100);
+    const spi = pv > 0 ? ev/pv : null;
+    return {...p, ev, ac, cpi, cv, pv, spi};
+  }
+  const eva = PROJECTS.map(calcEVAProject).filter(p=>p.ac>0);
+  function renderEVAModule(){
+    const evTotal=eva.reduce((s,p)=>s+p.ev,0), acTotal=eva.reduce((s,p)=>s+p.ac,0);
+    const cpiTotal=evTotal/acTotal;
+    document.getElementById('evaEV').textContent = fmtM(evTotal);
+    document.getElementById('evaAC').textContent = fmtM(acTotal);
+    document.getElementById('evaCPI').textContent = cpiTotal.toFixed(2);
+    document.getElementById('evaBadCount').textContent = eva.filter(p=>p.cpi!==null && p.cpi<1).length;
+
+    const worst=[...eva].sort((a,b)=>(a.cpi||0)-(b.cpi||0)).slice(0,12);
+    document.getElementById('evaBody').innerHTML = worst.map(p=>{
+      const health = p.cpi<0.8 || p.spi<0.8 ? '<span class="tag t-over">Critical</span>' : p.cpi<1 || p.spi<1 ? '<span class="tag t-warn">Watch</span>' : '<span class="tag t-under">Healthy</span>';
+      return `<tr><td>${p.name}</td><td style="color:var(--ink2)">${p.site}</td><td class="num">${fmtM(p.ev)}</td><td class="num">${fmtM(p.ac)}</td><td class="num" style="color:${p.cv<0?'var(--red)':'var(--green)'}">${fmtM(p.cv)}</td><td class="num">${p.cpi?p.cpi.toFixed(2):'—'}</td><td class="num">${p.spi?p.spi.toFixed(2):'—'}</td><td>${health}</td></tr>`;
+    }).join('');
+
+    const ctx1=document.getElementById('chartEVAModule').getContext('2d');
+    if(evaChart1) evaChart1.destroy();
+    evaChart1 = new Chart(ctx1,{type:'bar',data:{labels:worst.map(p=>p.name.split('·')[0].trim()),datasets:[{label:'EV',data:worst.map(p=>p.ev/1e6),backgroundColor:'#34d399',borderRadius:4},{label:'AC',data:worst.map(p=>p.ac/1e6),backgroundColor:'#f87171',borderRadius:4}]},options:{indexAxis:'y',plugins:{legend:{position:'bottom'},tooltip:{callbacks:{label:c=>c.dataset.label+': $'+c.raw.toFixed(1)+'M'}}},scales:{x:{ticks:{callback:v=>'$'+v+'M'}},y:{ticks:{font:{size:10}},grid:{display:false}}}}});
+
+    const ctx2=document.getElementById('chartEVAMatrix').getContext('2d');
+    if(evaChart2) evaChart2.destroy();
+    evaChart2 = new Chart(ctx2,{type:'scatter',data:{datasets:[{label:'Projects',data:eva.map(p=>({x:p.cpi||0,y:p.spi||0,project:p.name,site:p.site})),backgroundColor:'#4fc3f7',pointRadius:5}]},options:{plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw.project}: CPI ${c.raw.x.toFixed(2)}, SPI ${c.raw.y.toFixed(2)}`}}},scales:{x:{min:0,max:2,title:{display:true,text:'CPI (cost efficiency)',color:'#6f8aa5'}},y:{min:0,max:1.5,title:{display:true,text:'SPI (schedule efficiency)',color:'#6f8aa5'}}}}});
+  }
+
+  function initModuleWhenActive(id, fn){
+    let done=false;
+    const run=()=>{ if(!done && document.getElementById(id).classList.contains('active')){ done=true; fn(); } };
+    new MutationObserver(run).observe(document.getElementById(id),{attributes:true,attributeFilter:['class']});
+    window.addEventListener('load', run);
+    run();
+  }
+  initModuleWhenActive('v-abc', renderABCModule);
+  initModuleWhenActive('v-dupont', renderDupontModule);
+  initModuleWhenActive('v-eva', renderEVAModule);
+})();
+
+
+/* ══════════════════════════════════════════════
+   RISK & CONCENTRATION ANALYSIS MODULE
+══════════════════════════════════════════════ */
+(function(){
+  let chartSite=null, chartVendorPO=null, chartResource=null;
+  const shortName = s => (s||'').replace(/^[\dA-Z]+\s—\s/,'').replace('·','—');
+  const share = (n,d) => d ? (n/d*100) : 0;
+  const exposure = p => p.budget===0 ? p.forecast : Math.max(0, p.forecast-p.budget);
+  const overrunProjects = PROJECTS.map(p=>({...p, exposure:exposure(p)})).filter(p=>p.exposure>0).sort((a,b)=>b.exposure-a.exposure);
+  const totalForecast = SITES.reduce((s,x)=>s+x.forecast,0);
+  const totalExposure = overrunProjects.reduce((s,p)=>s+p.exposure,0);
+  const totalVendorSpend = (typeof VENDOR_GROUPS!=='undefined') ? VENDOR_GROUPS.reduce((s,v)=>s+v.spend,0) : 0;
+  const totalPOValue = (typeof PO_PACKAGES!=='undefined') ? PO_PACKAGES.reduce((s,p)=>s+p.value,0) : 0;
+  const totalResourceLoad = (typeof RESOURCE_CATEGORIES!=='undefined') ? RESOURCE_CATEGORIES.reduce((s,r)=>s+r.load,0) : 0;
+
+  function renderConcentrationModule(){
+    const sortedSites=[...SITES].sort((a,b)=>b.forecast-a.forecast);
+    const topSite=sortedSites[0];
+    const topProject=overrunProjects[0];
+    const topResource=(typeof RESOURCE_CATEGORIES!=='undefined') ? [...RESOURCE_CATEGORIES].sort((a,b)=>b.load-a.load)[0] : null;
+    const topVendors=(typeof VENDOR_GROUPS!=='undefined') ? [...VENDOR_GROUPS].sort((a,b)=>b.spend-a.spend).slice(0,3) : [];
+    const vendorShare=share(topVendors.reduce((s,v)=>s+v.spend,0),totalVendorSpend);
+
+    document.getElementById('concTopSite').textContent = topSite.site;
+    document.getElementById('concTopSiteSub').textContent = fmtM(topSite.forecast)+' forecast · '+share(topSite.forecast,totalForecast).toFixed(1)+'% of portfolio';
+    document.getElementById('concTopProjectPct').textContent = share(topProject.exposure,totalExposure).toFixed(1)+'%';
+    document.getElementById('concTopProjectName').textContent = shortName(topProject.name);
+    document.getElementById('concVendorShare').textContent = vendorShare.toFixed(0)+'%';
+    document.getElementById('concResourceTop').textContent = topResource ? topResource.name.split('/')[0].trim() : '—';
+    document.getElementById('concResourceSub').textContent = topResource ? share(topResource.load,totalResourceLoad).toFixed(0)+'% of resource load' : '—';
+
+    document.getElementById('concTreemap').innerHTML = sortedSites.slice(0,5).map((s,i)=>`<div class="treemap-tile ${i===0?'big':''}">
+      <div class="tm-name">${s.site}</div><div class="tm-val">${share(s.forecast,totalForecast).toFixed(1)}%</div>
+      <div class="tm-sub">${fmtM(s.forecast)} forecast · ${fmtM(Math.max(0,s.forecast-s.budget))} overrun</div></div>`).join('');
+
+    const driverCards = [
+      {name:'Portfolio concentration', text:`${topSite.site} carries ${share(topSite.forecast,totalForecast).toFixed(1)}% of forecast exposure.`, score:share(topSite.forecast,totalForecast)},
+      {name:'Cost overrun concentration', text:`${shortName(topProject.name)} drives ${share(topProject.exposure,totalExposure).toFixed(1)}% of total overrun exposure.`, score:share(topProject.exposure,totalExposure)},
+      {name:'Vendor concentration', text:`Top 3 vendors represent ${vendorShare.toFixed(1)}% of vendor spend.`, score:vendorShare},
+      {name:'PO package concentration', text:`Top 3 PO packages represent ${share([...PO_PACKAGES].sort((a,b)=>b.value-a.value).slice(0,3).reduce((s,p)=>s+p.value,0),totalPOValue).toFixed(1)}% of package value.`, score:share([...PO_PACKAGES].sort((a,b)=>b.value-a.value).slice(0,3).reduce((s,p)=>s+p.value,0),totalPOValue)}
+    ];
+    document.getElementById('concDriverCards').innerHTML = driverCards.map(c=>`<div class="driver-card"><b>${c.name}</b><span>${c.text}</span><div class="driver-score"><i style="width:${Math.min(100,c.score)}%"></i></div></div>`).join('');
+
+    document.getElementById('concTableBody').innerHTML = [
+      ['Portfolio / site', topSite.site, fmtM(topSite.forecast)+' / '+share(topSite.forecast,totalForecast).toFixed(1)+'%', 'Single-site exposure concentration', 'Prioritize site-level review and recovery governance'],
+      ['Project overrun', shortName(topProject.name), fmtM(topProject.exposure)+' / '+share(topProject.exposure,totalExposure).toFixed(1)+'%', 'One project drives majority of variance', 'Assign executive owner and weekly recovery action log'],
+      ['Vendor spend', topVendors.map(v=>v.vendor).join(', '), vendorShare.toFixed(1)+'%', 'Supplier dependency concentration', 'Review commercial leverage, single-source risk and expediting plan'],
+      ['PO packages', [...PO_PACKAGES].sort((a,b)=>b.value-a.value).slice(0,3).map(p=>p.po).join(', '), fmtM([...PO_PACKAGES].sort((a,b)=>b.value-a.value).slice(0,3).reduce((s,p)=>s+p.value,0)), 'Few packages dominate open commitment', 'Create PO risk review board for A-class packages'],
+      ['Resources', topResource?topResource.name:'—', topResource?share(topResource.load,totalResourceLoad).toFixed(1)+'%':'—', 'Resource bottleneck may constrain schedule recovery', 'Align resource plan with critical path and vendor lead times']
+    ].map(r=>`<tr><td>${r[0]}</td><td><b>${r[1]}</b></td><td class="num">${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td></tr>`).join('');
+
+    const ctx1=document.getElementById('chartConcSiteShare').getContext('2d');
+    if(chartSite) chartSite.destroy();
+    chartSite = new Chart(ctx1,{type:'doughnut',data:{labels:sortedSites.map(s=>s.site),datasets:[{data:sortedSites.map(s=>s.forecast/1e6),backgroundColor:['#f87171','#4fc3f7','#36d3c4','#fbbf24','#a78bfa','#34d399','#3a5d7d'],borderColor:'#13263a',borderWidth:2}]},options:{cutout:'58%',plugins:{legend:{position:'right',labels:{boxWidth:11,font:{size:11}}},tooltip:{callbacks:{label:c=>c.label+': $'+c.raw.toFixed(1)+'M'}}}}});
+
+    const vendors=[...VENDOR_GROUPS].sort((a,b)=>b.spend-a.spend).slice(0,6);
+    const pos=[...PO_PACKAGES].sort((a,b)=>b.value-a.value).slice(0,6);
+    const ctx2=document.getElementById('chartConcVendorPO').getContext('2d');
+    if(chartVendorPO) chartVendorPO.destroy();
+    chartVendorPO = new Chart(ctx2,{type:'bar',data:{labels:vendors.map(v=>v.vendor),datasets:[{label:'Vendor spend',data:vendors.map(v=>v.spend/1e6),backgroundColor:'#4fc3f7',borderRadius:4}]},options:{indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'$'+c.raw.toFixed(1)+'M'}}},scales:{x:{ticks:{callback:v=>'$'+v+'M'}},y:{grid:{display:false},ticks:{font:{size:10}}}}}});
+
+    const resources=[...RESOURCE_CATEGORIES].sort((a,b)=>b.load-a.load);
+    const ctx3=document.getElementById('chartConcResource').getContext('2d');
+    if(chartResource) chartResource.destroy();
+    chartResource = new Chart(ctx3,{type:'bar',data:{labels:resources.map(r=>r.name),datasets:[{label:'Resource load',data:resources.map(r=>r.load),backgroundColor:'#36d3c4',borderRadius:4}]},options:{plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.raw+' load score'}}},scales:{y:{ticks:{callback:v=>v}},x:{grid:{display:false},ticks:{font:{size:10}}}}}});
+  }
+
+  function initWhenActive(){
+    let done=false;
+    const el=document.getElementById('v-concentration');
+    const run=()=>{ if(!done && el && el.classList.contains('active')){ done=true; renderConcentrationModule(); } };
+    if(el) new MutationObserver(run).observe(el,{attributes:true,attributeFilter:['class']});
+    window.addEventListener('load',run); run();
+  }
+  initWhenActive();
+})();
+
+/* ══════════════════════════════════════════════
+   PARETO ANALYSIS MODULE
+══════════════════════════════════════════════ */
+(function(){
+  // Only projects that are over budget (variance < 0)
+  const overProjects = PROJECTS.filter(p => p.budget > 0 && p.forecast > p.budget)
+    .map(p => ({...p, overrun: p.forecast - p.budget}))
+    .sort((a,b) => b.overrun - a.overrun);
+
+  const emgProjects = PROJECTS.filter(p => p.budget === 0 && p.forecast > 0)
+    .map(p => ({...p, overrun: p.forecast}));
+
+  const allOver = [...overProjects, ...emgProjects].sort((a,b) => b.overrun - a.overrun);
+  const totalOverrun = allOver.reduce((s,p) => s + p.overrun, 0);
+
+  // ── Segment data builders ──
+  function buildProjectSeg(){
+    return allOver.map(p => ({label: p.name.replace(/^[\d\w]+ — /,'').replace('·','—'), full: p.name, value: p.overrun, site: p.site, emergent: p.budget===0}));
+  }
+  function buildSiteSeg(){
+    const map = {};
+    allOver.forEach(p => {
+      if(!map[p.site]) map[p.site] = {label:p.site, value:0, full:p.site};
+      map[p.site].value += p.overrun;
+    });
+    return Object.values(map).sort((a,b) => b.value - a.value);
+  }
+  function buildTypeSeg(){
+    const cats = {
+      'Expo Site (Tailings / Cell 4)': 0,
+      'Emergent (no budget)': 0,
+      'Schedule-driven overspend': 0,
+      'Scope growth': 0,
+      'Other over-budget': 0
+    };
+    allOver.forEach(p => {
+      if(p.budget===0) cats['Emergent (no budget)'] += p.overrun;
+      else if(p.name.includes('600')) cats['Expo Site (Tailings / Cell 4)'] += p.overrun;
+      else if(p.slip !== null && p.slip < -90) cats['Schedule-driven overspend'] += p.overrun;
+      else if(Math.abs((p.forecast-p.budget)/p.budget) > 0.5) cats['Scope growth'] += p.overrun;
+      else cats['Other over-budget'] += p.overrun;
+    });
+    return Object.entries(cats).filter(([,v])=>v>0).map(([k,v])=>({label:k,value:v,full:k})).sort((a,b)=>b.value-a.value);
+  }
+
+  let currentSeg = 'project';
+  let paretoCurveChart = null;
+
+  function renderPareto(seg){
+    const items = seg==='project' ? buildProjectSeg() : seg==='site' ? buildSiteSeg() : buildTypeSeg();
+    const total = items.reduce((s,i)=>s+i.value,0);
+
+    // KPIs
+    document.getElementById('pk-total').textContent = fmtM(total);
+    let cum=0, n80=-1;
+    for(let i=0;i<items.length;i++){cum+=items[i].value;if(cum/total>=0.8&&n80===-1)n80=i+1;}
+    const label80 = seg==='project'?'projects':seg==='site'?'sites':'categories';
+    document.getElementById('pk-n80').textContent = n80 + ' ' + label80;
+    document.getElementById('pk-total-n').textContent = items.length;
+    document.getElementById('pk-top1pct').textContent = (items[0].value/total*100).toFixed(1)+'%';
+    document.getElementById('pk-top1name').textContent = items[0].label.substring(0,30);
+    document.getElementById('pk-ratio').textContent = n80+' / '+items.length;
+
+    // Bar chart
+    const maxVal = items[0].value;
+    const barW = 520; // reference width
+    let cumPct = 0;
+    const html = items.map((item,i) => {
+      const pct = item.value / total;
+      const prevCum = cumPct;
+      cumPct += pct;
+      const barPct = item.value / maxVal * 100;
+      const cumLeft = prevCum * 100; // percent of bar track width
+      const past80 = prevCum >= 0.8;
+      const isFirst80 = !past80 && cumPct >= 0.8;
+      const fillColor = past80 ? '#4fc3f7' : isFirst80 ? '#f87171' : '#f87171';
+      const opacity = past80 ? '0.5' : '1';
+      return `<div class="pareto-bar-wrap">
+        <div class="pareto-label" title="${item.full}">${i+1}. ${item.label}</div>
+        <div class="pareto-bar-track">
+          <div class="pareto-bar-fill" style="width:${barPct}%;background:${fillColor};opacity:${opacity}"></div>
+          <div class="pareto-cum-line" style="left:${Math.min(99,cumPct*100)}%"></div>
+          <div class="pareto-bar-val">${fmtM(item.value)}</div>
+        </div>
+      </div>`;
+    }).join('');
+    document.getElementById('paretoChart').innerHTML = html;
+
+    // Insight
+    const top3pct = (items.slice(0,Math.min(3,items.length)).reduce((s,i)=>s+i.value,0)/total*100).toFixed(0);
+    document.getElementById('paretoInsight').innerHTML =
+      `<b>Key insight:</b> The top <b>${n80} ${label80}</b> account for <b>80%</b> of the total $${(total/1e6).toFixed(1)}M overrun. `+
+      `The single largest contributor — <b>${items[0].label}</b> — alone represents <b>${(items[0].value/total*100).toFixed(1)}%</b> of total exposure. `+
+      `Fixing just the top 3 ${label80} would address <b>${top3pct}%</b> of the portfolio overrun.`;
+
+    // Title
+    document.getElementById('paretoTitle').textContent =
+      seg==='project' ? 'Overrun by Project — ranked largest to smallest' :
+      seg==='site'    ? 'Overrun by Site — ranked largest to smallest' :
+                        'Overrun by Category — structured decomposition';
+
+    // Vital few
+    let vc=0;
+    const vitalHtml = items.map((item,i) => {
+      vc += item.value;
+      const isVital = vc - item.value < total*0.8;
+      const pct = (item.value/total*100).toFixed(1);
+      return `<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--line)">
+        <span style="width:22px;height:22px;border-radius:6px;background:${isVital?'rgba(248,113,113,.2)':'rgba(79,195,247,.1)'};
+          color:${isVital?'var(--red)':'var(--ice)'};display:grid;place-items:center;font-size:11px;font-weight:700;flex:0 0 22px">${i+1}</span>
+        <div style="flex:1;min-width:0"><div style="font-size:12.5px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${item.label}</div>
+          <div class="meter"><i style="width:${(item.value/maxVal*100).toFixed(0)}%;background:${isVital?'var(--red)':'var(--ice)'}"></i></div></div>
+        <div style="text-align:right;flex:0 0 80px">
+          <div style="font-size:12px;font-weight:700;color:${isVital?'var(--red)':'var(--ink2)'}">${fmtM(item.value)}</div>
+          <div style="font-size:11px;color:var(--ink3)">${pct}%</div>
+        </div>
+        <span style="font-size:10px;padding:2px 7px;border-radius:10px;font-weight:700;${isVital?'background:rgba(248,113,113,.12);color:var(--red)':'background:rgba(79,195,247,.08);color:var(--ice)'}">
+          ${isVital?'VITAL FEW':'USEFUL MANY'}</span>
+      </div>`;
+    }).join('');
+    document.getElementById('vitalFewList').innerHTML = vitalHtml;
+
+    // Pareto S-curve
+    const cumData = [];
+    let c=0;
+    items.forEach((item,i)=>{c+=item.value;cumData.push({x:i+1,y:+(c/total*100).toFixed(1)});});
+    if(paretoCurveChart) paretoCurveChart.destroy();
+    const ctx = document.getElementById('chartParetoCurve').getContext('2d');
+    paretoCurveChart = new Chart(ctx,{
+      type:'line',
+      data:{
+        labels: items.map((_,i)=>i+1),
+        datasets:[
+          {label:'Cumulative %',data:cumData.map(d=>d.y),borderColor:'#fbbf24',backgroundColor:'rgba(251,191,36,.10)',
+           fill:true,tension:.35,pointRadius:3,pointBackgroundColor:'#fbbf24',borderWidth:2},
+          {label:'80% threshold',data:items.map(()=>80),borderColor:'rgba(248,113,113,.5)',borderDash:[6,4],
+           pointRadius:0,borderWidth:1.5,fill:false}
+        ]
+      },
+      options:{
+        plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.dataset.label+': '+c.raw+'%'}}},
+        scales:{
+          y:{min:0,max:100,ticks:{callback:v=>v+'%'},grid:{color:'rgba(34,64,93,.4)'}},
+          x:{title:{display:true,text:'# items ranked by overrun',color:'#6f8aa5',font:{size:11}},grid:{display:false}}
+        }
+      }
+    });
+
+    // Site pareto table (always recalculate from PROJECTS)
+    const siteMap = {};
+    allOver.forEach(p=>{
+      if(!siteMap[p.site])siteMap[p.site]={total:0,projects:[]};
+      siteMap[p.site].total+=p.overrun;
+      siteMap[p.site].projects.push(p);
+    });
+    const siteRows = Object.entries(siteMap).sort(([,a],[,b])=>b.total-a.total).map(([site,d])=>{
+      const top = d.projects.sort((a,b)=>b.overrun-a.overrun)[0];
+      const conc = (top.overrun/d.total*100).toFixed(0);
+      const risk = conc>80?'<span class="tag t-over">Very high</span>':conc>50?'<span class="tag t-warn">High</span>':'<span class="tag t-under">Diversified</span>';
+      return `<tr><td>${site}</td><td class="num" style="color:var(--red)">${fmtM(d.total)}</td>
+        <td style="font-size:12px;color:var(--ink2)">${top.name.substring(0,40)}</td>
+        <td class="num">${fmtM(top.overrun)}</td>
+        <td class="num"><div style="display:flex;align-items:center;gap:8px;justify-content:flex-end">
+          <div class="bar" style="width:60px"><i style="width:${conc}%;background:${conc>80?'var(--red)':'var(--amber)'}"></i></div>
+          <span style="color:${conc>80?'var(--red)':'var(--ink2)'}">${conc}%</span></div></td>
+        <td>${risk}</td></tr>`;
+    }).join('');
+    document.getElementById('sitePareto').innerHTML = siteRows;
+  }
+
+  // Tab switching
+  document.querySelectorAll('.seg-tab').forEach(t=>{
+    t.onclick=()=>{
+      document.querySelectorAll('.seg-tab').forEach(x=>x.classList.remove('on'));
+      t.classList.add('on');
+      currentSeg = t.dataset.seg;
+      renderPareto(currentSeg);
+    };
+  });
+
+  // Render on first activation
+  const paretoObs = new MutationObserver(()=>{
+    if(document.getElementById('v-pareto').classList.contains('active')){
+      renderPareto(currentSeg);
+    }
+  });
+  paretoObs.observe(document.getElementById('v-pareto'),{attributes:true,attributeFilter:['class']});
+  // Also render if already active
+  if(document.getElementById('v-pareto').classList.contains('active')) renderPareto(currentSeg);
+})();
+
+/* ══════════════════════════════════════════════
+   WHAT-IF SIMULATOR MODULE
+══════════════════════════════════════════════ */
+(function(){
+  const BUDGET_TOTAL = 249305795;
+  const BASE_FORECAST_TOTAL = 369636894;
+
+  // Projects available for adjustment: top over-budget + emergent
+  const adjustable = [
+    {id:'p600', name:'600 — EX Cell 4', site:'Expo Site', forecast:215065143, budget:111000000, emergent:false},
+    {id:'p547', name:'547 — MQ Ventilation no2', site:'UG Mequillon', forecast:9936000, budget:0, emergent:true},
+    {id:'p433', name:'433 — UTEU Expo', site:'Expo Site', forecast:9576158, budget:7332443, emergent:false},
+    {id:'p484b',name:'484 — IK Ph2 Génératrice', site:'UG Ivakkak', forecast:3018377, budget:1500000, emergent:false},
+    {id:'p542', name:'542 — BD Amélioration élec.', site:'BD', forecast:1508548, budget:1200000, emergent:false},
+    {id:'p715', name:'715 — Inuksuk Portail', site:'Inuksuk', forecast:2450000, budget:0, emergent:true},
+    {id:'p706', name:'706 — Inuksuk Électrique EX', site:'Inuksuk', forecast:10200000, budget:8500000, emergent:false},
+    {id:'pFibre',name:'XXX — Fibre Optique Wakeham', site:'Expo Site', forecast:2500000, budget:0, emergent:true},
+    {id:'p541', name:'541 — BD Balance replacement', site:'BD', forecast:250000, budget:0, emergent:true},
+    {id:'p490', name:'490 — MQ Ventilation no1', site:'UG Mequillon', forecast:4555184, budget:3311916, emergent:false},
+  ];
+
+  // State: each project has a reduction factor (0 = no change, 100 = reduce forecast to budget)
+  const state = {};
+  adjustable.forEach(p=>{state[p.id]=0;});
+
+  function getAdjustedForecast(p){
+    const maxReduction = p.budget===0 ? p.forecast : (p.forecast - p.budget);
+    const reduction = maxReduction * (state[p.id]/100);
+    return p.forecast - reduction;
+  }
+
+  function getPortfolioForecast(){
+    let adj = BASE_FORECAST_TOTAL;
+    adjustable.forEach(p=>{
+      adj -= (p.forecast - getAdjustedForecast(p));
+    });
+    return adj;
+  }
+
+  let wiDeltaChart = null;
+
+  function renderWI(){
+    const adjTotal = getPortfolioForecast();
+    const variance = adjTotal - BUDGET_TOTAL;
+    const varPctVal = variance / BUDGET_TOTAL * 100;
+
+    document.getElementById('wi-adj-forecast').textContent = fmtM(adjTotal);
+    document.getElementById('wi-adj-forecast').style.color = adjTotal > BUDGET_TOTAL ? 'var(--red)' : 'var(--green)';
+    document.getElementById('wi-variance').textContent = (variance>0?'−':'+')+fmtM(Math.abs(variance));
+    document.getElementById('wi-variance').style.color = variance>0?'var(--red)':'var(--green)';
+    document.getElementById('wi-varpct').textContent = (varPctVal>0?'−':'+')+(Math.abs(varPctVal)).toFixed(1)+'%';
+
+    // Summary rows
+    const savings = BASE_FORECAST_TOTAL - adjTotal;
+    const rows = [
+      {m:'Forecast at Completion', base: fmtM(BASE_FORECAST_TOTAL), scen: fmtM(adjTotal), delta: savings, better:true},
+      {m:'Variance vs Budget', base: fmtM(-(BASE_FORECAST_TOTAL-BUDGET_TOTAL)), scen: fmtM(-variance), delta: savings, better:true},
+      {m:'Overrun %', base: '-48.3%', scen: (varPctVal>0?'-':'+')+Math.abs(varPctVal).toFixed(1)+'%', delta: null, better: variance<0},
+      {m:'Potential savings applied', base: '$0', scen: fmtM(savings), delta: savings, better:true},
+    ];
+    document.getElementById('wi-summary-rows').innerHTML = rows.map(r=>`
+      <tr><td style="color:var(--ink2)">${r.m}</td>
+      <td class="num" style="color:var(--ink3)">${r.base}</td>
+      <td class="num" style="color:${r.better?(variance<0?'var(--green)':'var(--ink)'):'var(--red)'}">${r.scen}</td>
+      <td class="num">${r.delta!==null?`<span class="change-badge ${r.delta>0?'cb-save':'cb-add'}">${r.delta>0?'−':'+'} ${fmtM(Math.abs(r.delta))}</span>`:'—'}</td></tr>
+    `).join('');
+
+    // Narrative
+    const savedCount = adjustable.filter(p=>state[p.id]>0).length;
+    const narrative = savedCount===0
+      ? '<b>No interventions applied.</b> Adjust sliders to model cost recovery scenarios. Start with <b>Cell 4</b> — it alone drives 86% of the portfolio overrun.'
+      : `<b>Scenario active:</b> With <b>${savedCount}</b> project${savedCount>1?'s':''} adjusted, the portfolio forecast drops by <b>${fmtM(savings)}</b> to <b>${fmtM(adjTotal)}</b>. `+
+        (variance <= 0 ? `🎉 <b style="color:var(--green)">Portfolio would be within budget!</b>` :
+         `The overrun shrinks to <b style="color:var(--amber)">${fmtM(variance)}</b> (${Math.abs(varPctVal).toFixed(1)}% over). `+
+         `Bringing Cell 4 under control remains the single highest-leverage action.`);
+    document.getElementById('wi-narrative').innerHTML = narrative;
+
+    // Delta bar chart
+    const labels = adjustable.map(p=>p.name.replace(/^[\d\w]+\s—\s/,'').substring(0,22));
+    const baseOverruns = adjustable.map(p => p.budget>0 ? Math.max(0,p.forecast-p.budget) : p.forecast);
+    const adjOverruns  = adjustable.map(p => {
+      const af = getAdjustedForecast(p);
+      return p.budget>0 ? Math.max(0,af-p.budget) : af;
+    });
+    if(wiDeltaChart) wiDeltaChart.destroy();
+    const ctx = document.getElementById('wi-chart-delta').getContext('2d');
+    wiDeltaChart = new Chart(ctx,{
+      type:'bar',
+      data:{
+        labels,
+        datasets:[
+          {label:'Baseline overrun',data:baseOverruns.map(v=>v/1e6),backgroundColor:'rgba(248,113,113,.35)',borderColor:'#f87171',borderWidth:1,borderRadius:4},
+          {label:'Scenario overrun', data:adjOverruns.map(v=>v/1e6), backgroundColor:'rgba(79,195,247,.5)',borderColor:'#4fc3f7',borderWidth:1,borderRadius:4},
+        ]
+      },
+      options:{
+        indexAxis:'y',
+        plugins:{legend:{position:'bottom',labels:{boxWidth:11,font:{size:11}}},
+          tooltip:{callbacks:{label:c=>c.dataset.label+': $'+c.raw.toFixed(1)+'M'}}},
+        scales:{
+          x:{ticks:{callback:v=>'$'+v+'M'},grid:{color:'rgba(34,64,93,.4)'}},
+          y:{grid:{display:false},ticks:{font:{size:11}}}
+        }
+      }
+    });
+  }
+
+  function buildSliders(containerId, projects){
+    const el = document.getElementById(containerId);
+    el.innerHTML = projects.map(p=>{
+      const maxReduction = p.budget===0 ? p.forecast : (p.forecast - p.budget);
+      return `<div class="wi-row">
+        <div class="wi-name">
+          <b>${p.name}</b>
+          <small>${p.site} · Overrun: ${fmtM(p.budget===0?p.forecast:p.forecast-p.budget)}</small>
+          <div class="meter" id="m-${p.id}"><i style="width:100%;background:${p.emergent?'#b6a4ff':'var(--red)'}"></i></div>
+        </div>
+        <input type="range" class="wi-slider" id="sl-${p.id}" min="0" max="100" value="0"
+          title="0 = no change, 100 = fully recover to budget">
+        <div class="wi-pct" id="wp-${p.id}" style="color:var(--ink3)">0%</div>
+        <div class="wi-delta" id="wd-${p.id}" style="color:var(--ink3)">$0</div>
+      </div>`;
+    }).join('');
+
+    projects.forEach(p=>{
+      document.getElementById('sl-'+p.id).oninput = function(){
+        state[p.id] = +this.value;
+        const maxR = p.budget===0 ? p.forecast : (p.forecast-p.budget);
+        const saving = maxR * (state[p.id]/100);
+        document.getElementById('wp-'+p.id).textContent = state[p.id]+'%';
+        document.getElementById('wp-'+p.id).style.color = state[p.id]>0?'var(--green)':'var(--ink3)';
+        document.getElementById('wd-'+p.id).innerHTML = state[p.id]>0
+          ? `<span class="change-badge cb-save">−${fmtM(saving)}</span>`
+          : '<span style="color:var(--ink3)">$0</span>';
+        // Update meter to show remaining overrun
+        const remaining = 100 - state[p.id];
+        document.getElementById('m-'+p.id).firstElementChild.style.width = remaining+'%';
+        renderWI();
+      };
+    });
+  }
+
+  function applyScenario(vals){
+    // vals is object {id: 0-100}
+    adjustable.forEach(p=>{
+      state[p.id] = vals[p.id]||0;
+      const sl = document.getElementById('sl-'+p.id);
+      if(sl) sl.value = state[p.id];
+      const maxR = p.budget===0?p.forecast:(p.forecast-p.budget);
+      const saving = maxR*(state[p.id]/100);
+      const wp = document.getElementById('wp-'+p.id);
+      const wd = document.getElementById('wd-'+p.id);
+      const m  = document.getElementById('m-'+p.id);
+      if(wp) wp.textContent=state[p.id]+'%';
+      if(wp) wp.style.color=state[p.id]>0?'var(--green)':'var(--ink3)';
+      if(wd) wd.innerHTML=state[p.id]>0?`<span class="change-badge cb-save">−${fmtM(saving)}</span>`:'<span style="color:var(--ink3)">$0</span>';
+      if(m) m.firstElementChild.style.width=(100-state[p.id])+'%';
+    });
+    renderWI();
+  }
+
+  const overProj  = adjustable.filter(p=>!p.emergent);
+  const emgProj   = adjustable.filter(p=>p.emergent);
+
+  buildSliders('wi-sliders-over', overProj);
+  buildSliders('wi-sliders-emg', emgProj);
+
+  // Scenarios
+  document.getElementById('scnReset').onclick = ()=>{
+    const z={};adjustable.forEach(p=>{z[p.id]=0;});applyScenario(z);
+  };
+  document.getElementById('scnBase').onclick = ()=>{
+    applyScenario({p600:15,p547:30,p433:20,p484b:25,p542:20,p715:50,p706:10,pFibre:50,p541:100,p490:10});
+  };
+  document.getElementById('scnWorst').onclick = ()=>{
+    applyScenario({p600:0,p547:0,p433:0,p484b:0,p542:0,p715:0,p706:0,pFibre:0,p541:0,p490:0});
+  };
+  document.getElementById('scnMgmt').onclick = ()=>{
+    applyScenario({p600:30,p547:60,p433:35,p484b:50,p542:40,p715:80,p706:20,pFibre:100,p541:100,p490:15});
+  };
+
+  renderWI();
+
+  // Activate on tab click
+  const wiObs = new MutationObserver(()=>{
+    if(document.getElementById('v-whatif').classList.contains('active')){
+      renderWI();
+    }
+  });
+  wiObs.observe(document.getElementById('v-whatif'),{attributes:true,attributeFilter:['class']});
+})();
+
+/* ---------- GEOGRAPHIC RISK MAP ---------- */
+(function(){
+  const siteCoords = {
+    'Expo Site':   [61.555, -73.645],
+    'UG Mequillon':[61.585, -73.765],
+    'UG Ivakkak':  [61.465, -73.895],
+    'Inuksuk':     [61.635, -73.555],
+    'BD':          [61.455, -73.705],
+    'Puimajuq':    [61.395, -73.485],
+    'Allammaq':    [61.675, -73.305]
+  };
+  const riskColor = {critical:'#f87171', emergent:'#b6a4ff', watch:'#fbbf24', good:'#34d399'};
+  const riskClass = {critical:'mk-critical', emergent:'mk-emg', watch:'mk-watch', good:'mk-good'};
+  const riskLabel = {critical:'Critical over budget', emergent:'Emergent / unbudgeted', watch:'Schedule watch', good:'Controlled'};
+
+  function siteSummary(site){
+    const s = SITES.find(x=>x.site===site) || {forecast:0,budget:0};
+    const ps = PROJECTS.filter(p=>p.site===site);
+    const overrun = Math.max(0, s.forecast - s.budget);
+    const emergent = ps.filter(isEmergent);
+    const worstSlip = ps.filter(p=>p.slip!==null && p.slip!==undefined).reduce((m,p)=>Math.min(m,p.slip),0);
+    const topRisk = [...ps].sort((a,b)=>((b.forecast-b.budget)-(a.forecast-a.budget)))[0] || ps[0];
+    let risk = 'good';
+    if(overrun > 1000000) risk = 'critical';
+    else if(emergent.length) risk = 'emergent';
+    else if(worstSlip < -90) risk = 'watch';
+    return {site, forecast:s.forecast, budget:s.budget, overrun, projects:ps.length, emergent:emergent.length, worstSlip, topRisk, risk, coords:siteCoords[site]};
+  }
+  const mapSites = Object.keys(siteCoords).map(siteSummary);
+
+  function popupHtml(x){
+    return `<div class="map-popup"><h4>${x.site}</h4>
+      <table>
+        <tr><td>Forecast</td><td>${fmtM(x.forecast)}</td></tr>
+        <tr><td>Budget</td><td>${fmtM(x.budget)}</td></tr>
+        <tr><td>Overrun</td><td style="color:${x.overrun>0?'#b91c1c':'#047857'}">${fmtM(x.overrun)}</td></tr>
+        <tr><td>Active projects</td><td>${x.projects}</td></tr>
+        <tr><td>Worst schedule slip</td><td>${x.worstSlip<0?x.worstSlip+' d':'On watch'}</td></tr>
+      </table>
+      <div style="font-size:11px;margin-top:6px;color:#334155"><b>Top risk:</b> ${x.topRisk?x.topRisk.name:'—'}</div>
+      <span class="mp-risk">${riskLabel[x.risk]}</span></div>`;
+  }
+
+  function renderSiteCards(markers){
+    const box = document.getElementById('siteMapCards');
+    if(!box) return;
+    box.innerHTML = mapSites.sort((a,b)=>b.overrun-a.overrun).map(x=>`
+      <div class="site-card" data-site="${x.site}">
+        <div class="sh"><span class="sn"><i class="risk-dot" style="background:${riskColor[x.risk]}"></i>${x.site}</span><span class="tag ${x.risk==='good'?'t-under':x.risk==='watch'?'t-warn':'t-over'}">${riskLabel[x.risk]}</span></div>
+        <div class="meta">Forecast ${fmtM(x.forecast)} · Budget ${fmtM(x.budget)} · Overrun ${fmtM(x.overrun)}</div>
+        <div class="meta">${x.projects} projects · ${x.emergent} emergent · worst slip ${x.worstSlip<0?x.worstSlip+' days':'on watch'}</div>
+      </div>`).join('');
+    box.querySelectorAll('.site-card').forEach(card=>{
+      card.onclick=()=>{
+        box.querySelectorAll('.site-card').forEach(c=>c.classList.remove('on'));
+        card.classList.add('on');
+        const site = card.dataset.site;
+        const x = mapSites.find(s=>s.site===site);
+        if(window.auroraMap && x){
+          window.auroraMap.setView(x.coords, 9);
+          if(markers && markers[site]) markers[site].openPopup();
+        }
+      };
+    });
+  }
+
+  function refreshAuroraMap(){
+    if(!window.auroraMap) return;
+    const pts = mapSites.map(x=>x.coords);
+    // Leaflet sometimes calculates the wrong size when the map is opened from a hidden tab,
+    // when the sidebar is collapsed, or when the file is opened on mobile.  Run a few
+    // refresh passes so every tile fills the visible container.
+    [0,80,180,350,700].forEach(delay=>setTimeout(()=>{
+      if(!window.auroraMap) return;
+      window.auroraMap.invalidateSize({animate:false, pan:false});
+      if(pts.length) window.auroraMap.fitBounds(pts, {padding:[45,45], animate:false});
+    }, delay));
+  }
+
+  function initMap(){
+    const mapDiv = document.getElementById('projectMap');
+    if(!mapDiv) return;
+
+    // Use a stable built-in schematic map instead of web tiles. This avoids the partial-tile
+    // problem when the HTML is opened locally, inside mobile browsers, or behind corporate firewalls.
+    if(window.auroraMapRendered){ return; }
+    window.auroraMapRendered = true;
+    mapDiv.classList.add('aurora-schematic-map');
+
+    const pos = {
+      'Expo Site':[43,50],
+      'UG Mequillon':[32,42],
+      'UG Ivakkak':[27,68],
+      'Inuksuk':[54,34],
+      'BD':[58,74],
+      'Puimajuq':[71,58],
+      'Allammaq':[77,29]
+    };
+    const sorted = [...mapSites].sort((a,b)=>b.overrun-a.overrun);
+    let current = sorted[0];
+
+    function pinHtml(x){
+      const [left,top] = pos[x.site] || [50,50];
+      return `<div class="aurora-pin" data-site="${x.site}" style="left:${left}%;top:${top}%">
+        <i class="aurora-pin-dot" style="background:${riskColor[x.risk]}"></i>
+        <div class="aurora-pin-label"><b>${x.site}</b><span>${fmtM(x.overrun)} overrun · ${x.projects} projects</span></div>
+      </div>`;
+    }
+
+    function trendSvg(x){
+      const profiles = {
+        'Expo Site':[0.18,0.42,0.68,1.00],
+        'UG Mequillon':[0.26,0.52,0.76,1.00],
+        'UG Ivakkak':[0.20,0.47,0.72,1.00],
+        'BD':[0.30,0.55,0.78,1.00],
+        'Inuksuk':[0.16,0.38,0.66,1.00],
+        'Puimajuq':[0.12,0.34,0.67,1.00],
+        'Allammaq':[0.10,0.48,0.83,1.00]
+      };
+      const f = profiles[x.site] || [0.2,0.5,0.75,1.0];
+      const b = [0.25,0.50,0.75,1.00];
+      const forecastVals = f.map(v=>x.forecast*v);
+      const budgetVals = b.map(v=>x.budget*v);
+      const max = Math.max(...forecastVals, ...budgetVals, 1);
+      const xs = [14,82,150,222];
+      const y = v => 78 - (v / max) * 62;
+      const line = vals => vals.map((v,i)=>(i?'L':'M') + xs[i].toFixed(1) + ' ' + y(v).toFixed(1)).join(' ');
+      const forecastLine = line(forecastVals);
+      const budgetLine = line(budgetVals);
+      const area = forecastLine + ` L ${xs[xs.length-1]} 82 L ${xs[0]} 82 Z`;
+      return `<svg viewBox="0 0 240 96" preserveAspectRatio="none" aria-label="Dynamic cumulative cost trend for ${x.site}">
+        <line x1="14" y1="16" x2="230" y2="16" stroke="rgba(159,182,204,.14)"/>
+        <line x1="14" y1="47" x2="230" y2="47" stroke="rgba(159,182,204,.14)"/>
+        <line x1="14" y1="78" x2="230" y2="78" stroke="rgba(159,182,204,.25)"/>
+        <line x1="14" y1="12" x2="14" y2="82" stroke="rgba(159,182,204,.25)"/>
+        <path d="${area}" fill="rgba(52,211,153,.18)"/>
+        <path d="${budgetLine}" fill="none" stroke="#36d3c4" stroke-width="1.6" stroke-dasharray="5 5" opacity=".8"/>
+        <path d="${forecastLine}" fill="none" stroke="#34d399" stroke-width="3"/>
+        ${forecastVals.map((v,i)=>`<circle cx="${xs[i]}" cy="${y(v)}" r="2.4" fill="#34d399"/>`).join('')}
+        <text x="14" y="94" fill="#6f8aa5" font-size="9">Mar</text>
+        <text x="80" y="94" fill="#6f8aa5" font-size="9">Apr</text>
+        <text x="148" y="94" fill="#6f8aa5" font-size="9">May</text>
+        <text x="216" y="94" fill="#6f8aa5" font-size="9">Jun</text>
+      </svg>`;
+    }
+
+    function popup(x){
+      const maxVal = Math.max(x.forecast, x.budget, 1);
+      const forecastPct = Math.min(100, Math.max(8, x.forecast / maxVal * 100));
+      const budgetPct = Math.min(100, Math.max(8, x.budget / maxVal * 100));
+      const overCls = x.overrun > 1000000 ? 'red' : x.risk==='watch' ? 'warn' : 'good';
+      return `<button class="geo-detail-close" type="button" aria-label="Close site detail">×</button>
+        <div class="geo-detail-head">
+          <h3>${x.site}</h3>
+          <span class="tag ${x.risk==='good'?'t-under':x.risk==='watch'?'t-warn':'t-over'}">${riskLabel[x.risk]}</span>
+        </div>
+        <div class="geo-detail-grid">
+          <div>
+            <div class="geo-metrics">
+              <div class="geo-metric"><span>Forecast</span><b>${fmtM(x.forecast)}</b></div>
+              <div class="geo-metric"><span>Budget</span><b>${fmtM(x.budget)}</b></div>
+              <div class="geo-metric ${overCls}"><span>Overrun</span><b>${fmtM(x.overrun)}</b></div>
+              <div class="geo-metric"><span>Projects</span><b>${x.projects}</b></div>
+              <div class="geo-metric"><span>Emergent</span><b>${x.emergent}</b></div>
+              <div class="geo-metric warn"><span>Worst slip</span><b>${x.worstSlip<0?x.worstSlip+' d':'Watch'}</b></div>
+            </div>
+          </div>
+          <div class="geo-chartbox">
+            <h4>Budget vs Forecast</h4>
+            <div class="geo-axis"><div class="geo-budget-line" style="width:${budgetPct}%"></div><div class="geo-forecast-bar" style="width:${forecastPct}%"></div></div>
+            <div style="display:flex;justify-content:space-between;color:var(--ink3);font-size:11px"><span>$0</span><span>${fmtM(maxVal)}</span></div>
+          </div>
+          <div class="geo-chartbox">
+            <h4>Cost Trend (Cumulative)</h4>
+            <div class="geo-trend">${trendSvg(x)}</div>
+            <div style="display:flex;justify-content:space-between;color:var(--ink3);font-size:11px;margin-top:3px">
+              <span>Budget ${fmtM(x.budget)}</span><span>Forecast ${fmtM(x.forecast)}</span>
+            </div>
+          </div>
+        </div>
+        <div class="geo-detail-foot">
+          <div><b>Top risk</b>${x.topRisk?x.topRisk.name:'—'}</div>
+          <div><b>Location</b>Nunavik, Quebec</div>
+          <div><b>Discipline</b>${x.site==='Allammaq'?'Civil':x.risk==='critical'?'Engineering / Construction':'Mixed'}</div>
+          <div><b>Project Manager</b>${x.site==='Allammaq'?'Jean Tremblay':'TBD'}</div>
+          <div><b>Last Update</b>2 Jun 2026</div>
+        </div>`;
+    }
+
+
+    mapDiv.innerHTML = `<div class="aurora-map-canvas">
+      <svg viewBox="0 0 1000 620" preserveAspectRatio="none" aria-hidden="true">
+        <defs>
+          <linearGradient id="landGrad" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#16334a"/><stop offset="1" stop-color="#0e2538"/></linearGradient>
+        </defs>
+        ${[120,240,360,480,600,720,840].map(x=>`<line class="aurora-grid-line" x1="${x}" y1="0" x2="${x}" y2="620"/>`).join('')}
+        ${[100,200,300,400,500].map(y=>`<line class="aurora-grid-line" x1="0" y1="${y}" x2="1000" y2="${y}"/>`).join('')}
+        <path class="aurora-water" d="M55,90 C130,65 200,80 250,130 C315,190 380,178 430,140 C502,86 600,95 690,150 C778,205 835,198 920,160 L1000,135 L1000,0 L0,0 L0,130 Z"/>
+        <path class="aurora-region" fill="url(#landGrad)" d="M155,150 C230,105 325,130 392,192 C462,257 527,245 602,205 C705,150 840,202 870,305 C912,438 760,548 610,525 C498,508 455,425 370,430 C260,438 168,380 135,285 C120,240 120,180 155,150 Z"/>
+        <path class="aurora-road" d="M220,360 C310,310 365,318 430,280 C500,235 560,245 650,295 C725,335 780,330 840,300"/>
+        <path class="aurora-road" d="M305,205 C345,275 355,333 330,405 C310,465 330,505 390,545"/>
+        <path class="aurora-road" d="M520,170 C550,235 570,300 560,365 C548,440 590,488 665,515"/>
+        <text x="24" y="42" fill="#6f8aa5" font-size="13">Nunavik Nickel schematic risk map</text>
+        <text x="24" y="61" fill="#4fc3f7" font-size="11">offline-safe view · no external tile dependency</text>
+      </svg>
+      <div class="aurora-map-tools"><button type="button" id="mapFitAll">Fit all sites</button><button type="button" id="mapTopRisk">Top risk</button></div>
+      <div class="map-zoom-control"><button type="button" id="mapZoomIn">+</button><button type="button" id="mapZoomOut">−</button></div>
+      <div class="risk-intensity">Risk intensity<div class="dots"><span>Low</span><i style="background:#34d399"></i><i style="background:#fbbf24"></i><i style="background:#fb923c"></i><i style="background:#f87171"></i><span>High</span></div></div>
+      <div id="schematicPins">${mapSites.map(pinHtml).join('')}</div>
+    </div>`;
+
+    function selectSite(site){
+      const x = mapSites.find(m=>m.site===site) || current;
+      current = x;
+      mapDiv.querySelectorAll('.aurora-pin').forEach(p=>p.classList.toggle('on', p.dataset.site===site));
+      const pop = document.getElementById('schematicSelectedCard');
+      if(pop){
+        pop.innerHTML = popup(x);
+        const closeBtn = pop.querySelector('.geo-detail-close');
+        if(closeBtn) closeBtn.onclick = (ev)=>{ ev.stopPropagation(); pop.innerHTML=''; mapDiv.querySelectorAll('.aurora-pin').forEach(p=>p.classList.remove('on')); };
+      }
+      const cards = document.querySelectorAll('#siteMapCards .site-card');
+      cards.forEach(c=>c.classList.toggle('on', c.dataset.site===site));
+    }
+    mapDiv.querySelectorAll('.aurora-pin').forEach(pin=>{
+      pin.addEventListener('click',()=>selectSite(pin.dataset.site));
+    });
+    const fitBtn = mapDiv.querySelector('#mapFitAll');
+    if(fitBtn) fitBtn.onclick = ()=>selectSite(sorted[0].site);
+    const zin = mapDiv.querySelector('#mapZoomIn'); if(zin) zin.onclick = ()=>mapDiv.classList.toggle('zoomed');
+    const zout = mapDiv.querySelector('#mapZoomOut'); if(zout) zout.onclick = ()=>mapDiv.classList.remove('zoomed');
+    const topBtn = mapDiv.querySelector('#mapTopRisk');
+    if(topBtn) topBtn.onclick = ()=>selectSite(sorted[0].site);
+
+    // Render the existing site register. Passing null keeps it independent from Leaflet.
+    renderSiteCards(null);
+    document.querySelectorAll('#siteMapCards .site-card').forEach(card=>{
+      card.onclick=()=>selectSite(card.dataset.site);
+    });
+    selectSite(current.site);
+  }
+
+  function refreshAuroraMap(){
+    // No tile refresh needed for the schematic map; keep this function so existing resize/sidebar
+    // handlers remain harmless.
+    return;
+  }
+
+  // Initialize once page is loaded, then refresh sizing when the module is opened.
+  window.addEventListener('load', initMap);
+  const mapSection = document.getElementById('v-map');
+  if(mapSection){
+    const obs = new MutationObserver(()=>{
+      if(mapSection.classList.contains('active')){
+        initMap();
+        refreshAuroraMap();
+      }
+    });
+    obs.observe(mapSection,{attributes:true,attributeFilter:['class']});
+  }
+  window.addEventListener('resize', refreshAuroraMap);
+  document.querySelectorAll('#nav button, #sidebarToggle, #mobileMenuBtn').forEach(el=>{
+    if(el) el.addEventListener('click', ()=>setTimeout(refreshAuroraMap, 260));
+  });
+})();
+
 </script>
 </body>
 </html>
