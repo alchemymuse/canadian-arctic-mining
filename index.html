@@ -175,6 +175,49 @@
   .reply-box input{flex:1;background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:9px;padding:8px 12px;font-size:12.5px}
   .vote{background:transparent;border:1px solid var(--line);color:var(--ink2);border-radius:8px;padding:3px 9px;font-size:11.5px;cursor:pointer}
   .vote:hover{border-color:var(--teal);color:var(--teal)}
+  /* functional layer (reuses existing palette) */
+  .btnp{background:linear-gradient(90deg,var(--ice2),var(--teal));border:0;color:#04121d;font-weight:700;border-radius:8px;padding:8px 14px;font-size:12.5px;cursor:pointer;transition:.15s}
+  .btnp:hover{filter:brightness(1.1)}
+  .btns{background:var(--panel2);border:1px solid var(--line);color:var(--ink2);border-radius:8px;padding:8px 13px;font-size:12.5px;cursor:pointer;transition:.15s}
+  .btns:hover{border-color:var(--ice);color:var(--ice)}
+  .rowbtns{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
+  .rowbtns .hint{color:var(--ink3);font-size:12px;margin-left:4px}
+  tbody tr.clk{cursor:pointer}
+  tbody tr.clk:hover{background:var(--panel2)}
+  .modal-bg{position:fixed;inset:0;background:rgba(4,10,18,.66);display:none;z-index:100;align-items:flex-start;justify-content:center;overflow:auto;padding:42px 16px}
+  .modal-bg.open{display:flex}
+  .modal{background:var(--panel);border:1px solid var(--line);border-radius:16px;width:560px;max-width:100%;box-shadow:0 24px 60px rgba(0,0,0,.5);animation:fade .25s ease}
+  .modal .mh{display:flex;justify-content:space-between;align-items:center;padding:18px 22px;border-bottom:1px solid var(--line)}
+  .modal .mh h3{margin:0;font-size:16px}
+  .modal .mh .x{background:transparent;border:0;color:var(--ink3);font-size:24px;cursor:pointer;line-height:1}
+  .modal .mh .x:hover{color:var(--ink)}
+  .modal .mb{padding:20px 22px}
+  .modal .mf{padding:14px 22px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:10px}
+  .field{margin-bottom:14px}
+  .field label{display:block;font-size:11px;color:var(--ink3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}
+  .field input,.field select,.field textarea{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:9px;padding:9px 12px;font-size:13px;font-family:inherit}
+  .row2{display:flex;gap:12px}.row2>*{flex:1}
+  .kv{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--line);font-size:13px}
+  .kv span{color:var(--ink3)} .kv b{font-variant-numeric:tabular-nums}
+  .subhead{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--ice);font-weight:700;margin:16px 0 8px}
+  .txnlog{max-height:140px;overflow:auto;font-size:11.5px;color:var(--ink2);border:1px solid var(--line);border-radius:9px;padding:4px 10px}
+  .txnlog div{padding:5px 0;border-bottom:1px solid var(--line)}.txnlog div:last-child{border-bottom:0}
+  .rule{display:flex;align-items:center;gap:12px;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:11px 14px;margin-bottom:9px}
+  .rule .rinfo{flex:1}.rule .rinfo b{font-size:13px}.rule .rinfo p{margin:2px 0 0;font-size:11.5px;color:var(--ink3)}
+  .rule .rthr{width:64px;text-align:right;background:var(--panel);border:1px solid var(--line);color:var(--ink);border-radius:7px;padding:5px 8px;font-size:12px}
+  .switch{position:relative;width:40px;height:22px;flex:0 0 40px}
+  .switch input{opacity:0;width:0;height:0}
+  .slider{position:absolute;inset:0;background:var(--line);border-radius:22px;cursor:pointer;transition:.2s}
+  .slider::before{content:"";position:absolute;height:16px;width:16px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s}
+  .switch input:checked+.slider{background:var(--teal)}
+  .switch input:checked+.slider::before{transform:translateX(18px)}
+  .alert .acts{display:flex;gap:6px;margin-top:9px;flex-wrap:wrap}
+  .lc{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:700;margin-left:6px}
+  .lc-new{background:var(--redbg);color:var(--red)}.lc-ack{background:rgba(251,191,36,.14);color:var(--amber)}.lc-res{background:rgba(52,211,153,.12);color:var(--green)}
+  .simout{margin-top:12px}
+  .toast{position:fixed;bottom:22px;right:22px;z-index:200;background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--teal);border-radius:10px;padding:13px 16px;box-shadow:0 12px 30px rgba(0,0,0,.45);font-size:13px;color:var(--ink);max-width:340px;transform:translateY(20px);opacity:0;transition:.25s;pointer-events:none}
+  .toast.show{transform:none;opacity:1}
+  .toast.warn{border-left-color:var(--red)}
 </style>
 </head>
 <body>
@@ -213,14 +256,14 @@
         <div class="pill"><span class="dot"></span> 8 sites · 60+ active projects · data as of 02 Jun 2026</div>
       </div>
 
-      <div class="banner">⚠ <div><b>Portfolio is forecast $120.3M (48%) over budget.</b> Five of eight sites are over; $15.1M of work is unbudgeted (emergent). Critical milestones are slipping up to 553 days vs baseline.</div></div>
+      <div class="banner" id="execBanner">⚠ <div><b>Portfolio is forecast $120.3M (48%) over budget.</b> Five of eight sites are over; $15.1M of work is unbudgeted (emergent). Critical milestones are slipping up to 553 days vs baseline.</div></div>
 
       <div class="kpis">
-        <div class="kpi warn"><div class="spark">$</div><div class="lab">Forecast at Completion</div><div class="val">$369.6M</div><div class="sub">Committed to date: $249.3M</div></div>
-        <div class="kpi warn"><div class="lab">Budget Variance (F/B)</div><div class="val">−$120.3M</div><div class="sub">48.3% over corporate budget</div></div>
-        <div class="kpi"><div class="lab">Approved Budget</div><div class="val">$249.3M</div><div class="sub">Across 8 sites</div></div>
-        <div class="kpi warn"><div class="lab">Emergent / Unbudgeted</div><div class="val">$15.1M</div><div class="sub">4 projects with $0 baseline</div></div>
-        <div class="kpi warn"><div class="lab">Sites Over Budget</div><div class="val">5 / 8</div><div class="sub">BD · Expo · UG Expo · Ivakkak · Mequillon</div></div>
+        <div class="kpi warn"><div class="spark">$</div><div class="lab">Forecast at Completion</div><div class="val" id="kpiForecast">$369.6M</div><div class="sub" id="kpiCommitted">Committed to date: $249.3M</div></div>
+        <div class="kpi warn"><div class="lab">Budget Variance (F/B)</div><div class="val" id="kpiVar">−$120.3M</div><div class="sub" id="kpiVarSub">48.3% over corporate budget</div></div>
+        <div class="kpi"><div class="lab">Approved Budget</div><div class="val" id="kpiBudget">$249.3M</div><div class="sub" id="kpiBudgetSub">Across 8 sites</div></div>
+        <div class="kpi warn"><div class="lab">Emergent / Unbudgeted</div><div class="val" id="kpiEmg">$15.1M</div><div class="sub" id="kpiEmgSub">4 projects with $0 baseline</div></div>
+        <div class="kpi warn"><div class="lab">Sites Over Budget</div><div class="val" id="kpiSites">5 / 8</div><div class="sub">By forecast vs budget</div></div>
         <div class="kpi warn"><div class="lab">Worst Schedule Slip</div><div class="val">−553 d</div><div class="sub">470 — BD Dépoussiéreur</div></div>
       </div>
 
@@ -256,6 +299,13 @@
       <div class="topbar">
         <div><h2>Cost Control &amp; Variance</h2>
           <p>The module the company lacks today: every project's committed cost vs forecast vs budget, with automatic over-budget flags so overspend is caught in days, not at year-end.</p></div>
+      </div>
+      <div class="rowbtns">
+        <button class="btnp" onclick="newProject()">+ New project</button>
+        <button class="btns" onclick="openCommit()">＋ Log commitment / PO</button>
+        <button class="btns" onclick="exportData()">⤓ Export data</button>
+        <button class="btns" onclick="resetData()">↺ Reset to baseline</button>
+        <span class="hint">Tip: click any project row to manage its budget, forecast & commitments.</span>
       </div>
       <div class="ctrl">
         <label style="color:var(--ink2);font-size:12.5px">Site</label>
@@ -315,16 +365,16 @@
           <p>Your core pain point, made visible. Without detailed upfront planning, unbudgeted work appears mid-year. AURORA isolates every project carrying a $0 baseline so leadership sees reactive spend the instant it is committed.</p></div>
       </div>
       <div class="kpis">
-        <div class="kpi warn"><div class="lab">Unbudgeted forecast</div><div class="val">$15.1M</div><div class="sub">4 projects with no approved budget</div></div>
-        <div class="kpi warn"><div class="lab">Largest single</div><div class="val">$9.94M</div><div class="sub">547 — MQ Ventilation Principale no2</div></div>
-        <div class="kpi"><div class="lab">% of total overrun</div><div class="val">13%</div><div class="sub">of the $120.3M variance</div></div>
+        <div class="kpi warn"><div class="lab">Unbudgeted forecast</div><div class="val" id="emgKpiTotal">$15.1M</div><div class="sub" id="emgKpiCount">4 projects</div></div>
+        <div class="kpi warn"><div class="lab">Largest single</div><div class="val" id="emgKpiLargest">$9.94M</div><div class="sub" id="emgKpiLargestSub">547 — MQ Ventilation Principale no2</div></div>
+        <div class="kpi"><div class="lab">% of total overrun</div><div class="val" id="emgKpiPct">13%</div><div class="sub">of the portfolio variance</div></div>
         <div class="kpi"><div class="lab">Detection today</div><div class="val">Year-end</div><div class="sub">AURORA: at commitment</div></div>
       </div>
       <div class="card">
         <h3>Emergent project register</h3>
         <div class="csub">Auto-flagged: forecast &gt; $0 against a $0 corporate budget.</div>
         <table>
-          <thead><tr><th>Project</th><th>Site</th><th class="num">Forecast</th><th class="num">Budget</th><th>Why it's flagged</th></tr></thead>
+          <thead><tr><th>Project</th><th>Site</th><th class="num">Forecast</th><th class="num">Budget</th><th>Why it's flagged</th><th>Stage-gate</th></tr></thead>
           <tbody id="emgBody"></tbody>
         </table>
       </div>
@@ -338,8 +388,36 @@
           <p>The engine running underneath every view. Rules fire automatically on cost, schedule and procurement signals — pushed to email / Teams so issues reach a manager the same week, not the next quarterly review.</p></div>
         <div class="pill"><span class="dot" style="background:var(--red);box-shadow:0 0 8px var(--red)"></span> <span id="alertCount">0</span> active alerts</div>
       </div>
+      <div class="rowbtns">
+        <button class="btnp" onclick="runCheck()">⟳ Run check now</button>
+        <label style="color:var(--ink2);font-size:12.5px">Show</label>
+        <select id="alFilter" onchange="renderAlerts()" style="background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:7px 10px;font-size:12.5px">
+          <option value="active">Active (new + acknowledged)</option>
+          <option value="all">All including resolved</option>
+          <option value="new">New only</option>
+          <option value="crit">Critical only</option>
+        </select>
+        <span class="hint">Acknowledge, assign or resolve each alert. State is saved.</span>
+      </div>
       <div id="alertFeed"></div>
-      <div class="note">Each alert is a configurable rule: <b>cost</b> (variance &gt; threshold, commitment &gt; budget), <b>schedule</b> (baseline slip &gt; N days, 0% complete past start), <b>procurement</b> (PO past sealift cut-off, long-lead item not ordered). Thresholds are owned by Finance &amp; the PMO, not hard-coded.</div>
+
+      <div class="grid g2b" style="margin-top:18px">
+        <div class="card">
+          <h3>Alert rules</h3>
+          <div class="csub">Toggle rules on/off and set thresholds. Owned by Finance &amp; the PMO — not hard-coded.</div>
+          <div id="ruleList"></div>
+        </div>
+        <div class="card">
+          <h3>What-if simulator</h3>
+          <div class="csub">Test a new commitment <i>before</i> it's raised — see which alerts it would trigger. Proactive, not reactive.</div>
+          <div class="field"><label>Project</label><select id="simProj"></select></div>
+          <div class="field"><label>New commitment amount ($)</label>
+            <div class="row2"><input type="number" id="simAmt" placeholder="e.g. 2000000" min="0">
+            <button class="btnp" onclick="runSim()">Simulate</button></div></div>
+          <div class="simout" id="simOut"></div>
+        </div>
+      </div>
+      <div class="note">Each alert is a configurable rule: <b>cost</b> (variance &gt; threshold, commitment &gt; budget), <b>schedule</b> (baseline slip &gt; N days), <b>emergent</b> (commitment against $0 budget). Rules and thresholds are managed above; in production these also push to email / Teams.</div>
     </section>
 
     <!-- ============ FORUM ============ -->
@@ -488,6 +566,9 @@
   </main>
 </div>
 
+<div class="modal-bg" id="modalBg"><div class="modal" id="modalCard"></div></div>
+<div class="toast" id="toast"></div>
+
 <script>
 /* ---------- REAL DATA (from Projects Dashboard & Key Milestones 90D, 02 Jun 2026) ---------- */
 const SITES = [
@@ -558,7 +639,41 @@ document.querySelectorAll('#nav button').forEach(b=>{
   };
 });
 
-/* ---------- EXEC ---------- */
+/* ================= STATE + PERSISTENCE ================= */
+const SEED_PROJECTS = JSON.parse(JSON.stringify(PROJECTS));
+const STATE_KEY='aurora_state_v2';
+let TXNS=[];                 // audit log of every change
+let ALERT_STATE={};          // alertId -> {status:'new|ack|res', assignee}
+const DEFAULT_RULES=[
+  {id:'r_emg',   name:'Unbudgeted commitment', desc:'Forecast &gt; 0 against a $0 approved budget', sev:'crit', cat:'COST',     enabled:true},
+  {id:'r_over',  name:'Cost variance over threshold', desc:'Forecast exceeds budget by ≥ threshold', sev:'crit', cat:'COST', enabled:true, threshold:20, unit:'%'},
+  {id:'r_commit',name:'Commitment exceeds budget', desc:'Committed cost has passed approved budget', sev:'high', cat:'COST', enabled:true},
+  {id:'r_slipC', name:'Critical schedule slip', desc:'Baseline slip beyond critical days', sev:'crit', cat:'SCHEDULE', enabled:true, threshold:300, unit:'d'},
+  {id:'r_slipH', name:'Schedule slip warning', desc:'Baseline slip beyond warning days', sev:'high', cat:'SCHEDULE', enabled:true, threshold:90, unit:'d'},
+];
+let RULES=JSON.parse(JSON.stringify(DEFAULT_RULES));
+const stamp=()=>new Date().toISOString();
+function fmtTs(iso){return new Date(iso).toLocaleString('en-CA',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});}
+function saveState(){try{localStorage.setItem(STATE_KEY,JSON.stringify({projects:PROJECTS,txns:TXNS,rules:RULES,alertState:ALERT_STATE}));}catch(e){}}
+(function loadState(){
+  try{const d=JSON.parse(localStorage.getItem(STATE_KEY));
+    if(d&&d.projects&&d.projects.length){PROJECTS.length=0;d.projects.forEach(p=>PROJECTS.push(p));
+      TXNS=d.txns||[]; ALERT_STATE=d.alertState||{};
+      if(d.rules&&d.rules.length){ // keep rule defs current, restore enabled/threshold
+        RULES.forEach(r=>{const s=d.rules.find(x=>x.id===r.id); if(s){r.enabled=s.enabled;if('threshold'in s)r.threshold=s.threshold;}});
+      }}
+  }catch(e){}
+})();
+function logTxn(project,action){TXNS.unshift({project,action,ts:stamp()});}
+function setText(id,t){const el=document.getElementById(id); if(el) el.textContent=t;}
+
+/* toast */
+let toastT;
+function toast(msg,warn){const el=document.getElementById('toast'); if(!el)return;
+  el.className='toast'+(warn?' warn':''); el.innerHTML=msg; requestAnimationFrame(()=>el.classList.add('show'));
+  clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove('show'),3800);}
+
+/* ---------- tag helpers (unchanged styling) ---------- */
 function statusTag(p){
   if(isEmergent(p)) return '<span class="tag t-emg">Emergent</span>';
   if(isOver(p)) return '<span class="tag t-over">Over '+Math.abs(varPct(p)).toFixed(0)+'%</span>';
@@ -571,60 +686,92 @@ function schedTag(p){
   return '<span class="tag t-under">on time</span>';
 }
 
-// top exposures = biggest over-budget by $
-const topExp = [...PROJECTS].filter(isOver).sort((a,b)=>variance(a)-variance(b)).slice(0,8);
-document.getElementById('topExp').innerHTML = topExp.map(p=>`
-  <tr><td>${p.name}</td><td>${p.site}</td>
-  <td class="num">${fmtM(p.forecast)}</td><td class="num">${fmtM(p.budget)}</td>
-  <td class="num" style="color:var(--red)">${fmtM(variance(p))}</td>
-  <td>${schedTag(p)}</td></tr>`).join('');
+/* ---------- EXEC (live) ---------- */
+function portfolioStats(){
+  let f=0,b=0,c=0; PROJECTS.forEach(p=>{f+=p.forecast;b+=p.budget;c+=p.committed;});
+  const emg=PROJECTS.filter(isEmergent); const emgSum=emg.reduce((s,p)=>s+p.forecast,0);
+  const sites=[...new Set(PROJECTS.map(p=>p.site))];
+  const overSites=sites.filter(s=>{const sf=PROJECTS.filter(p=>p.site===s);
+    return sf.reduce((a,p)=>a+p.forecast,0) > sf.reduce((a,p)=>a+p.budget,0);});
+  return {f,b,c,emg,emgSum,sites,overSites,delta:b-f};
+}
+function renderExec(){
+  const s=portfolioStats(), overPct=s.b>0?Math.round((s.f-s.b)/s.b*100):0;
+  setText('kpiForecast',fmtM(s.f)); setText('kpiCommitted','Committed to date: '+fmtM(s.c));
+  setText('kpiVar',(s.delta<0?'−':'')+'$'+(Math.abs(s.delta)/1e6).toFixed(1)+'M');
+  setText('kpiVarSub',overPct+'% over corporate budget');
+  setText('kpiBudget',fmtM(s.b)); setText('kpiBudgetSub','Across '+s.sites.length+' sites');
+  setText('kpiEmg',fmtM(s.emgSum)); setText('kpiEmgSub',s.emg.length+' projects with $0 baseline');
+  setText('kpiSites',s.overSites.length+' / '+s.sites.length);
+  const banner=document.getElementById('execBanner');
+  if(banner) banner.innerHTML='⚠ <div><b>Portfolio is forecast '+fmtM(Math.abs(s.delta))+' ('+overPct+'%) over budget.</b> '+
+    s.overSites.length+' of '+s.sites.length+' sites are over; '+fmtM(s.emgSum)+' of work is unbudgeted (emergent). Critical milestones are slipping up to 553 days vs baseline.</div>';
+  const topExp=[...PROJECTS].filter(isOver).sort((a,b)=>variance(a)-variance(b)).slice(0,8);
+  document.getElementById('topExp').innerHTML=topExp.map(p=>`
+    <tr class="clk" onclick="openProject('${esc2(p.name)}')"><td>${p.name}</td><td>${p.site}</td>
+    <td class="num">${fmtM(p.forecast)}</td><td class="num">${fmtM(p.budget)}</td>
+    <td class="num" style="color:var(--red)">${fmtM(variance(p))}</td>
+    <td>${schedTag(p)}</td></tr>`).join('');
+}
+const esc2=s=>(s||'').replace(/'/g,"\\'").replace(/"/g,'&quot;');
 
-/* charts after DOM ready */
-window.addEventListener('load',()=>{
+/* charts — rebuildable so they reflect live edits */
+let chSite,chConc,chSlip,chComp,chartsReady=false;
+function renderCharts(){
+  if(typeof Chart==='undefined'||!document.getElementById('chartSite'))return;
   Chart.defaults.color='#9fb6cc'; Chart.defaults.font.family="'Segoe UI',sans-serif";
   Chart.defaults.borderColor='rgba(34,64,93,.5)';
+  [chSite,chConc,chSlip,chComp].forEach(c=>{if(c)c.destroy();});
 
-  const sortedSites=[...SITES].sort((a,b)=>b.forecast-a.forecast);
-  new Chart(document.getElementById('chartSite'),{type:'bar',
-    data:{labels:sortedSites.map(s=>s.site),
+  // site aggregates from live PROJECTS
+  const sites=[...new Set(PROJECTS.map(p=>p.site))].map(s=>{
+    const sf=PROJECTS.filter(p=>p.site===s);
+    return {site:s,forecast:sf.reduce((a,p)=>a+p.forecast,0),budget:sf.reduce((a,p)=>a+p.budget,0)};
+  }).sort((a,b)=>b.forecast-a.forecast);
+  chSite=new Chart(document.getElementById('chartSite'),{type:'bar',
+    data:{labels:sites.map(s=>s.site),
       datasets:[
-        {label:'Forecast',data:sortedSites.map(s=>s.forecast/1e6),backgroundColor:'#4fc3f7',borderRadius:5},
-        {label:'Budget',data:sortedSites.map(s=>s.budget/1e6),backgroundColor:'#3a5d7d',borderRadius:5}
+        {label:'Forecast',data:sites.map(s=>s.forecast/1e6),backgroundColor:'#4fc3f7',borderRadius:5},
+        {label:'Budget',data:sites.map(s=>s.budget/1e6),backgroundColor:'#3a5d7d',borderRadius:5}
       ]},
     options:{plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.dataset.label+': $'+c.raw.toFixed(1)+'M'}}},
       scales:{y:{ticks:{callback:v=>'$'+v+'M'},grid:{color:'rgba(34,64,93,.4)'}},x:{grid:{display:false}}}}});
 
-  // concentration of overrun
   const overs=[...PROJECTS].filter(isOver).map(p=>({name:p.name.split('·')[0].trim(),v:-variance(p)})).sort((a,b)=>b.v-a.v);
   const top=overs.slice(0,5); const rest=overs.slice(5).reduce((s,x)=>s+x.v,0);
-  const concLabels=[...top.map(t=>t.name),'Other'];const concData=[...top.map(t=>t.v/1e6),rest/1e6];
-  new Chart(document.getElementById('chartConc'),{type:'doughnut',
-    data:{labels:concLabels,datasets:[{data:concData,
+  chConc=new Chart(document.getElementById('chartConc'),{type:'doughnut',
+    data:{labels:[...top.map(t=>t.name),'Other'],datasets:[{data:[...top.map(t=>t.v/1e6),rest/1e6],
       backgroundColor:['#f87171','#fb923c','#fbbf24','#4fc3f7','#36d3c4','#3a5d7d'],borderColor:'#13263a',borderWidth:2}]},
     options:{cutout:'58%',plugins:{legend:{position:'right',labels:{boxWidth:11,font:{size:10.5}}},
       tooltip:{callbacks:{label:c=>c.label+': $'+c.raw.toFixed(1)+'M'}}}}});
 
-  // schedule slip
   const slips=PROJECTS.filter(p=>p.slip!==null&&p.slip<0).sort((a,b)=>a.slip-b.slip).slice(0,10);
-  new Chart(document.getElementById('chartSlip'),{type:'bar',
+  chSlip=new Chart(document.getElementById('chartSlip'),{type:'bar',
     data:{labels:slips.map(p=>p.name.split('·')[0].trim()),
       datasets:[{data:slips.map(p=>p.slip),backgroundColor:slips.map(p=>p.slip<-90?'#f87171':'#fbbf24'),borderRadius:4}]},
     options:{indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.raw+' days behind baseline'}}},
       scales:{x:{ticks:{callback:v=>v+'d'},grid:{color:'rgba(34,64,93,.4)'}},y:{grid:{display:false},ticks:{font:{size:10}}}}}});
 
-  // completion scatter-ish (bubble: x=pct, y=-slip risk)
   const cmp=PROJECTS.filter(p=>p.slip!==null);
-  new Chart(document.getElementById('chartComp'),{type:'bubble',
+  chComp=new Chart(document.getElementById('chartComp'),{type:'bubble',
     data:{datasets:[{data:cmp.map(p=>({x:p.pct,y:Math.max(0,-p.slip),r:Math.max(5,Math.sqrt(p.forecast/1e6)*2),name:p.name})),
       backgroundColor:cmp.map(p=>(-p.slip>90?'rgba(248,113,113,.6)':(-p.slip>0?'rgba(251,191,36,.6)':'rgba(52,211,153,.6)')))}]},
     options:{plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.raw.name+' — '+c.raw.x+'% done, '+c.raw.y+'d behind'}}},
       scales:{x:{title:{display:true,text:'% complete'},min:0,max:100,grid:{color:'rgba(34,64,93,.4)'}},
               y:{title:{display:true,text:'days behind baseline'},grid:{color:'rgba(34,64,93,.4)'}}}}});
-});
+  chartsReady=true;
+}
+window.addEventListener('load',()=>{renderCharts();});
 
-/* ---------- COST table ---------- */
+/* ---------- COST table (interactive ledger) ---------- */
 const fSite=document.getElementById('fSite');
-[...new Set(PROJECTS.map(p=>p.site))].sort().forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;fSite.appendChild(o);});
+function populateCostSites(){
+  const cur=fSite.value;
+  fSite.innerHTML='<option value="">All sites</option>'+
+    [...new Set(PROJECTS.map(p=>p.site))].sort().map(s=>`<option>${s}</option>`).join('');
+  fSite.value=cur;
+}
+populateCostSites();
 let sortKey='delta',sortDir=1;
 function renderCost(){
   const site=fSite.value, st=document.getElementById('fStatus').value;
@@ -647,7 +794,7 @@ function renderCost(){
     const v=variance(p), vp=varPct(p), flagged=isOver(p)&&Math.abs(vp)>=th;
     const barColor=isOver(p)?'#f87171':'#34d399';
     const ratio=p.budget>0?Math.min(150,p.forecast/p.budget*100):150;
-    return `<tr style="${flagged?'background:rgba(248,113,113,.06)':''}">
+    return `<tr class="clk" onclick="openProject('${esc2(p.name)}')" style="${flagged?'background:rgba(248,113,113,.06)':''}">
       <td>${flagged?'<span style="color:var(--red)">● </span>':''}${p.name}</td>
       <td style="color:var(--ink2)">${p.site}</td>
       <td class="num">${fmt(p.committed)}</td>
@@ -660,16 +807,14 @@ function renderCost(){
   }).join('');
 }
 document.querySelectorAll('#v-cost th[data-k]').forEach(th=>th.onclick=()=>{
-  const k=th.dataset.k; if(sortKey===k)sortDir*=-1; else{sortKey=k;sortDir=(k==='delta'||k==='pct')?1:1;}
+  const k=th.dataset.k; if(sortKey===k)sortDir*=-1; else{sortKey=k;sortDir=1;}
   renderCost();
 });
 fSite.onchange=renderCost;
 document.getElementById('fStatus').onchange=renderCost;
 document.getElementById('fThresh').oninput=function(){document.getElementById('threshLab').textContent=this.value+'% over';renderCost();};
-renderCost();
 
 /* ---------- SCHEDULE table ---------- */
-const schedRows=PROJECTS.filter(p=>p.slip!==null).sort((a,b)=>a.slip-b.slip);
 const endDates={ '470':'19-Apr-26','433':'10-Aug-26','600':'22-Dec-29','542':'30-Oct-26','519':'—','348':'01-Nov-26',
   '490':'13-Aug-26','394':'27-Nov-26','544':'20-Dec-27','715':'01-Jan-27','708':'30-Jul-27','705':'10-Aug-27',
   '484':'01-Dec-26','494':'19-Jul-26','543':'09-Nov-26','472':'29-Aug-26','704':'13-Jul-27' };
@@ -679,56 +824,237 @@ function healthTag(p){
   if(p.slip<0) return '<span class="tag t-warn">Slipping</span>';
   return '<span class="tag t-under">On track</span>';
 }
-document.getElementById('schedBody').innerHTML=schedRows.map(p=>{
-  const code=p.name.match(/\d{3}|XXX/)?.[0]||'';
-  return `<tr>
-    <td>${p.name}</td><td style="color:var(--ink2)">${p.site}</td>
-    <td class="num">${endDates[code]||'—'}</td>
-    <td class="num" style="color:var(--ink3)">baseline</td>
-    <td class="num" style="color:${p.slip<-90?'var(--red)':(p.slip<0?'var(--amber)':'var(--green)')}">${p.slip} d</td>
-    <td class="num">${p.pct}%<div class="bar" style="margin-top:4px"><i style="width:${p.pct}%;background:${p.pct>70?'#34d399':(p.pct>30?'#fbbf24':'#4fc3f7')}"></i></div></td>
-    <td>${healthTag(p)}</td></tr>`;
-}).join('');
+function renderSched(){
+  const schedRows=PROJECTS.filter(p=>p.slip!==null).sort((a,b)=>a.slip-b.slip);
+  document.getElementById('schedBody').innerHTML=schedRows.map(p=>{
+    const code=p.name.match(/\d{3}|XXX/)?.[0]||'';
+    return `<tr class="clk" onclick="openProject('${esc2(p.name)}')">
+      <td>${p.name}</td><td style="color:var(--ink2)">${p.site}</td>
+      <td class="num">${endDates[code]||'—'}</td>
+      <td class="num" style="color:var(--ink3)">baseline</td>
+      <td class="num" style="color:${p.slip<-90?'var(--red)':(p.slip<0?'var(--amber)':'var(--green)')}">${p.slip} d</td>
+      <td class="num">${p.pct}%<div class="bar" style="margin-top:4px"><i style="width:${p.pct}%;background:${p.pct>70?'#34d399':(p.pct>30?'#fbbf24':'#4fc3f7')}"></i></div></td>
+      <td>${healthTag(p)}</td></tr>`;
+  }).join('');
+}
 
 /* ---------- EMERGENT ---------- */
-const emg=PROJECTS.filter(isEmergent).sort((a,b)=>b.forecast-a.forecast);
 const emgReason={
   '547 — MQ UG · Ventilation Principale no2':'New ventilation shaft added mid-year; $9.94M committed with no corporate budget line.',
   '715 — Inuksuk · Portail':'Reactive portal works; $2.45M forecast, 0 budget, already 380 days behind baseline.',
   'XXX — Fibre Optique BD · Wakeham Bay':'Newly scoped fibre link (no project number yet); $2.5M unbudgeted.',
   '541 — BD · Balance replacement':'Replacement triggered by failure; $250K forecast against $0 budget.'
 };
-document.getElementById('emgBody').innerHTML=emg.map(p=>`
-  <tr><td><span class="tag t-emg">⚑</span> ${p.name}</td><td style="color:var(--ink2)">${p.site}</td>
-  <td class="num" style="color:var(--red)">${fmt(p.forecast)}</td>
-  <td class="num" style="color:var(--ink3)">$0</td>
-  <td style="color:var(--ink2);font-size:12px">${emgReason[p.name]||'Forecast committed against a $0 corporate budget.'}</td></tr>`).join('');
+function renderEmergent(){
+  const emg=PROJECTS.filter(isEmergent).sort((a,b)=>b.forecast-a.forecast);
+  const total=emg.reduce((s,p)=>s+p.forecast,0);
+  const largest=emg.length?emg[0].forecast:0;
+  const s=portfolioStats(); const overTotal=s.f-s.b;
+  setText('emgKpiTotal',fmtM(total)); setText('emgKpiLargest',fmtM(largest));
+  setText('emgKpiLargestSub',emg.length?emg[0].name.split('·').slice(-1)[0].trim():'—');
+  setText('emgKpiPct',overTotal>0?Math.round(total/overTotal*100)+'%':'—');
+  setText('emgKpiCount',emg.length+' projects');
+  document.getElementById('emgBody').innerHTML=emg.length?emg.map(p=>`
+    <tr><td><span class="tag t-emg">⚑</span> ${p.name}</td><td style="color:var(--ink2)">${p.site}</td>
+    <td class="num" style="color:var(--red)">${fmt(p.forecast)}</td>
+    <td class="num" style="color:var(--ink3)">$0</td>
+    <td style="color:var(--ink2);font-size:12px">${emgReason[p.name]||'Forecast committed against a $0 corporate budget.'}</td>
+    <td><button class="btnp" style="padding:5px 11px;font-size:11.5px" onclick="openProject('${esc2(p.name)}')">Approve &amp; fund</button></td></tr>`).join('')
+    : '<tr><td colspan="6" style="text-align:center;color:var(--ink3);padding:18px">No emergent projects — all work is funded. ✓</td></tr>';
+}
 
-/* ---------- ALERTS ---------- */
-const alerts=[];
-PROJECTS.forEach(p=>{
-  if(isEmergent(p)) alerts.push({sev:'crit',cat:'COST',title:p.name,
-    msg:`Unbudgeted commitment — ${fmt(p.forecast)} forecast against a $0 corporate budget. Requires sponsor approval & budget line.`,meta:p.site});
-  else if(isOver(p)&&Math.abs(varPct(p))>=20) alerts.push({sev:'crit',cat:'COST',title:p.name,
-    msg:`Forecast ${Math.abs(varPct(p)).toFixed(0)}% over budget (${fmt(variance(p))}). Exceeds 20% control threshold.`,meta:p.site});
-  if(p.slip!==null&&p.slip<-300) alerts.push({sev:'crit',cat:'SCHEDULE',title:p.name,
-    msg:`Critical baseline slip — ${Math.abs(p.slip)} days behind original finish at ${p.pct}% complete.`,meta:p.site});
-  else if(p.slip!==null&&p.slip<-90) alerts.push({sev:'high',cat:'SCHEDULE',title:p.name,
-    msg:`Schedule slip ${Math.abs(p.slip)} days behind baseline at ${p.pct}% complete.`,meta:p.site});
-});
-alerts.push({sev:'high',cat:'PROCUREMENT',title:'547 — Ventilation Principale no2',
-  msg:'Major mechanical package not yet ordered — long-lead items risk missing the 2026 sealift window.',meta:'UG Mequillon'});
-alerts.push({sev:'info',cat:'PORTFOLIO',title:'Portfolio variance',
-  msg:'Total forecast $369.6M vs $249.3M budget — portfolio 48% over. Recommend control review with Finance & PMO.',meta:'All sites'});
-const sevOrder={crit:0,high:1,info:2};
-alerts.sort((a,b)=>sevOrder[a.sev]-sevOrder[b.sev]);
-const icons={crit:'⛔',high:'▲',info:'ⓘ'};
-document.getElementById('alertCount').textContent=alerts.filter(a=>a.sev!=='info').length;
-document.getElementById('alertFeed').innerHTML=alerts.map(a=>`
-  <div class="alert"><div class="sev ${a.sev}">${icons[a.sev]}</div>
-   <div class="body"><b>${a.title}</b> &nbsp;<span class="tag ${a.cat==='COST'?'t-over':(a.cat==='SCHEDULE'?'t-warn':'t-emg')}" style="font-size:10px">${a.cat}</span>
-     <p>${a.msg}</p></div>
-   <div class="meta">${a.meta}</div></div>`).join('');
+/* ================= ALERT ENGINE ================= */
+const ruleById=id=>RULES.find(r=>r.id===id);
+function computeAlerts(projects){
+  const out=[], pr=projects||PROJECTS;
+  const rOver=ruleById('r_over'),rSlipC=ruleById('r_slipC'),rSlipH=ruleById('r_slipH'),rEmg=ruleById('r_emg'),rCom=ruleById('r_commit');
+  pr.forEach(p=>{
+    if(rEmg.enabled&&isEmergent(p)) out.push({id:'r_emg|'+p.name,sev:rEmg.sev,cat:'COST',title:p.name,meta:p.site,
+      msg:`Unbudgeted commitment — ${fmt(p.forecast)} forecast against a $0 corporate budget. Requires sponsor approval &amp; budget line.`});
+    else if(rOver.enabled&&p.budget>0&&isOver(p)&&Math.abs(varPct(p))>=rOver.threshold) out.push({id:'r_over|'+p.name,sev:rOver.sev,cat:'COST',title:p.name,meta:p.site,
+      msg:`Forecast ${Math.abs(varPct(p)).toFixed(0)}% over budget (${fmt(variance(p))}). Exceeds ${rOver.threshold}% control threshold.`});
+    if(rCom.enabled&&p.budget>0&&p.committed>p.budget) out.push({id:'r_commit|'+p.name,sev:rCom.sev,cat:'COST',title:p.name,meta:p.site,
+      msg:`Committed cost ${fmt(p.committed)} has passed approved budget ${fmt(p.budget)}.`});
+    if(p.slip!=null){
+      if(rSlipC.enabled&&p.slip<=-rSlipC.threshold) out.push({id:'r_slipC|'+p.name,sev:rSlipC.sev,cat:'SCHEDULE',title:p.name,meta:p.site,
+        msg:`Critical baseline slip — ${Math.abs(p.slip)} days behind at ${p.pct}% complete.`});
+      else if(rSlipH.enabled&&p.slip<=-rSlipH.threshold) out.push({id:'r_slipH|'+p.name,sev:rSlipH.sev,cat:'SCHEDULE',title:p.name,meta:p.site,
+        msg:`Schedule slip ${Math.abs(p.slip)} days behind baseline at ${p.pct}% complete.`});
+    }
+  });
+  return out;
+}
+const alStatus=id=>(ALERT_STATE[id]&&ALERT_STATE[id].status)||'new';
+function renderAlerts(){
+  let list=computeAlerts();
+  const s=portfolioStats(), overPct=s.b>0?Math.round((s.f-s.b)/s.b*100):0;
+  list.push({id:'sys_portfolio',sev:'info',cat:'PORTFOLIO',title:'Portfolio variance',meta:'All sites',
+    msg:`Total forecast ${fmtM(s.f)} vs ${fmtM(s.b)} budget — portfolio ${overPct}% over. Recommend control review with Finance &amp; PMO.`});
+  if(PROJECTS.some(p=>p.name.indexOf('547')===0)) list.push({id:'sys_sealift',sev:'high',cat:'PROCUREMENT',title:'547 — Ventilation Principale no2',meta:'UG Mequillon',
+    msg:'Major mechanical package not yet ordered — long-lead items risk missing the 2026 sealift window.'});
+  const filt=document.getElementById('alFilter')?document.getElementById('alFilter').value:'active';
+  let view=list.filter(a=>{const st=alStatus(a.id);
+    if(filt==='all')return true; if(filt==='new')return st==='new';
+    if(filt==='crit')return a.sev==='crit'&&st!=='res'; return st!=='res';});
+  const sevOrder={crit:0,high:1,info:2}, stOrder={new:0,ack:1,res:2};
+  view.sort((a,b)=> (sevOrder[a.sev]-sevOrder[b.sev]) || (stOrder[alStatus(a.id)]-stOrder[alStatus(b.id)]));
+  const icons={crit:'⛔',high:'▲',info:'ⓘ'};
+  setText('alertCount',list.filter(a=>a.sev!=='info'&&alStatus(a.id)!=='res').length);
+  document.getElementById('alertFeed').innerHTML = view.length? view.map(a=>{
+    const st=alStatus(a.id), asn=ALERT_STATE[a.id]&&ALERT_STATE[a.id].assignee;
+    const lc=st==='new'?'<span class="lc lc-new">NEW</span>':st==='ack'?'<span class="lc lc-ack">ACK'+(asn?' · '+asn:'')+'</span>':'<span class="lc lc-res">RESOLVED</span>';
+    let acts;
+    if(st==='new')acts=`<button class="btns" onclick="setAlert('${a.id}','ack')">Acknowledge</button><button class="btns" onclick="assignAlert('${a.id}')">Assign</button><button class="btns" onclick="setAlert('${a.id}','res')">Resolve</button>`;
+    else if(st==='ack')acts=`<button class="btns" onclick="assignAlert('${a.id}')">Reassign</button><button class="btns" onclick="setAlert('${a.id}','res')">Resolve</button>`;
+    else acts=`<button class="btns" onclick="setAlert('${a.id}','new')">Reopen</button>`;
+    return `<div class="alert"><div class="sev ${a.sev}">${icons[a.sev]}</div>
+     <div class="body"><b>${a.title}</b> <span class="tag ${a.cat==='COST'?'t-over':(a.cat==='SCHEDULE'?'t-warn':'t-emg')}" style="font-size:10px">${a.cat}</span>${lc}
+       <p>${a.msg}</p><div class="acts">${acts}</div></div>
+     <div class="meta">${a.meta}</div></div>`;
+  }).join('') : '<div class="card" style="text-align:center;color:var(--ink3)">No alerts match this filter.</div>';
+}
+function setAlert(id,st){ALERT_STATE[id]=Object.assign({},ALERT_STATE[id],{status:st});saveState();renderAlerts();
+  toast(st==='res'?'Alert resolved ✓':st==='ack'?'Alert acknowledged':'Alert reopened');}
+function assignAlert(id){const who=prompt('Assign this alert to (name / role):'); if(who){ALERT_STATE[id]=Object.assign({},ALERT_STATE[id],{status:'ack',assignee:who});saveState();renderAlerts();toast('Assigned to '+who);}}
+function runCheck(){renderAlerts();toast('Rules evaluated — '+document.getElementById('alertCount').textContent+' active alerts');}
+function critCount(){return computeAlerts().filter(a=>a.sev==='crit'&&alStatus(a.id)!=='res').length;}
+
+/* rules panel */
+function renderRules(){
+  const el=document.getElementById('ruleList'); if(!el)return;
+  el.innerHTML=RULES.map(r=>`
+   <div class="rule">
+     <label class="switch"><input type="checkbox" ${r.enabled?'checked':''} onchange="toggleRule('${r.id}',this.checked)"><span class="slider"></span></label>
+     <div class="rinfo"><b>${r.name}</b> <span class="tag ${r.sev==='crit'?'t-over':'t-warn'}" style="font-size:9.5px">${r.sev.toUpperCase()}</span><p>${r.desc}</p></div>
+     ${r.unit?`<input class="rthr" type="number" value="${r.threshold}" onchange="setThreshold('${r.id}',this.value)"><span style="color:var(--ink3);font-size:12px">${r.unit}</span>`:''}
+   </div>`).join('');
+}
+function toggleRule(id,on){ruleById(id).enabled=on;saveState();renderAlerts();renderExec();toast('Rule '+(on?'enabled':'disabled'));}
+function setThreshold(id,vv){ruleById(id).threshold=Math.abs(parseFloat(vv)||0);saveState();renderAlerts();toast('Threshold updated');}
+
+/* what-if simulator */
+function populateSim(){const el=document.getElementById('simProj'); if(!el)return; const cur=el.value;
+  el.innerHTML=PROJECTS.map(p=>`<option>${p.name.replace(/"/g,'&quot;')}</option>`).join(''); if(cur)el.value=cur;}
+function runSim(){
+  const name=document.getElementById('simProj').value, amt=parseFloat(document.getElementById('simAmt').value)||0;
+  const out=document.getElementById('simOut'), p=PROJECTS.find(x=>x.name===name); if(!p){out.innerHTML='';return;}
+  const before=computeAlerts().map(a=>a.id);
+  const clone=PROJECTS.map(x=>Object.assign({},x)), cp=clone.find(x=>x.name===name);
+  cp.committed+=amt; if(cp.committed>cp.forecast)cp.forecast=cp.committed;
+  const fresh=computeAlerts(clone).filter(a=>!before.includes(a.id));
+  const vv=cp.budget-cp.forecast;
+  let html=`<div class="kv"><span>New committed</span><b>${fmt(cp.committed)}</b></div>
+    <div class="kv"><span>New forecast</span><b>${fmt(cp.forecast)}</b></div>
+    <div class="kv"><span>Variance vs budget</span><b style="color:${vv<0?'var(--red)':'var(--green)'}">${fmt(vv)}</b></div>`;
+  if(fresh.length) html+=`<div class="subhead" style="color:var(--red)">⚠ Would trigger ${fresh.length} new alert(s)</div>`+
+    fresh.map(a=>`<div class="alert" style="margin-bottom:8px"><div class="sev ${a.sev}">${a.sev==='crit'?'⛔':'▲'}</div><div class="body"><b>${a.title}</b><p>${a.msg}</p></div></div>`).join('');
+  else html+=`<div class="subhead" style="color:var(--green)">✓ No new alerts — within current thresholds</div>`;
+  out.innerHTML=html;
+}
+
+/* ================= MODAL: project editing, commitments, stage-gate ================= */
+const valOf=id=>parseFloat(document.getElementById(id).value)||0;
+function mOpen(html){document.getElementById('modalCard').innerHTML=html;document.getElementById('modalBg').classList.add('open');}
+function mClose(){document.getElementById('modalBg').classList.remove('open');mPending=[];}
+let mPid=null,mPending=[];
+function openProject(name){
+  mPending=[]; const p=PROJECTS.find(x=>x.name===name); if(!p)return; mPid=name;
+  const hist=TXNS.filter(t=>t.project===name).slice(0,12);
+  mOpen(`
+   <div class="mh"><h3>${p.name}</h3><button class="x" onclick="mClose()">×</button></div>
+   <div class="mb">
+     <div style="color:var(--ink3);font-size:12px;margin-bottom:14px">${p.site}${isEmergent(p)?' · <span class="tag t-emg">Emergent — set a budget to fund via stage-gate</span>':''}</div>
+     <div class="row2">
+       <div class="field"><label>Approved budget ($)</label><input type="number" id="mBudget" value="${p.budget}" oninput="mRecalc()"></div>
+       <div class="field"><label>Forecast at completion ($)</label><input type="number" id="mForecast" value="${p.forecast}" oninput="mRecalc()"></div>
+     </div>
+     <div class="row2">
+       <div class="field"><label>Committed to date ($)</label><input type="number" id="mCommitted" value="${p.committed}" oninput="mRecalc()"></div>
+       <div class="field"><label>% complete</label><input type="number" id="mPct" value="${p.pct}" min="0" max="100"></div>
+     </div>
+     <div class="kv"><span>Variance (budget − forecast)</span><b id="mVar"></b></div>
+     <div class="subhead">Log a commitment / PO</div>
+     <div class="row2"><input type="number" id="mcAmt" placeholder="Amount ($)"><input type="text" id="mcDesc" placeholder="Vendor / PO description"></div>
+     <button class="btns" style="margin-top:8px" onclick="mAddCommit()">＋ Add to committed</button>
+     ${hist.length?`<div class="subhead">Recent activity</div><div class="txnlog">${hist.map(t=>`<div>${fmtTs(t.ts)} — ${t.action}</div>`).join('')}</div>`:''}
+   </div>
+   <div class="mf"><button class="btns" onclick="mClose()">Cancel</button><button class="btnp" onclick="mSaveProject()">Save changes</button></div>`);
+  mRecalc();
+}
+function mRecalc(){const el=document.getElementById('mVar'); if(!el)return; const d=valOf('mBudget')-valOf('mForecast');
+  el.textContent=fmt(d); el.style.color=d<0?'var(--red)':'var(--green)';}
+function mAddCommit(){const amt=valOf('mcAmt'); if(amt<=0)return;
+  const c=document.getElementById('mCommitted'); c.value=(parseFloat(c.value)||0)+amt;
+  const f=document.getElementById('mForecast'); if(parseFloat(c.value)>parseFloat(f.value))f.value=c.value;
+  mPending.push({amt,desc:document.getElementById('mcDesc').value||'Commitment'});
+  document.getElementById('mcAmt').value='';document.getElementById('mcDesc').value='';mRecalc();toast('Commitment staged — Save to confirm');}
+function mSaveProject(){
+  const p=PROJECTS.find(x=>x.name===mPid); if(!p)return; const pre=critCount();
+  const nb=valOf('mBudget'),nf=valOf('mForecast'),nc=valOf('mCommitted'),np=Math.max(0,Math.min(100,valOf('mPct')));
+  if(nb!==p.budget)logTxn(p.name,`Budget set to ${fmt(nb)} (was ${fmt(p.budget)})`);
+  if(nf!==p.forecast)logTxn(p.name,`Forecast re-estimated to ${fmt(nf)} (was ${fmt(p.forecast)})`);
+  mPending.forEach(c=>logTxn(p.name,`Commitment logged: ${fmt(c.amt)} — ${c.desc}`));
+  if(nc!==p.committed&&!mPending.length)logTxn(p.name,`Committed adjusted to ${fmt(nc)}`);
+  p.budget=nb;p.forecast=nf;p.committed=nc;p.pct=np;
+  mClose();refreshAll(); const post=critCount();
+  toast(post>pre?('Saved — ⚠ '+(post-pre)+' new critical alert(s)'):'Saved ✓ — variance &amp; alerts updated',post>pre);
+}
+function newProject(){
+  mPending=[];mPid=null; const sites=[...new Set(PROJECTS.map(p=>p.site))].sort();
+  mOpen(`<div class="mh"><h3>New project</h3><button class="x" onclick="mClose()">×</button></div>
+   <div class="mb">
+     <div class="field"><label>Project name</label><input type="text" id="nName" placeholder="e.g. 720 — Inuksuk · New workshop"></div>
+     <div class="field"><label>Site</label><select id="nSite" onchange="document.getElementById('nSiteNew').style.display=this.value==='＋ New site…'?'block':'none'">${sites.map(s=>`<option>${s}</option>`).join('')}<option>＋ New site…</option></select></div>
+     <input type="text" id="nSiteNew" placeholder="New site name" style="display:none;width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:9px;padding:9px 12px;font-size:13px;margin-bottom:14px">
+     <div class="row2"><div class="field"><label>Approved budget ($)</label><input type="number" id="nBudget" placeholder="0 = emergent"></div>
+       <div class="field"><label>Forecast ($)</label><input type="number" id="nForecast" placeholder="0"></div></div>
+     <div class="field"><label>Committed to date ($)</label><input type="number" id="nCommitted" placeholder="0"></div>
+   </div>
+   <div class="mf"><button class="btns" onclick="mClose()">Cancel</button><button class="btnp" onclick="mCreateProject()">Create project</button></div>`);
+}
+function mCreateProject(){
+  const name=(document.getElementById('nName').value||'').trim(); if(!name){toast('Enter a project name',true);return;}
+  if(PROJECTS.some(p=>p.name===name)){toast('A project with that name already exists',true);return;}
+  let site=document.getElementById('nSite').value; if(site==='＋ New site…')site=(document.getElementById('nSiteNew').value||'New site').trim();
+  PROJECTS.push({name,site,committed:valOf('nCommitted'),forecast:valOf('nForecast'),budget:valOf('nBudget'),slip:null,pct:0});
+  logTxn(name,`Project created (budget ${fmt(valOf('nBudget'))}, forecast ${fmt(valOf('nForecast'))})`);
+  mClose();refreshAll();toast('Project created ✓');
+}
+function openCommit(){
+  mOpen(`<div class="mh"><h3>Log commitment / PO</h3><button class="x" onclick="mClose()">×</button></div>
+   <div class="mb">
+     <div class="field"><label>Project</label><select id="cProj">${PROJECTS.map(p=>`<option>${p.name.replace(/"/g,'&quot;')}</option>`).join('')}</select></div>
+     <div class="row2"><div class="field"><label>Amount ($)</label><input type="number" id="cAmt" placeholder="0"></div>
+       <div class="field"><label>Vendor / description</label><input type="text" id="cDesc" placeholder="e.g. PO-1453 — fans"></div></div>
+     <div class="field"><label style="text-transform:none;letter-spacing:0;color:var(--ink2)"><input type="checkbox" id="cBump" checked style="width:auto;margin-right:7px;vertical-align:middle">Raise forecast if commitment exceeds it</label></div>
+   </div>
+   <div class="mf"><button class="btns" onclick="mClose()">Cancel</button><button class="btnp" onclick="mDoCommit()">Log commitment</button></div>`);
+}
+function mDoCommit(){
+  const name=document.getElementById('cProj').value, amt=valOf('cAmt'), p=PROJECTS.find(x=>x.name===name);
+  if(!p||amt<=0){toast('Enter an amount',true);return;}
+  const pre=critCount(); p.committed+=amt;
+  if(document.getElementById('cBump').checked&&p.committed>p.forecast)p.forecast=p.committed;
+  logTxn(name,`Commitment logged: ${fmt(amt)} — ${document.getElementById('cDesc').value||'PO'}`);
+  mClose();refreshAll(); const post=critCount();
+  toast(post>pre?'Commitment logged — ⚠ new critical alert':'Commitment logged ✓',post>pre);
+}
+function exportData(){
+  const blob=new Blob([JSON.stringify({projects:PROJECTS,txns:TXNS,rules:RULES},null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download='aurora-data-'+new Date().toISOString().slice(0,10)+'.json'; a.click(); toast('Data exported as JSON');
+}
+function resetData(){ if(!confirm('Reset all projects, edits, commitments and alerts to the original baseline?'))return;
+  PROJECTS.length=0;SEED_PROJECTS.forEach(p=>PROJECTS.push(JSON.parse(JSON.stringify(p))));
+  TXNS=[];ALERT_STATE={};RULES=JSON.parse(JSON.stringify(DEFAULT_RULES));
+  refreshAll();toast('Reset to baseline ✓');
+}
+
+/* ================= REFRESH + INIT ================= */
+function refreshAll(){populateCostSites();renderExec();renderCost();renderSched();renderEmergent();renderRules();populateSim();renderAlerts();renderCharts();saveState();}
+document.getElementById('modalBg').onclick=e=>{if(e.target.id==='modalBg')mClose();};
+document.addEventListener('keydown',e=>{if(e.key==='Escape')mClose();});
+refreshAll();
 
 /* ---------- TEAM FORUM ---------- */
 const FORUM_KEY='aurora_forum_v1', ME_KEY='aurora_forum_me';
