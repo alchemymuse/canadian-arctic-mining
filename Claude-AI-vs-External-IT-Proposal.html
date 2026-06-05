@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Proposal — Replacing External IT Spend with Claude AI | Canadian Royalties / Nunavik Nickel</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root{
+    --ink:#1a2733; --ink2:#46596b; --ink3:#748899; --line:#dde6ee; --line2:#eef3f8;
+    --bg:#f4f7fa; --panel:#ffffff; --brand:#0e5a8a; --brand2:#1184c9; --accent:#0fae9e;
+    --replace:#0fae9e; --augment:#f0a431; --keep:#9aa7b5; --over:#e0584f; --good:#0fae9e;
+    --tealbg:#e6f7f4; --amberbg:#fdf1dd; --graybg:#eef1f4; --redbg:#fbe9e7;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body{margin:0;font-family:'Segoe UI',-apple-system,system-ui,sans-serif;color:var(--ink);
+     background:var(--bg);line-height:1.5;font-size:14px}
+  .doc{max-width:920px;margin:0 auto;padding:0 18px 60px}
+  .toolbar{position:sticky;top:0;z-index:50;background:var(--brand);color:#fff;display:flex;
+     justify-content:space-between;align-items:center;padding:9px 18px;font-size:13px;box-shadow:0 2px 10px rgba(0,0,0,.15)}
+  .toolbar b{letter-spacing:.5px}
+  .toolbar button{background:#fff;color:var(--brand);border:0;border-radius:7px;padding:7px 16px;
+     font-weight:700;cursor:pointer;font-size:13px}
+  .toolbar button:hover{background:#e8f3fb}
+  /* page blocks */
+  .sheet{background:var(--panel);border:1px solid var(--line);border-radius:12px;
+     padding:34px 40px;margin:18px 0;box-shadow:0 4px 18px rgba(20,50,80,.06)}
+  .cover{background:linear-gradient(155deg,#0e5a8a,#0b3f63 60%,#0a3556);color:#eaf3fa;border:0}
+  .cover .kicker{color:#7fc4ee;font-size:12px;letter-spacing:3px;text-transform:uppercase;font-weight:700}
+  .cover h1{font-size:33px;margin:14px 0 8px;line-height:1.15;color:#fff;font-weight:680}
+  .cover .sub{font-size:15px;color:#bcd9ef;max-width:640px}
+  .cover .meta{margin-top:30px;display:flex;gap:34px;flex-wrap:wrap;font-size:13px;color:#9fc4e2}
+  .cover .meta b{color:#fff;display:block;font-size:14px}
+  h2{font-size:21px;margin:6px 0 4px;color:var(--brand);font-weight:670}
+  h2 .n{color:var(--ink3);font-weight:600;margin-right:8px}
+  h3{font-size:15.5px;margin:22px 0 6px;color:var(--ink)}
+  .rule{height:3px;width:48px;background:var(--accent);border-radius:3px;margin:10px 0 18px}
+  p{margin:9px 0}
+  .lead{font-size:15px;color:var(--ink2)}
+  small,.fine{font-size:12px;color:var(--ink3)}
+  /* KPI strip */
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:18px 0}
+  .kpi{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:13px 15px}
+  .kpi .v{font-size:23px;font-weight:740;color:var(--brand)}
+  .kpi .v.green{color:var(--good)} .kpi .v.red{color:var(--over)}
+  .kpi .l{font-size:11.5px;color:var(--ink3);text-transform:uppercase;letter-spacing:.4px;margin-top:3px}
+  /* tables */
+  table{width:100%;border-collapse:collapse;font-size:12.8px;margin:10px 0}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line)}
+  thead th{background:var(--brand);color:#fff;font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.3px;border:0}
+  thead th.num,td.num{text-align:right;font-variant-numeric:tabular-nums}
+  tbody tr:nth-child(even){background:var(--line2)}
+  tfoot td{font-weight:700;border-top:2px solid var(--brand);background:#eaf2f8}
+  .v-replace{color:var(--replace);font-weight:700}
+  .v-augment{color:var(--augment);font-weight:700}
+  .v-keep{color:var(--keep);font-weight:700}
+  .badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap}
+  .b-replace{background:var(--tealbg);color:#0a7d71}
+  .b-augment{background:var(--amberbg);color:#a9711a}
+  .b-keep{background:var(--graybg);color:#5d6b79}
+  /* cards / callouts */
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .callout{background:var(--tealbg);border:1px solid #bfe9e2;border-left:4px solid var(--accent);
+     border-radius:9px;padding:13px 16px;margin:14px 0;font-size:13px;color:#0c5249}
+  .callout.warn{background:var(--amberbg);border-color:#f1d59a;border-left-color:var(--augment);color:#8a5d12}
+  .chartbox{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:16px;margin:14px 0}
+  .chartwrap{position:relative;height:260px}
+  .legend{display:flex;gap:18px;flex-wrap:wrap;font-size:12px;color:var(--ink2);margin-top:10px}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .sw{width:11px;height:11px;border-radius:3px;display:inline-block}
+  ul.tick{list-style:none;padding-left:0;margin:8px 0}
+  ul.tick li{padding-left:24px;position:relative;margin:6px 0;font-size:13px}
+  ul.tick li::before{content:"✓";position:absolute;left:0;color:var(--accent);font-weight:800}
+  ul.cross li::before{content:"✕";color:var(--keep)}
+  .vendor{border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin:10px 0;background:#fff}
+  .vendor .vh{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+  .vendor .vh b{font-size:14.5px}
+  .vendor .cost{font-size:13px;color:var(--ink3);font-weight:600}
+  .vendor p{margin:7px 0 0;font-size:12.8px;color:var(--ink2)}
+  .cat-head{display:flex;align-items:center;gap:10px;margin:24px 0 4px}
+  .cat-head .tag{background:var(--brand);color:#fff;border-radius:6px;padding:4px 11px;font-size:12px;font-weight:700}
+  .scenario-tabs{display:flex;gap:8px;margin:6px 0 0}
+  .footer{text-align:center;color:var(--ink3);font-size:11.5px;margin-top:18px}
+  a{color:var(--brand2)}
+  @media print{
+    body{background:#fff;font-size:11.5pt}
+    .toolbar{display:none}
+    .doc{max-width:none;padding:0}
+    .sheet{box-shadow:none;border:0;border-radius:0;margin:0;padding:14mm 0;page-break-inside:auto}
+    .cover{min-height:auto;padding:24mm 0}
+    .page-break{page-break-before:always}
+    .vendor,.kpi,.chartbox,.callout,table{page-break-inside:avoid}
+    h2,h3{page-break-after:avoid}
+    .chartwrap{height:230px}
+  }
+  @media(max-width:760px){.kpis,.two{grid-template-columns:1fr 1fr}.sheet{padding:22px}}
+</style>
+</head>
+<body>
+<div class="toolbar">
+  <b>PROPOSAL · Claude AI vs. External IT Spend</b>
+  <button onclick="window.print()">⎙ Print / Save as PDF</button>
+</div>
+<div class="doc">
+
+  <!-- COVER -->
+  <section class="sheet cover">
+    <div class="kicker">Strategic IT Cost Review · Confidential</div>
+    <h1>Replacing External IT Spend with Claude&nbsp;AI</h1>
+    <div class="sub">An honest, vendor-by-vendor assessment of where an in-house Claude AI capability can replace or augment external IT consultants — and where it cannot — with a low / base / high cost comparison.</div>
+    <div class="meta">
+      <div><b>Canadian Royalties Inc.</b>Nunavik Nickel — Arctic Operations</div>
+      <div><b>Prepared by</b>Alchemy M</div>
+      <div><b>Date</b>June 2026</div>
+      <div><b>Basis</b>"IT external consultants &amp; Projects" deck (May 2026)</div>
+    </div>
+  </section>
+
+  <!-- EXEC SUMMARY -->
+  <section class="sheet">
+    <h2><span class="n">1</span>Executive summary</h2>
+    <div class="rule"></div>
+    <p class="lead">Canadian Royalties spends on the order of <b>$3.76M per year</b> across external IT consultants, contractors and suppliers. Most of that is <b>not</b> replaceable by AI — it is physical hardware, field installation, satellite/radio infrastructure, and licensed platforms that must continue. But a meaningful slice — roughly <b>$1.1M of knowledge work</b> (business analysis, custom development, data integration, BI dashboards, and document/invoice automation) — is exactly the kind of work Claude AI does well.</p>
+
+    <div class="kpis">
+      <div class="kpi"><div class="v">$3.76M</div><div class="l">Total annual external IT spend</div></div>
+      <div class="kpi"><div class="v">~$1.1M</div><div class="l">Addressable by Claude (29%)</div></div>
+      <div class="kpi"><div class="v green">$0.17–0.43M</div><div class="l">Realistic annual capture</div></div>
+      <div class="kpi"><div class="v green">$150–305K</div><div class="l">Net annual saving (after Claude cost)</div></div>
+    </div>
+
+    <p>Our recommendation is deliberately <b>"replace where it makes sense"</b>, not wholesale replacement. Claude should absorb the routine, repeatable knowledge work — freeing the company from paying consultant day-rates for dashboard builds, data plumbing, internal app tweaks and invoice processing — while specialist vendors are retained for OT/SCADA engineering, HRIS/payroll platforms, computer vision, and all field and hardware work.</p>
+
+    <div class="callout">
+      <b>Bottom line.</b> A Claude Team/Enterprise deployment costing <b>$20–125K/year</b> can credibly displace <b>$170–430K/year</b> of consultant knowledge-work, for a <b>net saving of roughly $150–305K in year one</b> and more thereafter — while keeping the intellectual property and institutional knowledge in-house rather than walking out the door with a departing consultant.
+    </div>
+  </section>
+
+  <!-- CURRENT STATE -->
+  <section class="sheet page-break">
+    <h2><span class="n">2</span>Where the money goes today</h2>
+    <div class="rule"></div>
+    <p>The May 2026 deck lists four groups of external IT spend. The chart below de-duplicates the Microsoft licences (counted once, whether billed direct or via the Insight reseller) and excludes the cancelled Dingo project as a one-time sunk cost.</p>
+
+    <div class="two">
+      <div class="chartbox"><div class="chartwrap"><canvas id="catChart"></canvas></div>
+        <div class="legend">
+          <span><i class="sw" style="background:#1184c9"></i> Consultants</span>
+          <span><i class="sw" style="background:#0fae9e"></i> Contractors (field)</span>
+          <span><i class="sw" style="background:#0e5a8a"></i> Suppliers (hw/licences)</span>
+          <span><i class="sw" style="background:#f0a431"></i> IT projects</span>
+        </div>
+      </div>
+      <div class="chartbox"><div class="chartwrap"><canvas id="addrChart"></canvas></div>
+        <div class="legend">
+          <span><i class="sw" style="background:#0fae9e"></i> Addressable by Claude</span>
+          <span><i class="sw" style="background:#cdd6df"></i> Not addressable</span>
+        </div>
+      </div>
+    </div>
+
+    <table>
+      <thead><tr><th>Category</th><th class="num">Annual spend</th><th class="num">Addressable</th><th>What it is</th></tr></thead>
+      <tbody>
+        <tr><td><b>IT consultants</b></td><td class="num">$1,085K</td><td class="num" style="color:#0a7d71">~$1,000K</td><td>BA, custom dev, data, BI, HR/CMMS platforms, invoicing</td></tr>
+        <tr><td><b>IT-involved projects</b></td><td class="num">$50K</td><td class="num" style="color:#0a7d71">~$50K</td><td>Computer-vision PoC (Always AI); others pre-spend</td></tr>
+        <tr><td><b>Contractors (field)</b></td><td class="num">$950K</td><td class="num">$0</td><td>LTE, telecom towers, fuel systems, UPS, VHF radios</td></tr>
+        <tr><td><b>Major suppliers</b></td><td class="num">$1,670K</td><td class="num" style="color:#0a7d71">~$25K</td><td>Microsoft, Dell, satellite, virtualization, backup, Cisco</td></tr>
+      </tbody>
+      <tfoot><tr><td>Total</td><td class="num">$3,755K</td><td class="num">~$1,075K</td><td>≈ 29% of spend is knowledge work</td></tr></tfoot>
+    </table>
+    <p class="fine">All figures are annualised from the dollar amounts shown on each slide. Dingo ($250K spent before cancellation) is treated as a one-time sunk cost and excluded from annual totals. Microsoft licences ($500K) are counted once.</p>
+  </section>
+
+  <!-- METHODOLOGY -->
+  <section class="sheet">
+    <h2><span class="n">3</span>How we judged "replaceable"</h2>
+    <div class="rule"></div>
+    <p>Each vendor was scored against a simple test: <i>is the work knowledge work that an AI assistant plus a small internal team can do, or does it require something Claude fundamentally cannot provide?</i> Three verdicts result:</p>
+    <div class="two">
+      <div class="vendor"><div class="vh"><b><span class="badge b-replace">REPLACE</span></b></div>
+        <p>Routine, repeatable knowledge work — dashboards, reports, data integration scripts, internal forms/apps, document and invoice processing. Claude can do the bulk of this directly; consultant day-rates fall away.</p></div>
+      <div class="vendor"><div class="vh"><b><span class="badge b-augment">AUGMENT</span></b></div>
+        <p>Work tied to a specialist platform or domain (HRIS, CMMS, SCADA) where the licence and core expertise stay, but Claude cuts the hours spent on configuration, migration, testing, documentation and integration glue.</p></div>
+    </div>
+    <div class="vendor"><div class="vh"><b><span class="badge b-keep">KEEP</span></b></div>
+      <p>Physical hardware, field installation and maintenance, satellite/radio infrastructure, real-time control systems, computer vision, and vendor licences. Claude adds little or nothing to the core deliverable; these vendors are retained in full.</p></div>
+    <div class="callout warn"><b>A note on honesty.</b> Capture percentages below are planning estimates, not guarantees. They assume the company stands up a small internal "AI-enabled IT" capability to operate Claude — without that, savings will not materialise. They should be validated against one or two real pilots before any contract is reduced.</div>
+  </section>
+
+  <!-- VENDOR ASSESSMENT -->
+  <section class="sheet page-break">
+    <h2><span class="n">4</span>Vendor-by-vendor assessment</h2>
+    <div class="rule"></div>
+
+    <div class="cat-head"><span class="tag">A · IT Consultants</span><span class="fine">$1,085K/yr — the core opportunity</span></div>
+
+    <div class="vendor"><div class="vh"><b>Richer &amp; Associés</b> <span class="badge b-replace">REPLACE — high</span><span class="cost">$200K · capture ~55%</span></div>
+      <p>Business analysis, supply-chain improvements, data-warehouse development, cross-application data integration, and Power BI dashboard development. This is the single best fit for Claude: requirements drafting, SQL/ETL generation, and dashboard building are everyday Claude tasks. A small internal team using Claude can own most of this; retain limited specialist help for warehouse architecture.</p></div>
+
+    <div class="vendor"><div class="vh"><b>Optima Solutions</b> <span class="badge b-augment">AUGMENT — high</span><span class="cost">$80K · capture ~45%</span></div>
+      <p>Development and support of internal systems — HR database, personnel workflows, LMS, dispatch, Health &amp; Safety inspections and environmental tracking. Claude can build and maintain these internal apps, forms and workflows. Keep some vendor support for the systems of record, but most enhancement/support tickets become in-house.</p></div>
+
+    <div class="vendor"><div class="vh"><b>BBA (IT/OT)</b> <span class="badge b-keep">KEEP — augment lightly</span><span class="cost">$75K · capture ~15%</span></div>
+      <p>OT network coordination, AVEVA Historian/PlantSCADA, ControlXpert, IT/OT posture survey and cybersecurity. This is industrial/OT engineering and on-site work that Claude should not replace. Claude can augment the documentation, obsolescence inventory and capacity-planning write-ups — modest hours only.</p></div>
+
+    <div class="vendor"><div class="vh"><b>CIMSoft</b> <span class="badge b-keep">KEEP — augment</span><span class="cost">$200K · capture ~15%</span></div>
+      <p>AVEVA Historian/SCADA support, licence distribution, AVEVA Connect and advanced analytics. The AVEVA licences and platform expertise must stay. Claude can take on some of the downstream "advanced analytics and reporting projects" for energy and mill once the data is in Connect, trimming consulting hours on the BI layer.</p></div>
+
+    <div class="vendor"><div class="vh"><b>Cogep (Guide TI)</b> <span class="badge b-keep">KEEP — augment</span><span class="cost">$150K · capture ~12%</span></div>
+      <p>Guide TI (CMMS) licences, maintenance and platform integration. Licences and core product stay. Claude can help with the integration glue to AVEVA Connect / Manifeste / Viridem and with data clean-up (parts catalogue, price-list imports), reducing billable integration time.</p></div>
+
+    <div class="vendor"><div class="vh"><b>DLGL</b> <span class="badge b-keep">KEEP — augment</span><span class="cost">$300K · capture ~12%</span></div>
+      <p>Integrated HR system (VIP) implementation replacing ADP for payroll/timesheets by Oct 2026. A payroll platform implementation must run on the vendor's product and methodology — do not disrupt it. Claude can reduce cost on data migration mapping, test-case generation, parallel-run reconciliation and end-user documentation.</p></div>
+
+    <div class="vendor"><div class="vh"><b>Viridem</b> <span class="badge b-augment">AUGMENT — medium</span><span class="cost">$80K · capture ~25%</span></div>
+      <p>Invoice management with OCR and 3-way-match, replacing DocuShare. The platform itself is a reasonable buy, but invoice extraction, 3-way matching and approval routing are increasingly automatable with Claude. Proceed with Viridem for the system of record, and pilot Claude-driven automation for the long tail (contracts, engineering-plan approvals, expense processing) before expanding Viridem scope.</p></div>
+
+    <div class="cat-head"><span class="tag">B · IT-Involved Projects</span><span class="fine">mostly specialist or pre-spend</span></div>
+
+    <div class="vendor"><div class="vh"><b>Always AI</b> <span class="badge b-keep">KEEP — computer vision</span><span class="cost">$50K spent · capture ~10%</span></div>
+      <p>Real-time computer vision for UG vehicle/ore tracking and crusher-belt object detection (possible $500–800K over 5 yrs). Real-time edge vision is <b>not</b> Claude's domain — keep the specialist. Claude can assist with the surrounding software, dashboards and integration, and should be used to pressure-test the business case before the multi-year commitment.</p></div>
+
+    <div class="vendor"><div class="vh"><b>Dingo</b> <span class="badge b-keep">CANCELLED — lesson learned</span><span class="cost">$250K sunk</span></div>
+      <p>Predictive maintenance, cancelled after one year with no project lead after a key departure. The lesson reinforces the case for an in-house Claude capability: a low-cost Claude pilot could have tested the oil-analysis payback for a few thousand dollars before $250K was committed — and would not have collapsed when one person left.</p></div>
+
+    <div class="vendor"><div class="vh"><b>Tugliq/BBA — Windmill</b> &nbsp;·&nbsp; <b>BBA — Mill Flotation Optimization</b> <span class="badge b-keep">KEEP</span></div>
+      <p>Windmill power-management server configuration and AI mill-flotation optimisation (replacing the abandoned Schneider effort). Both are OT/process-control engineering with real-time requirements — retain the specialists; no Claude replacement.</p></div>
+
+    <div class="cat-head"><span class="tag">C · Contractors (field)</span><span class="fine">$950K/yr — not addressable</span></div>
+    <table>
+      <thead><tr><th>Vendor</th><th class="num">Spend</th><th>Scope</th><th>Verdict</th></tr></thead>
+      <tbody>
+        <tr><td>Becker Varis</td><td class="num">$300K</td><td>Underground LTE / leaky-feeder hardware &amp; deployment</td><td><span class="v-keep">Keep</span></td></tr>
+        <tr><td>Clarence &amp; Alex Bouffard</td><td class="num">$100K</td><td>Telecom tower install, inspection, ice removal (+$500K Inuksuk)</td><td><span class="v-keep">Keep</span></td></tr>
+        <tr><td>Services AP Guay</td><td class="num">$200K</td><td>Coencorp fuel system install &amp; maintenance</td><td><span class="v-keep">Keep</span></td></tr>
+        <tr><td>GDF Technologies</td><td class="num">$150K</td><td>UPS install, maintenance &amp; support (IT/OT)</td><td><span class="v-keep">Keep</span></td></tr>
+        <tr><td>Orizon Mobile</td><td class="num">$200K</td><td>Hytera VHF radio procurement &amp; microwave network</td><td><span class="v-keep">Keep</span></td></tr>
+      </tbody>
+    </table>
+    <p class="fine">All five are physical installation, maintenance and hardware-supply businesses in a remote Arctic setting. Claude cannot string leaky-feeder cable, de-ice an antenna or service a fuel station — these are retained in full.</p>
+
+    <div class="cat-head"><span class="tag">D · Major Suppliers</span><span class="fine">$1,670K/yr — licences &amp; hardware</span></div>
+    <table>
+      <thead><tr><th>Vendor</th><th class="num">Spend</th><th>Scope</th><th>Verdict</th></tr></thead>
+      <tbody>
+        <tr><td>Microsoft</td><td class="num">$500K</td><td>M365, Azure, Power BI, <b>Copilot</b></td><td><span class="v-augment">Trim Copilot</span></td></tr>
+        <tr><td>Dell</td><td class="num">$300K</td><td>Workstation &amp; server hardware renewal</td><td><span class="v-keep">Keep</span></td></tr>
+        <tr><td>Galaxy</td><td class="num">$300K</td><td>OneWeb / Starlink satellite internet</td><td><span class="v-keep">Keep</span></td></tr>
+        <tr><td>Insight (VMware/Proxmox, Veeam, Cisco)</td><td class="num">$570K</td><td>Virtualization, backup, network hardware &amp; support</td><td><span class="v-keep">Keep</span></td></tr>
+      </tbody>
+    </table>
+    <div class="callout"><b>One direct overlap:</b> Microsoft <b>Copilot</b> licences overlap with Claude. Teams adopting Claude often drop the Copilot add-on, recovering a slice of the $500K Microsoft line — the only supplier spend Claude meaningfully displaces. Everything else (compute, storage, network, satellite, backup) is required regardless of AI strategy.</div>
+  </section>
+
+  <!-- WHAT CLAUDE CAN / CANNOT -->
+  <section class="sheet page-break">
+    <h2><span class="n">5</span>What Claude replaces — and what it doesn't</h2>
+    <div class="rule"></div>
+    <div class="two">
+      <div>
+        <h3 style="color:#0a7d71">Claude is a strong fit for</h3>
+        <ul class="tick">
+          <li>Power BI &amp; reporting dashboard development</li>
+          <li>Data integration / ETL scripts across applications</li>
+          <li>Business analysis &amp; requirements documentation</li>
+          <li>Internal app, form and workflow building (HR, H&amp;S, environment)</li>
+          <li>Invoice / document processing &amp; 3-way-match automation</li>
+          <li>Data clean-up (parts catalogues, price lists, migrations)</li>
+          <li>Test-case generation &amp; user documentation for platform rollouts</li>
+          <li>Rapid, low-cost proofs-of-concept before big commitments</li>
+        </ul>
+      </div>
+      <div>
+        <h3 style="color:#5d6b79">Claude does not replace</h3>
+        <ul class="tick cross">
+          <li>Field installation &amp; maintenance (LTE, towers, fuel, UPS)</li>
+          <li>Hardware supply (Dell, radios, satellite terminals)</li>
+          <li>Licensed platforms (AVEVA, DLGL VIP, Guide TI, M365, Veeam, Cisco)</li>
+          <li>OT / SCADA real-time control &amp; industrial engineering</li>
+          <li>Real-time computer vision &amp; edge AI (Always AI)</li>
+          <li>Satellite / radio / microwave network infrastructure</li>
+          <li>Regulatory-grade payroll processing (system of record)</li>
+        </ul>
+      </div>
+    </div>
+    <div class="callout">The honest framing: Claude doesn't shrink the IT <i>budget</i> by half. It removes a specific, recurring cost — paying outside firms premium day-rates to build and maintain software, dashboards and data flows that a small, Claude-equipped internal team can increasingly own.</div>
+  </section>
+
+  <!-- COST COMPARISON -->
+  <section class="sheet page-break">
+    <h2><span class="n">6</span>Cost comparison &amp; net savings</h2>
+    <div class="rule"></div>
+    <p>The comparison weighs the consultant knowledge-work Claude can absorb against the all-in cost of running Claude (seats + API usage + a small internal enablement effort). We model three scenarios reflecting how aggressively the company adopts.</p>
+
+    <div class="chartbox"><div class="chartwrap"><canvas id="savingsChart"></canvas></div>
+      <div class="legend">
+        <span><i class="sw" style="background:#1184c9"></i> Consultant work captured (gross)</span>
+        <span><i class="sw" style="background:#e0584f"></i> Claude all-in cost</span>
+        <span><i class="sw" style="background:#0fae9e"></i> Net annual saving</span>
+      </div>
+    </div>
+
+    <table>
+      <thead><tr><th>Scenario</th><th class="num">Gross capture</th><th class="num">Claude seats</th><th class="num">API + tools</th><th class="num">Enablement (yr 1)</th><th class="num">Claude all-in</th><th class="num">Net saving (yr 1)</th></tr></thead>
+      <tbody>
+        <tr><td><b>Conservative</b></td><td class="num">$173K</td><td class="num">$2K<br><span class="fine">8 std seats</span></td><td class="num">$5K</td><td class="num">$15K</td><td class="num">$22K</td><td class="num" style="color:#0a7d71"><b>$151K</b></td></tr>
+        <tr><td><b>Base case</b></td><td class="num">$291K</td><td class="num">$6K<br><span class="fine">12 std + 3 prem</span></td><td class="num">$15K</td><td class="num">$40K</td><td class="num">$61K</td><td class="num" style="color:#0a7d71"><b>$230K</b></td></tr>
+        <tr><td><b>Aggressive</b></td><td class="num">$429K</td><td class="num">$10K<br><span class="fine">15 std + 5 prem</span></td><td class="num">$35K</td><td class="num">$80K</td><td class="num">$125K</td><td class="num" style="color:#0a7d71"><b>$304K</b></td></tr>
+      </tbody>
+    </table>
+    <p class="fine">Enablement is a year-1 cost (building agents, skills, integrations and training). From year 2 onward it largely falls away, so steady-state net savings are higher — roughly <b>$165K / $270K / $385K</b> for the three scenarios. Base-case year-1 return on Claude spend is about <b>3.8×</b>.</p>
+
+    <div class="callout"><b>Payback.</b> In the base case, the one-time enablement (~$40K) is recovered in about <b>two months</b> of captured consultant spend. The ongoing run-rate (seats + API ≈ $21K/yr) is a rounding error against the $1.1M consultant pool.</div>
+  </section>
+
+  <!-- PRICING BASIS -->
+  <section class="sheet">
+    <h2><span class="n">7</span>Claude pricing basis</h2>
+    <div class="rule"></div>
+    <p>Figures below are Anthropic's published pricing as of June 2026 and form the basis of the cost model. A 5–150-seat <b>Team</b> plan fits an SME; <b>Enterprise</b> suits if &gt;50 seats or advanced security (SCIM, audit logs, IP allowlisting) are required.</p>
+    <table>
+      <thead><tr><th>Plan / item</th><th class="num">Price</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td>Team — Standard seat</td><td class="num">$20 / seat / mo</td><td>Annual billing ($25 monthly). Incl. Claude Code &amp; Cowork, SSO, connectors</td></tr>
+        <tr><td>Team — Premium seat</td><td class="num">$100 / seat / mo</td><td>Annual ($125 monthly). 6.25× usage for power users</td></tr>
+        <tr><td>Enterprise — seat</td><td class="num">$20 / seat + usage</td><td>Min 50 seats; usage billed at API rates; advanced security</td></tr>
+        <tr><td>API — Sonnet 4.6</td><td class="num">$3 / $15 per MTok</td><td>Input / output; workhorse model for automation</td></tr>
+        <tr><td>API — Haiku 4.5</td><td class="num">$1 / $5 per MTok</td><td>Cheapest; high-volume tasks (e.g. invoice extraction)</td></tr>
+        <tr><td>API — Opus 4.8</td><td class="num">$5 / $25 per MTok</td><td>Most capable; complex agentic work</td></tr>
+        <tr><td>Web search / Code exec</td><td class="num">$10 / 1K · $0.05/hr</td><td>50 free code-exec hours/day per org; batch saves 50%</td></tr>
+      </tbody>
+    </table>
+    <p class="fine">Source: claude.com/pricing and Claude Help Center, accessed June 2026. Prices exclude tax and are subject to change at Anthropic's discretion.</p>
+  </section>
+
+  <!-- RISKS -->
+  <section class="sheet">
+    <h2><span class="n">8</span>Risks &amp; honest caveats</h2>
+    <div class="rule"></div>
+    <table>
+      <thead><tr><th>Risk</th><th>Mitigation</th></tr></thead>
+      <tbody>
+        <tr><td>Savings depend on internal capability to operate Claude</td><td>Fund a small "AI-enabled IT" owner/team first; treat enablement as the gating investment</td></tr>
+        <tr><td>Capture rates are estimates, not guarantees</td><td>Validate with 1–2 pilots (e.g. Power BI builds, invoice automation) before cutting any contract</td></tr>
+        <tr><td>Loss of vendor accountability / SLAs</td><td>Keep vendors for systems of record &amp; specialist domains; phase reductions only after pilots prove out</td></tr>
+        <tr><td>OT / safety-critical work</td><td>Explicitly out of scope for Claude; retain BBA, CIMSoft, Always AI for OT, SCADA and vision</td></tr>
+        <tr><td>Data security &amp; residency</td><td>Enterprise plan offers no-training-by-default, audit logs, IP allowlisting; US/region inference options available</td></tr>
+        <tr><td>Change management / adoption</td><td>Start with willing internal users; measure hours saved; expand on evidence</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- RECOMMENDATION / ROLLOUT -->
+  <section class="sheet page-break">
+    <h2><span class="n">9</span>Recommendation &amp; phased rollout</h2>
+    <div class="rule"></div>
+    <p class="lead"><b>Adopt Claude to insource the knowledge-work layer of IT — start small, prove it on two pilots, then reduce consultant scope on evidence.</b> Do not touch field contractors, hardware suppliers, licensed platforms or OT specialists.</p>
+    <table>
+      <thead><tr><th>Phase</th><th>Timing</th><th>Focus</th><th class="num">Target</th></tr></thead>
+      <tbody>
+        <tr><td><b>0 · Pilot</b></td><td>Month 1–2</td><td>5–8 Team seats. Two pilots: a Power BI/reporting build (vs Richer) and invoice automation (vs Viridem). Measure hours saved.</td><td class="num">Prove ≥1 capture</td></tr>
+        <tr><td><b>1 · Insource</b></td><td>Month 3–6</td><td>Stand up internal "AI-enabled IT" owner. Move dashboard, data-integration and internal-app support in-house. Drop Copilot add-on.</td><td class="num">~$120K/yr</td></tr>
+        <tr><td><b>2 · Augment platforms</b></td><td>Month 6–12</td><td>Use Claude on migration/testing/docs for DLGL &amp; Guide TI; analytics layer on AVEVA Connect. Trim consultant hours.</td><td class="num">~$230K/yr</td></tr>
+        <tr><td><b>3 · Scale</b></td><td>Year 2+</td><td>Expand seats/agents; PoC discipline before big projects (the Dingo lesson). Benchmark realised savings.</td><td class="num">$270K+/yr</td></tr>
+      </tbody>
+    </table>
+    <div class="callout"><b>Recommended first step:</b> a 60-day, ~$5K Team-plan pilot on the two highest-fit areas (BI dashboards and invoice processing). If it lands even a fraction of the projected capture, the full programme funds itself many times over — at near-zero downside.</div>
+    <div class="footer">Prepared by Alchemy M for Canadian Royalties Inc. / Nunavik Nickel · June 2026 · Figures are planning estimates for discussion, not a commitment. Pricing per Anthropic published rates, June 2026.</div>
+  </section>
+
+</div>
+
+<script>
+window.addEventListener('load',()=>{
+  Chart.defaults.font.family="'Segoe UI',sans-serif";
+  Chart.defaults.color='#46596b';
+  const money=v=>'$'+v+'K';
+
+  new Chart(document.getElementById('catChart'),{type:'doughnut',
+    data:{labels:['Suppliers (hw/licences)','Consultants','Contractors (field)','IT projects'],
+      datasets:[{data:[1670,1085,950,50],backgroundColor:['#0e5a8a','#1184c9','#0fae9e','#f0a431'],borderColor:'#fff',borderWidth:2}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'56%',
+      plugins:{legend:{display:false},title:{display:true,text:'Annual external IT spend — $3.76M',font:{size:13,weight:'600'}},
+        tooltip:{callbacks:{label:c=>c.label+': $'+c.raw+'K'}}}}});
+
+  new Chart(document.getElementById('addrChart'),{type:'doughnut',
+    data:{labels:['Addressable by Claude','Not addressable'],
+      datasets:[{data:[1075,2680],backgroundColor:['#0fae9e','#cdd6df'],borderColor:'#fff',borderWidth:2}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'56%',
+      plugins:{legend:{display:false},title:{display:true,text:'~29% is knowledge work Claude can touch',font:{size:13,weight:'600'}},
+        tooltip:{callbacks:{label:c=>c.label+': $'+c.raw+'K'}}}}});
+
+  new Chart(document.getElementById('savingsChart'),{type:'bar',
+    data:{labels:['Conservative','Base case','Aggressive'],
+      datasets:[
+        {label:'Gross capture',data:[173,291,429],backgroundColor:'#1184c9',borderRadius:5},
+        {label:'Claude all-in cost',data:[22,61,125],backgroundColor:'#e0584f',borderRadius:5},
+        {label:'Net annual saving',data:[151,230,304],backgroundColor:'#0fae9e',borderRadius:5}
+      ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},title:{display:true,text:'Year-1 net savings by adoption scenario ($000s)',font:{size:13,weight:'600'}},
+        tooltip:{callbacks:{label:c=>c.dataset.label+': $'+c.raw+'K'}}},
+      scales:{y:{ticks:{callback:v=>'$'+v+'K'},grid:{color:'#eef3f8'}},x:{grid:{display:false}}}}});
+});
+</script>
+</body>
+</html>
