@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Remote Mine Operations Control Tower — for Arctic &amp; Remote Mines</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: { extend: {
+    colors: {
+      base:'#0a121c', panel:'#0f1a28', panel2:'#13212f', panel3:'#172838',
+      line:'#22344a', line2:'#2c4159', ink:'#e9f0f7', muted:'#90a4ba', faint:'#5d7490',
+      accent:'#3fa9e0', accent2:'#2b87bd', steel:'#7d96ad',
+      ok:'#22c55e', warn:'#f59e0b', risk:'#ef4444'
+    },
+    fontFamily:{ sans:['Inter','Segoe UI','system-ui','sans-serif'] },
+    boxShadow:{ card:'0 10px 30px -12px rgba(0,0,0,.5)' }
+  }}
+}
+</script>
+<style>
+  html{scroll-behavior:smooth}
+  body{background:#0a121c;color:#e9f0f7;font-family:Inter,'Segoe UI',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  ::selection{background:#3fa9e0;color:#06121d}
+  .grid-bg{background-image:linear-gradient(rgba(63,169,224,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(63,169,224,.05) 1px,transparent 1px);background-size:34px 34px}
+  .glow{box-shadow:0 0 0 1px rgba(63,169,224,.18),0 18px 50px -16px rgba(63,169,224,.25)}
+  .hairline{border:1px solid #22344a}
+  .tabular{font-variant-numeric:tabular-nums}
+  .fade-up{opacity:0;transform:translateY(14px);transition:opacity .6s ease,transform .6s ease}
+  .fade-up.in{opacity:1;transform:none}
+  .conn{position:relative}
+  details>summary{list-style:none}details>summary::-webkit-details-marker{display:none}
+  ::-webkit-scrollbar{height:8px;width:8px}::-webkit-scrollbar-thumb{background:#2c4159;border-radius:8px}
+  .nav-link{position:relative}
+  .nav-link:hover{color:#fff}
+  .marquee{mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)}
+</style>
+</head>
+<body class="min-h-screen">
+
+<!-- ============ HEADER ============ -->
+<header class="sticky top-0 z-50 backdrop-blur bg-base/85 border-b border-line">
+  <div class="max-w-7xl mx-auto px-5 lg:px-8 h-16 flex items-center justify-between">
+    <a href="#top" class="flex items-center gap-2.5">
+      <span class="w-9 h-9 rounded-md bg-gradient-to-br from-accent to-accent2 grid place-items-center shrink-0">
+        <svg viewBox="0 0 24 24" class="w-5 h-5 text-base" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6"/></svg>
+      </span>
+      <span class="leading-tight">
+        <span class="block text-[13px] font-semibold tracking-wide text-white">Remote Mine</span>
+        <span class="block text-[10px] tracking-[0.18em] text-muted uppercase">Operations Control Tower</span>
+      </span>
+    </a>
+    <nav class="hidden lg:flex items-center gap-7 text-[13.5px] text-muted">
+      <a href="#problem" class="nav-link transition">Problem</a>
+      <a href="#platform" class="nav-link transition">Platform</a>
+      <a href="#modules" class="nav-link transition">Modules</a>
+      <a href="#roi" class="nav-link transition">ROI</a>
+      <a href="#pilot" class="nav-link transition">Pilot</a>
+      <a href="#demo" class="nav-link transition">Demo</a>
+    </nav>
+    <div class="flex items-center gap-3">
+      <a href="#cta" class="hidden sm:inline-flex items-center gap-2 text-[13px] font-semibold bg-accent hover:bg-accent2 text-base px-4 py-2 rounded-md transition">Request Demo</a>
+      <button id="menuBtn" class="lg:hidden p-2 text-muted hover:text-white" aria-label="Menu">
+        <svg viewBox="0 0 24 24" class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+    </div>
+  </div>
+  <div id="mobileNav" class="hidden lg:hidden border-t border-line bg-panel">
+    <div class="px-5 py-3 flex flex-col gap-1 text-[14px] text-muted">
+      <a href="#problem" class="py-2">Problem</a><a href="#platform" class="py-2">Platform</a>
+      <a href="#modules" class="py-2">Modules</a><a href="#roi" class="py-2">ROI</a>
+      <a href="#pilot" class="py-2">Pilot</a><a href="#demo" class="py-2">Demo</a>
+    </div>
+  </div>
+</header>
+
+<main id="top">
+
+<!-- ============ HERO ============ -->
+<section class="relative overflow-hidden border-b border-line">
+  <div class="absolute inset-0 grid-bg opacity-60"></div>
+  <div class="absolute -top-40 -right-40 w-[40rem] h-[40rem] rounded-full bg-accent/10 blur-3xl"></div>
+  <div class="relative max-w-7xl mx-auto px-5 lg:px-8 py-16 lg:py-24 grid lg:grid-cols-2 gap-12 items-center">
+    <div>
+      <span class="inline-flex items-center gap-2 text-[11px] font-semibold tracking-[0.16em] uppercase text-accent bg-accent/10 border border-accent/20 rounded-full px-3 py-1.5">
+        <span class="w-1.5 h-1.5 rounded-full bg-accent"></span> Operations Control Tower · Arctic &amp; Remote
+      </span>
+      <h1 class="mt-5 text-3xl lg:text-[2.9rem] font-bold leading-[1.1] tracking-tight text-white">
+        Remote Mine Operations Control Tower for Arctic and Remote Mines
+      </h1>
+      <p class="mt-5 text-[15px] lg:text-base text-muted leading-relaxed max-w-xl">
+        Unify maintenance, critical spares, logistics windows, production losses, workforce readiness, and compliance obligations into one operating view — <span class="text-steel font-medium">without replacing your existing systems.</span>
+      </p>
+      <div class="mt-7 flex flex-wrap gap-3">
+        <a href="#demo" class="inline-flex items-center gap-2 bg-accent hover:bg-accent2 text-base font-semibold text-[14px] px-5 py-3 rounded-md transition">
+          View Demo Dashboard
+          <svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </a>
+        <a href="#usecases" class="inline-flex items-center gap-2 border border-line2 hover:border-steel text-white font-semibold text-[14px] px-5 py-3 rounded-md transition">See Use Cases</a>
+      </div>
+      <div class="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2 text-[12px] text-muted">
+        <span class="inline-flex items-center gap-1.5"><svg viewBox="0 0 24 24" class="w-4 h-4 text-ok" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg> Connects CMMS, ERP, fleet, SCADA &amp; planning</span>
+        <span class="inline-flex items-center gap-1.5"><svg viewBox="0 0 24 24" class="w-4 h-4 text-ok" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg> 90-day visibility pilot</span>
+      </div>
+    </div>
+
+    <!-- Hero dashboard preview -->
+    <div class="relative">
+      <div class="rounded-xl bg-panel hairline glow p-4 lg:p-5">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-2 text-[12px] text-muted">
+            <span class="w-2 h-2 rounded-full bg-ok animate-pulse"></span> Executive Risk Board
+          </div>
+          <span class="text-[11px] text-faint">Raglan-class site · Live</span>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <div class="rounded-lg bg-panel2 hairline p-3">
+            <div class="text-[10.5px] uppercase tracking-wide text-muted">Production vs Plan</div>
+            <div class="mt-1 text-2xl font-bold text-white tabular">92<span class="text-base text-muted">%</span></div>
+            <div class="mt-1 h-1.5 rounded bg-line"><div class="h-full rounded bg-warn" style="width:92%"></div></div>
+          </div>
+          <div class="rounded-lg bg-panel2 hairline p-3">
+            <div class="text-[10.5px] uppercase tracking-wide text-muted">Critical Spares at Risk</div>
+            <div class="mt-1 text-2xl font-bold text-risk tabular">17</div>
+            <div class="text-[11px] text-muted mt-1">3 critical · 6 high</div>
+          </div>
+          <div class="rounded-lg bg-panel2 hairline p-3">
+            <div class="text-[10.5px] uppercase tracking-wide text-muted">Downtime Today</div>
+            <div class="mt-1 text-2xl font-bold text-white tabular">38.5<span class="text-base text-muted"> hrs</span></div>
+            <div class="text-[11px] text-amber-400 mt-1">▲ 6.2 vs 7-day avg</div>
+          </div>
+          <div class="rounded-lg bg-panel2 hairline p-3">
+            <div class="text-[10.5px] uppercase tracking-wide text-muted">Winter Road Readiness</div>
+            <div class="mt-1 text-2xl font-bold text-white tabular">76<span class="text-base text-muted">%</span></div>
+            <div class="mt-1 h-1.5 rounded bg-line"><div class="h-full rounded bg-warn" style="width:76%"></div></div>
+          </div>
+          <div class="rounded-lg bg-panel2 hairline p-3">
+            <div class="text-[10.5px] uppercase tracking-wide text-muted">Fuel Inventory</div>
+            <div class="mt-1 text-2xl font-bold text-white tabular">21<span class="text-base text-muted"> days</span></div>
+            <div class="text-[11px] text-ok mt-1">Above 14-day floor</div>
+          </div>
+          <div class="rounded-lg bg-panel2 hairline p-3">
+            <div class="text-[10.5px] uppercase tracking-wide text-muted">Compliance Overdue</div>
+            <div class="mt-1 text-2xl font-bold text-risk tabular">4</div>
+            <div class="text-[11px] text-muted mt-1">2 permit · 2 safety</div>
+          </div>
+        </div>
+        <!-- risk alert panel -->
+        <div class="mt-3 rounded-lg border border-risk/40 bg-risk/10 p-3 flex gap-3">
+          <svg viewBox="0 0 24 24" class="w-5 h-5 text-risk shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4m0 4h.01M10.3 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.7 3.86a2 2 0 0 0-3.4 0Z"/></svg>
+          <div>
+            <div class="text-[12.5px] font-semibold text-white">Hydraulic pump PO may miss winter road cutoff</div>
+            <div class="text-[12px] text-muted mt-0.5">Potential impact: <span class="text-risk font-medium">42 hours of truck downtime.</span> Recommended: expedite PO-10821 via air freight.</div>
+          </div>
+        </div>
+      </div>
+      <div class="absolute -z-10 inset-0 translate-x-4 translate-y-4 rounded-xl bg-accent/5"></div>
+    </div>
+  </div>
+  <!-- logos / system strip -->
+  <div class="relative border-t border-line bg-panel/40">
+    <div class="max-w-7xl mx-auto px-5 lg:px-8 py-4 flex items-center gap-3 flex-wrap justify-center text-[11.5px] text-faint">
+      <span class="text-muted">Connects with</span>
+      <span class="px-2.5 py-1 rounded border border-line text-steel">SAP</span>
+      <span class="px-2.5 py-1 rounded border border-line text-steel">Pronto</span>
+      <span class="px-2.5 py-1 rounded border border-line text-steel">Maximo</span>
+      <span class="px-2.5 py-1 rounded border border-line text-steel">GTI</span>
+      <span class="px-2.5 py-1 rounded border border-line text-steel">Hexagon</span>
+      <span class="px-2.5 py-1 rounded border border-line text-steel">MineStar</span>
+      <span class="px-2.5 py-1 rounded border border-line text-steel">Deswik</span>
+      <span class="px-2.5 py-1 rounded border border-line text-steel">SCADA / PI</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PROBLEM ============ -->
+<section id="problem" class="py-16 lg:py-24 border-b border-line">
+  <div class="max-w-7xl mx-auto px-5 lg:px-8">
+    <div class="max-w-3xl">
+      <span class="text-[11px] font-semibold tracking-[0.16em] uppercase text-accent">The Problem</span>
+      <h2 class="mt-3 text-2xl lg:text-[2rem] font-bold tracking-tight text-white leading-tight">
+        Remote mines do not suffer from lack of software. They suffer from disconnected operations.
+      </h2>
+      <p class="mt-4 text-[15px] text-muted">Critical operational risk is real, but it is scattered across CMMS, ERP, fleet, planning, SCADA, spreadsheets, and email — with no shared operating view.</p>
+    </div>
+    <div class="mt-10 grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <!-- card -->
+      <div class="fade-up rounded-xl bg-panel hairline p-5 hover:border-line2 transition">
+        <div class="w-10 h-10 rounded-lg bg-panel3 grid place-items-center text-accent mb-4"><svg viewBox="0 0 24 24" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4l-6 6 2 2 6-6a4 4 0 0 0 5.4-5.4l-2.3 2.3-1.4-1.4 2.3-2.3Z"/></svg></div>
+        <h3 class="text-[15px] font-semibold text-white">Maintenance data is trapped in CMMS</h3>
+        <p class="mt-2 text-[13px] text-muted leading-relaxed">Work orders show what failed, but not the production loss, cash impact, missing parts, or logistics risk.</p>
+      </div>
+      <div class="fade-up rounded-xl bg-panel hairline p-5 hover:border-line2 transition">
+        <div class="w-10 h-10 rounded-lg bg-panel3 grid place-items-center text-accent mb-4"><svg viewBox="0 0 24 24" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg></div>
+        <h3 class="text-[15px] font-semibold text-white">Critical spares are managed too late</h3>
+        <p class="mt-2 text-[13px] text-muted leading-relaxed">A missing component can stop production for days when lead times, air freight, winter roads, and sealift windows are not visible together.</p>
+      </div>
+      <div class="fade-up rounded-xl bg-panel hairline p-5 hover:border-line2 transition">
+        <div class="w-10 h-10 rounded-lg bg-panel3 grid place-items-center text-accent mb-4"><svg viewBox="0 0 24 24" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18M7 14l4-4 4 4 5-6"/></svg></div>
+        <h3 class="text-[15px] font-semibold text-white">Production plans and actuals drift apart</h3>
+        <p class="mt-2 text-[13px] text-muted leading-relaxed">Mine plans, shift reports, fleet data, and plant throughput often live in different systems with different owners.</p>
+      </div>
+      <div class="fade-up rounded-xl bg-panel hairline p-5 hover:border-line2 transition">
+        <div class="w-10 h-10 rounded-lg bg-panel3 grid place-items-center text-accent mb-4"><svg viewBox="0 0 24 24" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 17h4V5H2v12h3M15 17h6V9h-4l-3 3M5 17a2 2 0 1 0 4 0M15 17a2 2 0 1 0 4 0"/></svg></div>
+        <h3 class="text-[15px] font-semibold text-white">Logistics windows drive production risk</h3>
+        <p class="mt-2 text-[13px] text-muted leading-relaxed">Winter road, barge, sealift, and air freight constraints are often managed in spreadsheets instead of linked to operational impact.</p>
+      </div>
+      <div class="fade-up rounded-xl bg-panel hairline p-5 hover:border-line2 transition">
+        <div class="w-10 h-10 rounded-lg bg-panel3 grid place-items-center text-accent mb-4"><svg viewBox="0 0 24 24" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/></svg></div>
+        <h3 class="text-[15px] font-semibold text-white">Camp, roster, and skill gaps affect output</h3>
+        <p class="mt-2 text-[13px] text-muted leading-relaxed">Remote workforce availability, flights, rooms, certifications, and contractor mobilization directly affect execution.</p>
+      </div>
+      <div class="fade-up rounded-xl bg-panel hairline p-5 hover:border-line2 transition">
+        <div class="w-10 h-10 rounded-lg bg-panel3 grid place-items-center text-accent mb-4"><svg viewBox="0 0 24 24" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></svg></div>
+        <h3 class="text-[15px] font-semibold text-white">Compliance obligations are not operationalized</h3>
+        <p class="mt-2 text-[13px] text-muted leading-relaxed">Environmental, safety, permit, and Indigenous commitment obligations need owners, deadlines, evidence, and escalation.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PLATFORM / INTEGRATION DIAGRAM ============ -->
+<section id="platform" class="py-16 lg:py-24 border-b border-line bg-panel/30">
+  <div class="max-w-7xl mx-auto px-5 lg:px-8">
+    <div class="max-w-3xl">
+      <span class="text-[11px] font-semibold tracking-[0.16em] uppercase text-accent">The Platform</span>
+      <h2 class="mt-3 text-2xl lg:text-[2rem] font-bold tracking-tight text-white leading-tight">One control layer above your existing mining systems</h2>
+    </div>
+
+    <div class="mt-10 grid lg:grid-cols-[1fr_auto_1.1fr_auto_1fr] gap-5 items-stretch">
+      <!-- left: existing systems -->
+      <div class="rounded-xl bg-panel hairline p-5">
+        <div class="text-[11px] uppercase tracking-wide text-muted mb-3">Existing systems</div>
+        <div class="space-y-2 text-[13px]">
+          <div class="flex items-center gap-2 rounded-md bg-panel2 hairline px-3 py-2"><span class="w-1.5 h-1.5 rounded-full bg-steel"></span> CMMS / GTI / Maximo</div>
+          <div class="flex items-center gap-2 rounded-md bg-panel2 hairline px-3 py-2"><span class="w-1.5 h-1.5 rounded-full bg-steel"></span> ERP / SAP / Pronto / Dynamics</div>
+          <div class="flex items-center gap-2 rounded-md bg-panel2 hairline px-3 py-2"><span class="w-1.5 h-1.5 rounded-full bg-steel"></span> Fleet / MineStar / Hexagon / Wenco</div>
+          <div class="flex items-center gap-2 rounded-md bg-panel2 hairline px-3 py-2"><span class="w-1.5 h-1.5 rounded-full bg-steel"></span> Mine Planning / Deswik / MinePlan</div>
+          <div class="flex items-center gap-2 rounded-md bg-panel2 hairline px-3 py-2"><span class="w-1.5 h-1.5 rounded-full bg-steel"></span> SCADA / PI / Ignition</div>
+          <div class="flex items-center gap-2 rounded-md bg-panel2 hairline px-3 py-2"><span class="w-1.5 h-1.5 rounded-full bg-steel"></span> HSE / ESG tools</div>
+          <div class="flex items-center gap-2 rounded-md bg-panel2 hairline px-3 py-2"><span class="w-1.5 h-1.5 rounded-full bg-steel"></span> Excel / Email / SharePoint</div>
+        </div>
+      </div>
+      <!-- arrow -->
+      <div class="hidden lg:flex items-center justify-center text-accent"><svg viewBox="0 0 24 24" class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+      <!-- center: control tower -->
+      <div class="rounded-xl bg-gradient-to-b from-accent/15 to-panel border border-accent/30 p-5 flex flex-col glow">
+        <div class="w-11 h-11 rounded-lg bg-accent/20 grid place-items-center text-accent mb-3"><svg viewBox="0 0 24 24" class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2v4M5 8l-2 2M19 8l2 2M4 21h16M7 21V11l5-3 5 3v10M10 21v-4h4v4"/></svg></div>
+        <div class="text-white font-semibold text-[15px]">Remote Mine Operations Control Tower</div>
+        <p class="mt-2 text-[12.5px] text-muted leading-relaxed">Ingests and normalizes data from your systems, models cross-domain risk, and translates operational noise into management action.</p>
+        <div class="mt-4 grid grid-cols-2 gap-2 text-[11px] text-muted">
+          <span class="rounded bg-panel2 hairline px-2 py-1.5 text-center">Connectors</span>
+          <span class="rounded bg-panel2 hairline px-2 py-1.5 text-center">Data model</span>
+          <span class="rounded bg-panel2 hairline px-2 py-1.5 text-center">Risk engine</span>
+          <span class="rounded bg-panel2 hairline px-2 py-1.5 text-center">Action layer</span>
+        </div>
+      </div>
+      <div class="hidden lg:flex items-center justify-center text-accent"><svg viewBox="0 0 24 24" class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+      <!-- right: outputs -->
+      <div class="rounded-xl bg-panel hairline p-5">
+        <div class="text-[11px] uppercase tracking-wide text-muted mb-3">Operating outputs</div>
+        <div class="space-y-2 text-[13px]">
+          <div class="flex items-center gap-2 rounded-md bg-panel2 hairline px-3 py-2"><span class="w-1.5 h-1.5 rounded-full bg-accent"></span> Executive Risk Board</div>
+          <div class="flex items-center gap-2 rounded-md bg-panel2 hairline px-3 py-2"><span class="w-1.5 h-1.5 rounded-full bg-accent"></span> Critical Spares Control</div>
+          <div class="flex items-center gap-2 rounded-md bg-panel2 hairline px-3 py-2"><span class="w-1.5 h-1.5 rounded-full bg-accent"></span> Downtime-to-Production Loss</div>
+          <div class="flex items-center gap-2 rounded-md bg-panel2 hairline px-3 py-2"><span class="w-1.5 h-1.5 rounded-full bg-accent"></span> Logistics Window Readiness</div>
+          <div class="flex items-center gap-2 rounded-md bg-panel2 hairline px-3 py-2"><span class="w-1.5 h-1.5 rounded-full bg-accent"></span> Daily Mine Brief</div>
+          <div class="flex items-center gap-2 rounded-md bg-panel2 hairline px-3 py-2"><span class="w-1.5 h-1.5 rounded-full bg-accent"></span> Compliance Action Tracker</div>
+          <div class="flex items-center gap-2 rounded-md bg-panel2 hairline px-3 py-2"><span class="w-1.5 h-1.5 rounded-full bg-accent"></span> AI Operations Assistant</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-8 rounded-xl border border-accent/25 bg-accent/5 p-5 lg:p-6 flex items-start gap-3">
+      <svg viewBox="0 0 24 24" class="w-5 h-5 text-accent shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 16v-4M12 8h.01M22 12A10 10 0 1 1 2 12a10 10 0 0 1 20 0Z"/></svg>
+      <p class="text-[14px] lg:text-[15px] text-steel leading-relaxed"><span class="text-white font-semibold">We do not replace your systems.</span> We connect them, normalize the data, and translate operational noise into management action.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MODULES ============ -->
+<section id="modules" class="py-16 lg:py-24 border-b border-line">
+  <div class="max-w-7xl mx-auto px-5 lg:px-8">
+    <div class="max-w-3xl">
+      <span class="text-[11px] font-semibold tracking-[0.16em] uppercase text-accent">Key Modules</span>
+      <h2 class="mt-3 text-2xl lg:text-[2rem] font-bold tracking-tight text-white leading-tight">Five operating views, one source of truth</h2>
+    </div>
+
+    <div class="mt-10 space-y-5">
+      <!-- Module 1 -->
+      <div class="grid lg:grid-cols-2 gap-0 rounded-xl bg-panel hairline overflow-hidden">
+        <div class="p-6 lg:p-8">
+          <div class="text-[11px] font-semibold tracking-wide text-accent">MODULE 01</div>
+          <h3 class="mt-2 text-xl font-bold text-white">Executive Risk Board</h3>
+          <p class="mt-3 text-[13.5px] text-muted leading-relaxed">A daily operating view for mine GMs and COOs. See production variance, downtime exposure, critical spares, logistics risk, fuel days, workforce gaps, and compliance items in one place.</p>
+          <div class="mt-5 space-y-2.5">
+            <div class="flex items-center justify-between rounded-lg bg-panel2 hairline px-3.5 py-2.5"><span class="text-[12.5px] text-muted">Highest risk</span><span class="text-[12.5px] text-white font-medium">Mill feed conveyor — repeat failure</span></div>
+            <div class="flex items-center justify-between rounded-lg bg-panel2 hairline px-3.5 py-2.5"><span class="text-[12.5px] text-muted">Production at risk this week</span><span class="text-[13px] text-warn font-semibold tabular">8,400 tonnes</span></div>
+            <div class="flex items-center justify-between rounded-lg bg-panel2 hairline px-3.5 py-2.5"><span class="text-[12.5px] text-muted">Management decisions required</span><span class="text-[13px] text-white font-semibold tabular">5</span></div>
+          </div>
+        </div>
+        <div class="bg-panel2/50 border-t lg:border-t-0 lg:border-l border-line p-6 lg:p-8">
+          <div class="text-[11px] uppercase tracking-wide text-muted mb-3">Risk board preview</div>
+          <div class="space-y-2">
+            <div class="flex items-center gap-3 rounded-lg bg-panel hairline p-3"><span class="w-2 h-8 rounded bg-risk"></span><div class="flex-1"><div class="text-[12.5px] text-white">Mill feed conveyor CV-02</div><div class="text-[11px] text-muted">Repeat failure · 3rd event in 30 days</div></div><span class="text-[10px] font-semibold text-risk bg-risk/10 border border-risk/30 px-2 py-1 rounded">CRITICAL</span></div>
+            <div class="flex items-center gap-3 rounded-lg bg-panel hairline p-3"><span class="w-2 h-8 rounded bg-warn"></span><div class="flex-1"><div class="text-[12.5px] text-white">Hydraulic pump HP-440</div><div class="text-[11px] text-muted">PO may miss winter road cutoff</div></div><span class="text-[10px] font-semibold text-warn bg-warn/10 border border-warn/30 px-2 py-1 rounded">HIGH</span></div>
+            <div class="flex items-center gap-3 rounded-lg bg-panel hairline p-3"><span class="w-2 h-8 rounded bg-warn"></span><div class="flex-1"><div class="text-[12.5px] text-white">Reagent coverage — 18 days</div><div class="text-[11px] text-muted">Below 21-day target</div></div><span class="text-[10px] font-semibold text-warn bg-warn/10 border border-warn/30 px-2 py-1 rounded">HIGH</span></div>
+            <div class="flex items-center gap-3 rounded-lg bg-panel hairline p-3"><span class="w-2 h-8 rounded bg-ok"></span><div class="flex-1"><div class="text-[12.5px] text-white">Fuel inventory — 21 days</div><div class="text-[11px] text-muted">Above 14-day floor</div></div><span class="text-[10px] font-semibold text-ok bg-ok/10 border border-ok/30 px-2 py-1 rounded">OK</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Module 2 -->
+      <div class="grid lg:grid-cols-2 gap-0 rounded-xl bg-panel hairline overflow-hidden">
+        <div class="p-6 lg:p-8 lg:order-2">
+          <div class="text-[11px] font-semibold tracking-wide text-accent">MODULE 02</div>
+          <h3 class="mt-2 text-xl font-bold text-white">Critical Spares &amp; Logistics Risk</h3>
+          <p class="mt-3 text-[13.5px] text-muted leading-relaxed">Rank spare parts by operational impact, stockout risk, replenishment lead time, logistics window, and affected equipment — so the right PO gets expedited first.</p>
+          <div class="mt-5 flex flex-wrap gap-2 text-[11px]">
+            <span class="px-2.5 py-1 rounded bg-panel2 hairline text-muted">Stockout risk</span>
+            <span class="px-2.5 py-1 rounded bg-panel2 hairline text-muted">Lead time</span>
+            <span class="px-2.5 py-1 rounded bg-panel2 hairline text-muted">Logistics window</span>
+            <span class="px-2.5 py-1 rounded bg-panel2 hairline text-muted">Equipment impact</span>
+            <span class="px-2.5 py-1 rounded bg-panel2 hairline text-muted">Recommended action</span>
+          </div>
+        </div>
+        <div class="bg-panel2/50 border-t lg:border-t-0 lg:border-r border-line p-4 lg:p-6 lg:order-1 overflow-x-auto">
+          <table class="w-full text-[12px] min-w-[520px]">
+            <thead><tr class="text-muted text-[10.5px] uppercase tracking-wide text-left border-b border-line"><th class="py-2 pr-2 font-medium">Part</th><th class="py-2 px-2 font-medium">Equipment</th><th class="py-2 px-2 font-medium text-center">Stock</th><th class="py-2 px-2 font-medium">ETA</th><th class="py-2 px-2 font-medium">Path</th><th class="py-2 px-2 font-medium">Risk</th><th class="py-2 pl-2 font-medium">Action</th></tr></thead>
+            <tbody class="divide-y divide-line">
+              <tr><td class="py-2.5 pr-2 text-white">Hydraulic Pump HP-440</td><td class="py-2.5 px-2 text-muted">Haul Truck 17</td><td class="py-2.5 px-2 text-center tabular">0</td><td class="py-2.5 px-2 text-muted">Feb 14</td><td class="py-2.5 px-2 text-muted">Winter Road</td><td class="py-2.5 px-2"><span class="text-[10px] font-semibold text-warn bg-warn/10 border border-warn/30 px-1.5 py-0.5 rounded">High</span></td><td class="py-2.5 pl-2 text-accent font-medium">Expedite</td></tr>
+              <tr><td class="py-2.5 pr-2 text-white">Conveyor Belt Segment</td><td class="py-2.5 px-2 text-muted">Mill Feed CV-02</td><td class="py-2.5 px-2 text-center tabular">1</td><td class="py-2.5 px-2 text-muted">Jan 29</td><td class="py-2.5 px-2 text-muted">Air Freight</td><td class="py-2.5 px-2"><span class="text-[10px] font-semibold text-amber-300 bg-amber-300/10 border border-amber-300/30 px-1.5 py-0.5 rounded">Medium</span></td><td class="py-2.5 pl-2 text-accent font-medium">Confirm vendor</td></tr>
+              <tr><td class="py-2.5 pr-2 text-white">Generator Control Module</td><td class="py-2.5 px-2 text-muted">Powerhouse G3</td><td class="py-2.5 px-2 text-center tabular">0</td><td class="py-2.5 px-2 text-muted">N/A</td><td class="py-2.5 px-2 text-muted">Air Freight</td><td class="py-2.5 px-2"><span class="text-[10px] font-semibold text-risk bg-risk/10 border border-risk/30 px-1.5 py-0.5 rounded">Critical</span></td><td class="py-2.5 pl-2 text-risk font-medium">Issue PO today</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Module 3 -->
+      <div class="grid lg:grid-cols-2 gap-0 rounded-xl bg-panel hairline overflow-hidden">
+        <div class="p-6 lg:p-8">
+          <div class="text-[11px] font-semibold tracking-wide text-accent">MODULE 03</div>
+          <h3 class="mt-2 text-xl font-bold text-white">Downtime-to-Production Loss</h3>
+          <p class="mt-3 text-[13.5px] text-muted leading-relaxed">Translate maintenance events into production loss and cash impact. Connect work orders, equipment downtime, production actuals, and root-cause codes.</p>
+          <div class="mt-5 grid grid-cols-2 gap-3">
+            <div class="rounded-lg bg-panel2 hairline p-3"><div class="text-[10.5px] uppercase tracking-wide text-muted">Unplanned downtime</div><div class="text-xl font-bold text-white tabular mt-1">126 <span class="text-[12px] text-muted">hrs MTD</span></div></div>
+            <div class="rounded-lg bg-panel2 hairline p-3"><div class="text-[10.5px] uppercase tracking-wide text-muted">Waiting for parts</div><div class="text-xl font-bold text-warn tabular mt-1">34%</div></div>
+            <div class="rounded-lg bg-panel2 hairline p-3"><div class="text-[10.5px] uppercase tracking-wide text-muted">Lost production</div><div class="text-xl font-bold text-white tabular mt-1">18,200 <span class="text-[12px] text-muted">t</span></div></div>
+            <div class="rounded-lg bg-panel2 hairline p-3"><div class="text-[10.5px] uppercase tracking-wide text-muted">Repeat failures</div><div class="text-xl font-bold text-risk tabular mt-1">9</div></div>
+          </div>
+        </div>
+        <div class="bg-panel2/50 border-t lg:border-t-0 lg:border-l border-line p-6 lg:p-8">
+          <div class="text-[11px] uppercase tracking-wide text-muted mb-4">Downtime by cause</div>
+          <div class="space-y-3 text-[12px]" data-bars>
+            <div><div class="flex justify-between mb-1"><span class="text-white">Waiting for parts</span><span class="text-muted tabular">34%</span></div><div class="h-2 rounded bg-line"><div class="h-full rounded bg-risk" style="width:34%"></div></div></div>
+            <div><div class="flex justify-between mb-1"><span class="text-white">Mechanical failure</span><span class="text-muted tabular">24%</span></div><div class="h-2 rounded bg-line"><div class="h-full rounded bg-warn" style="width:24%"></div></div></div>
+            <div><div class="flex justify-between mb-1"><span class="text-white">Electrical failure</span><span class="text-muted tabular">16%</span></div><div class="h-2 rounded bg-line"><div class="h-full rounded bg-warn" style="width:16%"></div></div></div>
+            <div><div class="flex justify-between mb-1"><span class="text-white">Planned maintenance</span><span class="text-muted tabular">12%</span></div><div class="h-2 rounded bg-line"><div class="h-full rounded bg-accent" style="width:12%"></div></div></div>
+            <div><div class="flex justify-between mb-1"><span class="text-white">Weather</span><span class="text-muted tabular">9%</span></div><div class="h-2 rounded bg-line"><div class="h-full rounded bg-steel" style="width:9%"></div></div></div>
+            <div><div class="flex justify-between mb-1"><span class="text-white">Labour shortage</span><span class="text-muted tabular">5%</span></div><div class="h-2 rounded bg-line"><div class="h-full rounded bg-steel" style="width:5%"></div></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Module 4 -->
+      <div class="grid lg:grid-cols-2 gap-0 rounded-xl bg-panel hairline overflow-hidden">
+        <div class="p-6 lg:p-8 lg:order-2">
+          <div class="text-[11px] font-semibold tracking-wide text-accent">MODULE 04</div>
+          <h3 class="mt-2 text-xl font-bold text-white">Winter Road / Sealift Readiness</h3>
+          <p class="mt-3 text-[13.5px] text-muted leading-relaxed">Track every critical shipment against cutoff dates, staging status, transport mode, supplier delay, and production impact.</p>
+          <div class="mt-5 grid grid-cols-3 gap-2.5 text-center">
+            <div class="rounded-lg bg-panel2 hairline p-2.5"><div class="text-[10px] uppercase text-muted">Cutoff</div><div class="text-[14px] font-bold text-white mt-0.5">Mar 31</div></div>
+            <div class="rounded-lg bg-panel2 hairline p-2.5"><div class="text-[10px] uppercase text-muted">Readiness</div><div class="text-[14px] font-bold text-warn mt-0.5">76%</div></div>
+            <div class="rounded-lg bg-panel2 hairline p-2.5"><div class="text-[10px] uppercase text-muted">At-risk</div><div class="text-[14px] font-bold text-risk mt-0.5">12</div></div>
+            <div class="rounded-lg bg-panel2 hairline p-2.5"><div class="text-[10px] uppercase text-muted">Must-ship</div><div class="text-[14px] font-bold text-white mt-0.5">43</div></div>
+            <div class="rounded-lg bg-panel2 hairline p-2.5"><div class="text-[10px] uppercase text-muted">Fuel</div><div class="text-[14px] font-bold text-ok mt-0.5">21 d</div></div>
+            <div class="rounded-lg bg-panel2 hairline p-2.5"><div class="text-[10px] uppercase text-muted">Reagents</div><div class="text-[14px] font-bold text-warn mt-0.5">18 d</div></div>
+          </div>
+        </div>
+        <div class="bg-panel2/50 border-t lg:border-t-0 lg:border-r border-line p-6 lg:p-8 lg:order-1">
+          <div class="text-[11px] uppercase tracking-wide text-muted mb-5">Shipment lifecycle — Generator Control Module</div>
+          <ol class="relative">
+            <li class="flex items-center gap-3 pb-5 relative"><span class="absolute left-[7px] top-4 bottom-0 w-px bg-line"></span><span class="w-4 h-4 rounded-full bg-ok ring-4 ring-ok/15 shrink-0 z-10"></span><span class="text-[12.5px] text-white">PO issued</span><span class="ml-auto text-[11px] text-muted">Jan 8</span></li>
+            <li class="flex items-center gap-3 pb-5 relative"><span class="absolute left-[7px] top-4 bottom-0 w-px bg-line"></span><span class="w-4 h-4 rounded-full bg-ok ring-4 ring-ok/15 shrink-0 z-10"></span><span class="text-[12.5px] text-white">Vendor confirmed</span><span class="ml-auto text-[11px] text-muted">Jan 12</span></li>
+            <li class="flex items-center gap-3 pb-5 relative"><span class="absolute left-[7px] top-4 bottom-0 w-px bg-line"></span><span class="w-4 h-4 rounded-full bg-warn ring-4 ring-warn/15 shrink-0 z-10"></span><span class="text-[12.5px] text-white">Staging yard</span><span class="ml-auto text-[11px] text-warn font-medium">In progress</span></li>
+            <li class="flex items-center gap-3 pb-5 relative"><span class="absolute left-[7px] top-4 bottom-0 w-px bg-line"></span><span class="w-4 h-4 rounded-full bg-line ring-4 ring-line/30 shrink-0 z-10"></span><span class="text-[12.5px] text-muted">Loaded</span><span class="ml-auto text-[11px] text-faint">Pending</span></li>
+            <li class="flex items-center gap-3 pb-5 relative"><span class="absolute left-[7px] top-4 bottom-0 w-px bg-line"></span><span class="w-4 h-4 rounded-full bg-line ring-4 ring-line/30 shrink-0 z-10"></span><span class="text-[12.5px] text-muted">In transit</span><span class="ml-auto text-[11px] text-faint">Pending</span></li>
+            <li class="flex items-center gap-3 relative"><span class="w-4 h-4 rounded-full bg-line ring-4 ring-line/30 shrink-0 z-10"></span><span class="text-[12.5px] text-muted">Site received</span><span class="ml-auto text-[11px] text-faint">Pending</span></li>
+          </ol>
+        </div>
+      </div>
+
+      <!-- Module 5 -->
+      <div class="grid lg:grid-cols-2 gap-0 rounded-xl bg-panel hairline overflow-hidden">
+        <div class="p-6 lg:p-8">
+          <div class="text-[11px] font-semibold tracking-wide text-accent">MODULE 05</div>
+          <h3 class="mt-2 text-xl font-bold text-white">Daily Mine Brief + AI Operations Assistant</h3>
+          <p class="mt-3 text-[13.5px] text-muted leading-relaxed">Generate a daily one-page operating brief from maintenance, production, logistics, workforce, fuel, and compliance data. AI summarizes; managers decide.</p>
+          <div class="mt-5 inline-flex items-center gap-2 text-[11.5px] text-muted bg-panel2 hairline rounded px-3 py-1.5">
+            <svg viewBox="0 0 24 24" class="w-4 h-4 text-accent" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v3M5.6 5.6l2.1 2.1M3 12h3M18 12h3M16.3 7.7l2.1-2.1M12 12l5 9-5-3-5 3 5-9Z"/></svg>
+            AI drafts the brief from connected data — never autonomous action
+          </div>
+        </div>
+        <div class="bg-panel2/50 border-t lg:border-t-0 lg:border-l border-line p-6 lg:p-8">
+          <div class="flex items-center gap-2 text-[11px] uppercase tracking-wide text-muted mb-3"><svg viewBox="0 0 24 24" class="w-4 h-4 text-accent" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3v4a1 1 0 0 0 1 1h4M5 3h9l5 5v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/></svg> Daily Brief — generated 06:00</div>
+          <p class="text-[13px] text-steel leading-relaxed">"Yesterday's production was <span class="text-white">8% below plan.</span> The primary drivers were <span class="text-white">14.5 hours of haul truck downtime</span> and reduced mill feed caused by CV-02 conveyor issues. Three critical spares are at risk of missing the winter road cutoff."</p>
+          <div class="mt-4 text-[11px] uppercase tracking-wide text-muted mb-2">Recommended actions</div>
+          <div class="space-y-2 text-[12.5px]">
+            <div class="flex items-center gap-2 rounded bg-panel hairline px-3 py-2"><span class="w-1.5 h-1.5 rounded-full bg-risk"></span> Expedite PO-10821 (hydraulic pump)</div>
+            <div class="flex items-center gap-2 rounded bg-panel hairline px-3 py-2"><span class="w-1.5 h-1.5 rounded-full bg-warn"></span> Approve alternate supplier for belt segment</div>
+            <div class="flex items-center gap-2 rounded bg-panel hairline px-3 py-2"><span class="w-1.5 h-1.5 rounded-full bg-accent"></span> Reschedule planned maintenance for Truck 21</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ROI ============ -->
+<section id="roi" class="py-16 lg:py-24 border-b border-line bg-panel/30">
+  <div class="max-w-7xl mx-auto px-5 lg:px-8">
+    <div class="max-w-3xl">
+      <span class="text-[11px] font-semibold tracking-[0.16em] uppercase text-accent">Return on Investment</span>
+      <h2 class="mt-3 text-2xl lg:text-[2rem] font-bold tracking-tight text-white leading-tight">Built around measurable operating loss, not vanity dashboards</h2>
+    </div>
+    <div class="mt-10 grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="rounded-xl bg-panel hairline p-5"><div class="w-9 h-9 rounded-lg bg-panel3 grid place-items-center text-accent mb-3"><svg viewBox="0 0 24 24" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><h3 class="text-[14px] font-semibold text-white">Avoid production losses from missing critical parts</h3><p class="mt-2 text-[12.5px] text-muted">Identify stockout risks before they become downtime.</p></div>
+      <div class="rounded-xl bg-panel hairline p-5"><div class="w-9 h-9 rounded-lg bg-panel3 grid place-items-center text-accent mb-3"><svg viewBox="0 0 24 24" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 17h4V5H2v12h3M15 17h6V9h-4M5 17a2 2 0 1 0 4 0M15 17a2 2 0 1 0 4 0"/></svg></div><h3 class="text-[14px] font-semibold text-white">Reduce emergency freight and expediting</h3><p class="mt-2 text-[12.5px] text-muted">Connect PO delays with winter road, sealift, and air freight decision windows.</p></div>
+      <div class="rounded-xl bg-panel hairline p-5"><div class="w-9 h-9 rounded-lg bg-panel3 grid place-items-center text-accent mb-3"><svg viewBox="0 0 24 24" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/></svg></div><h3 class="text-[14px] font-semibold text-white">Lower inventory mismatch</h3><p class="mt-2 text-[12.5px] text-muted">Separate true critical spares from obsolete or slow-moving stock.</p></div>
+      <div class="rounded-xl bg-panel hairline p-5"><div class="w-9 h-9 rounded-lg bg-panel3 grid place-items-center text-accent mb-3"><svg viewBox="0 0 24 24" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div><h3 class="text-[14px] font-semibold text-white">Improve management accountability</h3><p class="mt-2 text-[12.5px] text-muted">Convert operational issues into owners, deadlines, actions, and financial impact.</p></div>
+    </div>
+
+    <!-- Calculator -->
+    <div class="mt-8 rounded-xl bg-panel hairline overflow-hidden grid lg:grid-cols-[1.3fr_1fr]">
+      <div class="p-6 lg:p-8">
+        <div class="text-[11px] uppercase tracking-wide text-muted">Value-protected calculator</div>
+        <h3 class="mt-1 text-lg font-bold text-white">Estimate the downtime you can protect</h3>
+        <div class="mt-6 space-y-5">
+          <div>
+            <div class="flex justify-between text-[12.5px] mb-1.5"><label class="text-muted">Average plant throughput</label><span class="text-white font-medium tabular"><span id="roiThruVal">5,000</span> t/day</span></div>
+            <input id="roiThru" type="range" min="1000" max="20000" step="250" value="5000" class="w-full accent-accent">
+          </div>
+          <div>
+            <div class="flex justify-between text-[12.5px] mb-1.5"><label class="text-muted">Average margin per tonne</label><span class="text-white font-medium tabular">$<span id="roiMarginVal">35</span></span></div>
+            <input id="roiMargin" type="range" min="5" max="120" step="1" value="35" class="w-full accent-accent">
+          </div>
+          <div>
+            <div class="flex justify-between text-[12.5px] mb-1.5"><label class="text-muted">Annual unplanned downtime</label><span class="text-white font-medium tabular"><span id="roiDaysVal">10</span> days</span></div>
+            <input id="roiDays" type="range" min="1" max="40" step="1" value="10" class="w-full accent-accent">
+          </div>
+          <div>
+            <div class="flex justify-between text-[12.5px] mb-1.5"><label class="text-muted">Targeted downtime reduction</label><span class="text-white font-medium tabular"><span id="roiPctVal">30</span>%</span></div>
+            <input id="roiPct" type="range" min="5" max="60" step="5" value="30" class="w-full accent-accent">
+          </div>
+        </div>
+      </div>
+      <div class="bg-gradient-to-br from-accent/15 to-panel border-t lg:border-t-0 lg:border-l border-line p-6 lg:p-8 flex flex-col justify-center">
+        <div class="text-[11px] uppercase tracking-wide text-muted">Estimated annual value protected</div>
+        <div id="roiOutput" class="mt-2 text-4xl lg:text-5xl font-bold text-white tabular">$525,000</div>
+        <div class="text-[12.5px] text-muted mt-1"><span id="roiAvoided">3.0</span> days of downtime avoided per year</div>
+        <div class="mt-6 pt-5 border-t border-line text-[12px] text-muted space-y-1.5">
+          <div class="flex justify-between"><span>Throughput value / day</span><span id="roiPerDay" class="text-steel tabular">$175,000</span></div>
+          <div class="flex justify-between"><span>Avoided downtime</span><span id="roiAvoided2" class="text-steel tabular">3.0 days</span></div>
+        </div>
+        <p class="mt-5 text-[11px] text-faint leading-relaxed">Illustrative model using your inputs. Value = throughput × margin × avoided downtime days. Not a guarantee of results.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ USE CASES ============ -->
+<section id="usecases" class="py-16 lg:py-24 border-b border-line">
+  <div class="max-w-7xl mx-auto px-5 lg:px-8">
+    <div class="max-w-3xl">
+      <span class="text-[11px] font-semibold tracking-[0.16em] uppercase text-accent">Use Cases</span>
+      <h2 class="mt-3 text-2xl lg:text-[2rem] font-bold tracking-tight text-white leading-tight">Designed for remote mining realities</h2>
+    </div>
+    <div class="mt-10 grid lg:grid-cols-2 gap-4">
+      <!-- uc1 -->
+      <div class="rounded-xl bg-panel hairline p-5 lg:p-6">
+        <div class="flex items-start gap-3"><span class="w-8 h-8 rounded-lg bg-risk/15 text-risk grid place-items-center shrink-0 text-[13px] font-bold">1</span><h3 class="text-[15px] font-semibold text-white mt-1">Critical spare may miss winter road cutoff</h3></div>
+        <div class="mt-4 flex flex-wrap items-center gap-2 text-[11.5px]" data-flow>
+          <span class="px-2.5 py-1.5 rounded bg-panel2 hairline text-muted">CMMS work order</span><span class="text-faint">→</span>
+          <span class="px-2.5 py-1.5 rounded bg-panel2 hairline text-muted">ERP purchase order</span><span class="text-faint">→</span>
+          <span class="px-2.5 py-1.5 rounded bg-panel2 hairline text-muted">Logistics ETA</span><span class="text-faint">→</span>
+          <span class="px-2.5 py-1.5 rounded bg-panel2 hairline text-muted">Production impact</span><span class="text-faint">→</span>
+          <span class="px-2.5 py-1.5 rounded bg-accent/15 border border-accent/30 text-accent font-medium">Management alert</span>
+        </div>
+      </div>
+      <!-- uc2 -->
+      <div class="rounded-xl bg-panel hairline p-5 lg:p-6">
+        <div class="flex items-start gap-3"><span class="w-8 h-8 rounded-lg bg-warn/15 text-warn grid place-items-center shrink-0 text-[13px] font-bold">2</span><h3 class="text-[15px] font-semibold text-white mt-1">Repeated truck failure is hurting ore movement</h3></div>
+        <div class="mt-4 flex flex-wrap items-center gap-2 text-[11.5px]">
+          <span class="px-2.5 py-1.5 rounded bg-panel2 hairline text-muted">Fleet downtime</span><span class="text-faint">→</span>
+          <span class="px-2.5 py-1.5 rounded bg-panel2 hairline text-muted">CMMS history</span><span class="text-faint">→</span>
+          <span class="px-2.5 py-1.5 rounded bg-panel2 hairline text-muted">Production variance</span><span class="text-faint">→</span>
+          <span class="px-2.5 py-1.5 rounded bg-panel2 hairline text-muted">Root cause</span><span class="text-faint">→</span>
+          <span class="px-2.5 py-1.5 rounded bg-accent/15 border border-accent/30 text-accent font-medium">Action owner</span>
+        </div>
+      </div>
+      <!-- uc3 -->
+      <div class="rounded-xl bg-panel hairline p-5 lg:p-6">
+        <div class="flex items-start gap-3"><span class="w-8 h-8 rounded-lg bg-warn/15 text-warn grid place-items-center shrink-0 text-[13px] font-bold">3</span><h3 class="text-[15px] font-semibold text-white mt-1">Fuel and reagent coverage is falling below plan</h3></div>
+        <div class="mt-4 flex flex-wrap items-center gap-2 text-[11.5px]">
+          <span class="px-2.5 py-1.5 rounded bg-panel2 hairline text-muted">Inventory</span><span class="text-faint">→</span>
+          <span class="px-2.5 py-1.5 rounded bg-panel2 hairline text-muted">Consumption rate</span><span class="text-faint">→</span>
+          <span class="px-2.5 py-1.5 rounded bg-panel2 hairline text-muted">Shipment ETA</span><span class="text-faint">→</span>
+          <span class="px-2.5 py-1.5 rounded bg-panel2 hairline text-muted">Days remaining</span><span class="text-faint">→</span>
+          <span class="px-2.5 py-1.5 rounded bg-accent/15 border border-accent/30 text-accent font-medium">Operating risk</span>
+        </div>
+      </div>
+      <!-- uc4 -->
+      <div class="rounded-xl bg-panel hairline p-5 lg:p-6">
+        <div class="flex items-start gap-3"><span class="w-8 h-8 rounded-lg bg-accent/15 text-accent grid place-items-center shrink-0 text-[13px] font-bold">4</span><h3 class="text-[15px] font-semibold text-white mt-1">Planned shutdown lacks labour and parts readiness</h3></div>
+        <div class="mt-4 flex flex-wrap items-center gap-2 text-[11.5px]">
+          <span class="px-2.5 py-1.5 rounded bg-panel2 hairline text-muted">Maintenance plan</span><span class="text-faint">→</span>
+          <span class="px-2.5 py-1.5 rounded bg-panel2 hairline text-muted">Roster</span><span class="text-faint">→</span>
+          <span class="px-2.5 py-1.5 rounded bg-panel2 hairline text-muted">Camp rooms</span><span class="text-faint">→</span>
+          <span class="px-2.5 py-1.5 rounded bg-panel2 hairline text-muted">Contractor mobilization</span><span class="text-faint">→</span>
+          <span class="px-2.5 py-1.5 rounded bg-accent/15 border border-accent/30 text-accent font-medium">Parts availability</span>
+        </div>
+      </div>
+      <!-- uc5 -->
+      <div class="rounded-xl bg-panel hairline p-5 lg:p-6 lg:col-span-2">
+        <div class="flex items-start gap-3"><span class="w-8 h-8 rounded-lg bg-risk/15 text-risk grid place-items-center shrink-0 text-[13px] font-bold">5</span><h3 class="text-[15px] font-semibold text-white mt-1">Environmental permit task is overdue</h3></div>
+        <div class="mt-4 flex flex-wrap items-center gap-2 text-[11.5px]">
+          <span class="px-2.5 py-1.5 rounded bg-panel2 hairline text-muted">Compliance obligation</span><span class="text-faint">→</span>
+          <span class="px-2.5 py-1.5 rounded bg-panel2 hairline text-muted">Responsible owner</span><span class="text-faint">→</span>
+          <span class="px-2.5 py-1.5 rounded bg-panel2 hairline text-muted">Evidence required</span><span class="text-faint">→</span>
+          <span class="px-2.5 py-1.5 rounded bg-accent/15 border border-accent/30 text-accent font-medium">Escalation</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ IMPLEMENTATION / PILOT ============ -->
+<section id="pilot" class="py-16 lg:py-24 border-b border-line bg-panel/30">
+  <div class="max-w-7xl mx-auto px-5 lg:px-8">
+    <div class="max-w-3xl">
+      <span class="text-[11px] font-semibold tracking-[0.16em] uppercase text-accent">Implementation</span>
+      <h2 class="mt-3 text-2xl lg:text-[2rem] font-bold tracking-tight text-white leading-tight">Start with a 90-day operating visibility pilot</h2>
+    </div>
+    <div class="mt-10 grid lg:grid-cols-3 gap-4">
+      <div class="rounded-xl bg-panel hairline p-6">
+        <div class="flex items-center justify-between"><span class="text-[11px] font-semibold tracking-wide text-accent">PHASE 1</span><span class="text-[11px] text-muted">Weeks 1–3</span></div>
+        <h3 class="mt-2 text-lg font-bold text-white">Data mapping</h3>
+        <ul class="mt-4 space-y-2 text-[13px] text-muted">
+          <li class="flex gap-2"><span class="text-accent">·</span> Equipment master</li>
+          <li class="flex gap-2"><span class="text-accent">·</span> Work orders</li>
+          <li class="flex gap-2"><span class="text-accent">·</span> Downtime records</li>
+          <li class="flex gap-2"><span class="text-accent">·</span> Inventory</li>
+          <li class="flex gap-2"><span class="text-accent">·</span> Open purchase orders</li>
+          <li class="flex gap-2"><span class="text-accent">·</span> Daily production actuals</li>
+        </ul>
+      </div>
+      <div class="rounded-xl bg-panel border border-accent/30 p-6 relative">
+        <span class="absolute -top-2.5 left-6 text-[10px] font-semibold tracking-wide bg-accent text-base px-2 py-0.5 rounded">CORE</span>
+        <div class="flex items-center justify-between"><span class="text-[11px] font-semibold tracking-wide text-accent">PHASE 2</span><span class="text-[11px] text-muted">Weeks 4–8</span></div>
+        <h3 class="mt-2 text-lg font-bold text-white">Control Tower MVP</h3>
+        <ul class="mt-4 space-y-2 text-[13px] text-muted">
+          <li class="flex gap-2"><span class="text-accent">·</span> Executive risk board</li>
+          <li class="flex gap-2"><span class="text-accent">·</span> Critical spares dashboard</li>
+          <li class="flex gap-2"><span class="text-accent">·</span> Downtime-to-loss model</li>
+          <li class="flex gap-2"><span class="text-accent">·</span> Logistics window board</li>
+          <li class="flex gap-2"><span class="text-accent">·</span> Daily mine brief</li>
+        </ul>
+      </div>
+      <div class="rounded-xl bg-panel hairline p-6">
+        <div class="flex items-center justify-between"><span class="text-[11px] font-semibold tracking-wide text-accent">PHASE 3</span><span class="text-[11px] text-muted">Weeks 9–12</span></div>
+        <h3 class="mt-2 text-lg font-bold text-white">Operational rollout</h3>
+        <ul class="mt-4 space-y-2 text-[13px] text-muted">
+          <li class="flex gap-2"><span class="text-accent">·</span> Department workflows</li>
+          <li class="flex gap-2"><span class="text-accent">·</span> Action tracking</li>
+          <li class="flex gap-2"><span class="text-accent">·</span> AI summary</li>
+          <li class="flex gap-2"><span class="text-accent">·</span> Weekly management review</li>
+          <li class="flex gap-2"><span class="text-accent">·</span> ROI baseline</li>
+        </ul>
+      </div>
+    </div>
+    <div class="mt-8 rounded-xl border border-line2 bg-panel p-5 lg:p-6 flex items-start gap-3">
+      <svg viewBox="0 0 24 24" class="w-5 h-5 text-ok shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 11 3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      <p class="text-[14px] text-steel leading-relaxed"><span class="text-white font-semibold">No full ERP migration. No disruption to existing CMMS. No replacement of fleet management systems.</span> Start with data visibility, then move to operating workflows.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ DEMO DASHBOARD ============ -->
+<section id="demo" class="py-16 lg:py-24 border-b border-line">
+  <div class="max-w-7xl mx-auto px-5 lg:px-8">
+    <div class="max-w-3xl">
+      <span class="text-[11px] font-semibold tracking-[0.16em] uppercase text-accent">Live Demo</span>
+      <h2 class="mt-3 text-2xl lg:text-[2rem] font-bold tracking-tight text-white leading-tight">Walk the operating view</h2>
+      <p class="mt-3 text-[14px] text-muted">Interactive mock-up — switch tabs to see how each operating view comes together. Mock data shown.</p>
+    </div>
+
+    <div class="mt-8 rounded-xl bg-panel hairline overflow-hidden">
+      <!-- window chrome -->
+      <div class="flex items-center justify-between px-4 py-3 border-b border-line bg-panel2/50">
+        <div class="flex items-center gap-2">
+          <span class="w-3 h-3 rounded-full bg-risk/70"></span><span class="w-3 h-3 rounded-full bg-warn/70"></span><span class="w-3 h-3 rounded-full bg-ok/70"></span>
+          <span class="ml-3 text-[12px] text-muted">control-tower / operating-view</span>
+        </div>
+        <span class="text-[11px] text-faint hidden sm:block">Site: Northern Lake Project · Shift A</span>
+      </div>
+      <!-- tabs -->
+      <div class="flex gap-1 px-3 pt-3 border-b border-line overflow-x-auto" id="demoTabs">
+        <button data-tab="exec" class="demo-tab whitespace-nowrap text-[13px] font-medium px-4 py-2.5 rounded-t-md text-white bg-panel2 border border-line border-b-0">Executive</button>
+        <button data-tab="spares" class="demo-tab whitespace-nowrap text-[13px] font-medium px-4 py-2.5 rounded-t-md text-muted hover:text-white">Critical Spares</button>
+        <button data-tab="downtime" class="demo-tab whitespace-nowrap text-[13px] font-medium px-4 py-2.5 rounded-t-md text-muted hover:text-white">Downtime</button>
+        <button data-tab="logistics" class="demo-tab whitespace-nowrap text-[13px] font-medium px-4 py-2.5 rounded-t-md text-muted hover:text-white">Logistics</button>
+        <button data-tab="brief" class="demo-tab whitespace-nowrap text-[13px] font-medium px-4 py-2.5 rounded-t-md text-muted hover:text-white">Daily Brief</button>
+      </div>
+
+      <div class="p-5 lg:p-6 bg-panel2/20">
+        <!-- EXEC -->
+        <div data-panel="exec">
+          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+            <div class="rounded-lg bg-panel hairline p-3.5"><div class="text-[10px] uppercase tracking-wide text-muted">Production vs Plan</div><div class="text-2xl font-bold text-warn tabular mt-1">92%</div></div>
+            <div class="rounded-lg bg-panel hairline p-3.5"><div class="text-[10px] uppercase tracking-wide text-muted">Downtime MTD</div><div class="text-2xl font-bold text-white tabular mt-1">126<span class="text-[12px] text-muted"> h</span></div></div>
+            <div class="rounded-lg bg-panel hairline p-3.5"><div class="text-[10px] uppercase tracking-wide text-muted">Critical Spares at Risk</div><div class="text-2xl font-bold text-risk tabular mt-1">17</div></div>
+            <div class="rounded-lg bg-panel hairline p-3.5"><div class="text-[10px] uppercase tracking-wide text-muted">Logistics Readiness</div><div class="text-2xl font-bold text-warn tabular mt-1">76%</div></div>
+            <div class="rounded-lg bg-panel hairline p-3.5"><div class="text-[10px] uppercase tracking-wide text-muted">Fuel Days</div><div class="text-2xl font-bold text-ok tabular mt-1">21</div></div>
+            <div class="rounded-lg bg-panel hairline p-3.5"><div class="text-[10px] uppercase tracking-wide text-muted">Compliance Overdue</div><div class="text-2xl font-bold text-risk tabular mt-1">4</div></div>
+          </div>
+          <div class="mt-4 grid lg:grid-cols-2 gap-3">
+            <div class="rounded-lg bg-panel hairline p-4">
+              <div class="text-[11px] uppercase tracking-wide text-muted mb-3">Top operating risks</div>
+              <div class="space-y-2">
+                <div class="flex items-center gap-3 text-[12.5px]"><span class="text-[10px] font-semibold text-risk bg-risk/10 border border-risk/30 px-1.5 py-0.5 rounded w-16 text-center">CRITICAL</span><span class="text-white flex-1">Mill feed conveyor — repeat failure</span><span class="text-muted tabular">8,400 t</span></div>
+                <div class="flex items-center gap-3 text-[12.5px]"><span class="text-[10px] font-semibold text-warn bg-warn/10 border border-warn/30 px-1.5 py-0.5 rounded w-16 text-center">HIGH</span><span class="text-white flex-1">Hydraulic pump PO at cutoff risk</span><span class="text-muted tabular">42 h</span></div>
+                <div class="flex items-center gap-3 text-[12.5px]"><span class="text-[10px] font-semibold text-warn bg-warn/10 border border-warn/30 px-1.5 py-0.5 rounded w-16 text-center">HIGH</span><span class="text-white flex-1">Reagent coverage below target</span><span class="text-muted tabular">18 d</span></div>
+                <div class="flex items-center gap-3 text-[12.5px]"><span class="text-[10px] font-semibold text-accent bg-accent/10 border border-accent/30 px-1.5 py-0.5 rounded w-16 text-center">WATCH</span><span class="text-white flex-1">Truck 21 maintenance overdue</span><span class="text-muted tabular">—</span></div>
+              </div>
+            </div>
+            <div class="rounded-lg bg-panel hairline p-4">
+              <div class="text-[11px] uppercase tracking-wide text-muted mb-3">Decisions required today</div>
+              <div class="space-y-2 text-[12.5px]">
+                <div class="flex items-center gap-2 rounded bg-panel2 hairline px-3 py-2"><span class="w-1.5 h-1.5 rounded-full bg-risk"></span> Approve air freight for generator module</div>
+                <div class="flex items-center gap-2 rounded bg-panel2 hairline px-3 py-2"><span class="w-1.5 h-1.5 rounded-full bg-warn"></span> Confirm belt segment alternate supplier</div>
+                <div class="flex items-center gap-2 rounded bg-panel2 hairline px-3 py-2"><span class="w-1.5 h-1.5 rounded-full bg-warn"></span> Re-sequence planned maintenance, Truck 21</div>
+                <div class="flex items-center gap-2 rounded bg-panel2 hairline px-3 py-2"><span class="w-1.5 h-1.5 rounded-full bg-accent"></span> Assign owner — overdue permit task</div>
+                <div class="flex items-center gap-2 rounded bg-panel2 hairline px-3 py-2"><span class="w-1.5 h-1.5 rounded-full bg-accent"></span> Review reagent re-order point</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SPARES -->
+        <div data-panel="spares" class="hidden overflow-x-auto">
+          <table class="w-full text-[12.5px] min-w-[640px]">
+            <thead><tr class="text-muted text-[10.5px] uppercase tracking-wide text-left border-b border-line"><th class="py-2.5 pr-2 font-medium">Part</th><th class="py-2.5 px-2 font-medium">Equipment</th><th class="py-2.5 px-2 font-medium text-center">Stock</th><th class="py-2.5 px-2 font-medium">Open PO</th><th class="py-2.5 px-2 font-medium">ETA</th><th class="py-2.5 px-2 font-medium">Logistics Path</th><th class="py-2.5 px-2 font-medium">Risk</th><th class="py-2.5 pl-2 font-medium">Recommended Action</th></tr></thead>
+            <tbody class="divide-y divide-line">
+              <tr><td class="py-3 pr-2 text-white">Hydraulic Pump HP-440</td><td class="py-3 px-2 text-muted">Haul Truck 17</td><td class="py-3 px-2 text-center tabular">0</td><td class="py-3 px-2 text-muted">PO-10821</td><td class="py-3 px-2 text-muted">Feb 14</td><td class="py-3 px-2 text-muted">Winter Road</td><td class="py-3 px-2"><span class="text-[10px] font-semibold text-warn bg-warn/10 border border-warn/30 px-1.5 py-0.5 rounded">High</span></td><td class="py-3 pl-2 text-accent font-medium">Expedite</td></tr>
+              <tr><td class="py-3 pr-2 text-white">Conveyor Belt Segment</td><td class="py-3 px-2 text-muted">Mill Feed CV-02</td><td class="py-3 px-2 text-center tabular">1</td><td class="py-3 px-2 text-muted">PO-10766</td><td class="py-3 px-2 text-muted">Jan 29</td><td class="py-3 px-2 text-muted">Air Freight</td><td class="py-3 px-2"><span class="text-[10px] font-semibold text-amber-300 bg-amber-300/10 border border-amber-300/30 px-1.5 py-0.5 rounded">Medium</span></td><td class="py-3 pl-2 text-accent font-medium">Confirm vendor</td></tr>
+              <tr><td class="py-3 pr-2 text-white">Generator Control Module</td><td class="py-3 px-2 text-muted">Powerhouse G3</td><td class="py-3 px-2 text-center tabular">0</td><td class="py-3 px-2 text-muted">Not ordered</td><td class="py-3 px-2 text-muted">N/A</td><td class="py-3 px-2 text-muted">Air Freight</td><td class="py-3 px-2"><span class="text-[10px] font-semibold text-risk bg-risk/10 border border-risk/30 px-1.5 py-0.5 rounded">Critical</span></td><td class="py-3 pl-2 text-risk font-medium">Issue PO today</td></tr>
+              <tr><td class="py-3 pr-2 text-white">Bearing Set, SAG Mill</td><td class="py-3 px-2 text-muted">SAG Mill 01</td><td class="py-3 px-2 text-center tabular">2</td><td class="py-3 px-2 text-muted">PO-10712</td><td class="py-3 px-2 text-muted">Feb 02</td><td class="py-3 px-2 text-muted">Sealift</td><td class="py-3 px-2"><span class="text-[10px] font-semibold text-ok bg-ok/10 border border-ok/30 px-1.5 py-0.5 rounded">Low</span></td><td class="py-3 pl-2 text-muted">Monitor</td></tr>
+              <tr><td class="py-3 pr-2 text-white">VFD Drive 600V</td><td class="py-3 px-2 text-muted">Crusher 02</td><td class="py-3 px-2 text-center tabular">0</td><td class="py-3 px-2 text-muted">PO-10844</td><td class="py-3 px-2 text-muted">Feb 20</td><td class="py-3 px-2 text-muted">Winter Road</td><td class="py-3 px-2"><span class="text-[10px] font-semibold text-warn bg-warn/10 border border-warn/30 px-1.5 py-0.5 rounded">High</span></td><td class="py-3 pl-2 text-accent font-medium">Expedite</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- DOWNTIME -->
+        <div data-panel="downtime" class="hidden">
+          <div class="grid md:grid-cols-4 gap-3 mb-4">
+            <div class="rounded-lg bg-panel hairline p-3.5"><div class="text-[10px] uppercase tracking-wide text-muted">Unplanned downtime</div><div class="text-xl font-bold text-white tabular mt-1">126 h</div></div>
+            <div class="rounded-lg bg-panel hairline p-3.5"><div class="text-[10px] uppercase tracking-wide text-muted">Waiting for parts</div><div class="text-xl font-bold text-warn tabular mt-1">34%</div></div>
+            <div class="rounded-lg bg-panel hairline p-3.5"><div class="text-[10px] uppercase tracking-wide text-muted">Lost production</div><div class="text-xl font-bold text-white tabular mt-1">18,200 t</div></div>
+            <div class="rounded-lg bg-panel hairline p-3.5"><div class="text-[10px] uppercase tracking-wide text-muted">Repeat failures</div><div class="text-xl font-bold text-risk tabular mt-1">9</div></div>
+          </div>
+          <div class="grid lg:grid-cols-2 gap-3">
+            <div class="rounded-lg bg-panel hairline p-4">
+              <div class="text-[11px] uppercase tracking-wide text-muted mb-4">Downtime by cause</div>
+              <div class="space-y-3 text-[12px]">
+                <div><div class="flex justify-between mb-1"><span class="text-white">Waiting for parts</span><span class="text-muted tabular">34%</span></div><div class="h-2.5 rounded bg-line"><div class="h-full rounded bg-risk" style="width:34%"></div></div></div>
+                <div><div class="flex justify-between mb-1"><span class="text-white">Mechanical failure</span><span class="text-muted tabular">24%</span></div><div class="h-2.5 rounded bg-line"><div class="h-full rounded bg-warn" style="width:24%"></div></div></div>
+                <div><div class="flex justify-between mb-1"><span class="text-white">Electrical failure</span><span class="text-muted tabular">16%</span></div><div class="h-2.5 rounded bg-line"><div class="h-full rounded bg-warn" style="width:16%"></div></div></div>
+                <div><div class="flex justify-between mb-1"><span class="text-white">Planned maintenance</span><span class="text-muted tabular">12%</span></div><div class="h-2.5 rounded bg-line"><div class="h-full rounded bg-accent" style="width:12%"></div></div></div>
+                <div><div class="flex justify-between mb-1"><span class="text-white">Weather</span><span class="text-muted tabular">9%</span></div><div class="h-2.5 rounded bg-line"><div class="h-full rounded bg-steel" style="width:9%"></div></div></div>
+                <div><div class="flex justify-between mb-1"><span class="text-white">Labour shortage</span><span class="text-muted tabular">5%</span></div><div class="h-2.5 rounded bg-line"><div class="h-full rounded bg-steel" style="width:5%"></div></div></div>
+              </div>
+            </div>
+            <div class="rounded-lg bg-panel hairline p-4">
+              <div class="text-[11px] uppercase tracking-wide text-muted mb-3">Top loss drivers</div>
+              <div class="space-y-2">
+                <div class="flex items-center justify-between rounded bg-panel2 hairline px-3 py-2.5 text-[12.5px]"><span class="text-white">Mill feed conveyor CV-02</span><span class="text-risk font-semibold tabular">6,200 t</span></div>
+                <div class="flex items-center justify-between rounded bg-panel2 hairline px-3 py-2.5 text-[12.5px]"><span class="text-white">Haul Truck 17 hydraulics</span><span class="text-warn font-semibold tabular">4,800 t</span></div>
+                <div class="flex items-center justify-between rounded bg-panel2 hairline px-3 py-2.5 text-[12.5px]"><span class="text-white">Crusher 02 VFD trip</span><span class="text-warn font-semibold tabular">3,400 t</span></div>
+                <div class="flex items-center justify-between rounded bg-panel2 hairline px-3 py-2.5 text-[12.5px]"><span class="text-white">Powerhouse G3 instability</span><span class="text-muted font-semibold tabular">2,100 t</span></div>
+                <div class="flex items-center justify-between rounded bg-panel2 hairline px-3 py-2.5 text-[12.5px]"><span class="text-white">Weather — road closure</span><span class="text-muted font-semibold tabular">1,700 t</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- LOGISTICS -->
+        <div data-panel="logistics" class="hidden">
+          <div class="grid md:grid-cols-4 gap-3 mb-4">
+            <div class="rounded-lg bg-panel hairline p-3.5"><div class="text-[10px] uppercase tracking-wide text-muted">Winter Road Cutoff</div><div class="text-xl font-bold text-white tabular mt-1">Mar 31</div></div>
+            <div class="rounded-lg bg-panel hairline p-3.5"><div class="text-[10px] uppercase tracking-wide text-muted">Readiness Score</div><div class="text-xl font-bold text-warn tabular mt-1">76%</div></div>
+            <div class="rounded-lg bg-panel hairline p-3.5"><div class="text-[10px] uppercase tracking-wide text-muted">At-risk shipments</div><div class="text-xl font-bold text-risk tabular mt-1">12</div></div>
+            <div class="rounded-lg bg-panel hairline p-3.5"><div class="text-[10px] uppercase tracking-wide text-muted">Must-ship critical</div><div class="text-xl font-bold text-white tabular mt-1">43</div></div>
+          </div>
+          <div class="rounded-lg bg-panel hairline p-4 mb-3">
+            <div class="text-[11px] uppercase tracking-wide text-muted mb-4">Shipment lifecycle</div>
+            <div class="flex items-center gap-1.5 overflow-x-auto pb-1 text-[11px]">
+              <span class="px-3 py-2 rounded bg-ok/15 border border-ok/30 text-ok whitespace-nowrap">PO issued</span><span class="text-faint">→</span>
+              <span class="px-3 py-2 rounded bg-ok/15 border border-ok/30 text-ok whitespace-nowrap">Vendor confirmed</span><span class="text-faint">→</span>
+              <span class="px-3 py-2 rounded bg-warn/15 border border-warn/30 text-warn whitespace-nowrap">Staging yard</span><span class="text-faint">→</span>
+              <span class="px-3 py-2 rounded bg-panel2 hairline text-muted whitespace-nowrap">Loaded</span><span class="text-faint">→</span>
+              <span class="px-3 py-2 rounded bg-panel2 hairline text-muted whitespace-nowrap">In transit</span><span class="text-faint">→</span>
+              <span class="px-3 py-2 rounded bg-panel2 hairline text-muted whitespace-nowrap">Site received</span>
+            </div>
+          </div>
+          <div class="rounded-lg bg-panel hairline overflow-x-auto">
+            <table class="w-full text-[12.5px] min-w-[560px]">
+              <thead><tr class="text-muted text-[10.5px] uppercase tracking-wide text-left border-b border-line"><th class="py-2.5 px-4 font-medium">Shipment</th><th class="py-2.5 px-2 font-medium">Mode</th><th class="py-2.5 px-2 font-medium">Cutoff</th><th class="py-2.5 px-2 font-medium">Status</th><th class="py-2.5 px-2 font-medium">Risk</th></tr></thead>
+              <tbody class="divide-y divide-line">
+                <tr><td class="py-3 px-4 text-white">Generator Control Module</td><td class="py-3 px-2 text-muted">Air Freight</td><td class="py-3 px-2 text-muted">Feb 10</td><td class="py-3 px-2 text-muted">Not ordered</td><td class="py-3 px-2"><span class="text-[10px] font-semibold text-risk bg-risk/10 border border-risk/30 px-1.5 py-0.5 rounded">Critical</span></td></tr>
+                <tr><td class="py-3 px-4 text-white">Hydraulic Pump HP-440</td><td class="py-3 px-2 text-muted">Winter Road</td><td class="py-3 px-2 text-muted">Mar 31</td><td class="py-3 px-2 text-muted">Staging</td><td class="py-3 px-2"><span class="text-[10px] font-semibold text-warn bg-warn/10 border border-warn/30 px-1.5 py-0.5 rounded">High</span></td></tr>
+                <tr><td class="py-3 px-4 text-white">Diesel resupply — Q1</td><td class="py-3 px-2 text-muted">Winter Road</td><td class="py-3 px-2 text-muted">Mar 31</td><td class="py-3 px-2 text-muted">In transit</td><td class="py-3 px-2"><span class="text-[10px] font-semibold text-ok bg-ok/10 border border-ok/30 px-1.5 py-0.5 rounded">On track</span></td></tr>
+                <tr><td class="py-3 px-4 text-white">Mill reagents</td><td class="py-3 px-2 text-muted">Sealift</td><td class="py-3 px-2 text-muted">Sep 15</td><td class="py-3 px-2 text-muted">Vendor confirmed</td><td class="py-3 px-2"><span class="text-[10px] font-semibold text-warn bg-warn/10 border border-warn/30 px-1.5 py-0.5 rounded">Watch</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- BRIEF -->
+        <div data-panel="brief" class="hidden">
+          <div class="grid lg:grid-cols-[1.3fr_1fr] gap-3">
+            <div class="rounded-lg bg-panel hairline p-5">
+              <div class="flex items-center gap-2 text-[11px] uppercase tracking-wide text-muted mb-3"><svg viewBox="0 0 24 24" class="w-4 h-4 text-accent" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v3M5.6 5.6l2.1 2.1M3 12h3M18 12h3M16.3 7.7l2.1-2.1M12 12l5 9-5-3-5 3 5-9Z"/></svg> Daily Mine Brief · auto-generated 06:00</div>
+              <p class="text-[13.5px] text-steel leading-relaxed">Yesterday's production was <span class="text-white font-medium">8% below plan.</span> The primary drivers were <span class="text-white font-medium">14.5 hours of haul truck downtime</span> and reduced mill feed caused by CV-02 conveyor issues. Three critical spares are at risk of missing the winter road cutoff.</p>
+              <p class="mt-3 text-[13.5px] text-steel leading-relaxed">Recommended actions: <span class="text-white">expedite PO-10821</span>, approve alternate supplier for belt segment, and reschedule planned maintenance for Truck 21.</p>
+              <div class="mt-4 flex flex-wrap gap-2 text-[11px]">
+                <span class="px-2.5 py-1 rounded bg-panel2 hairline text-muted">Production −8%</span>
+                <span class="px-2.5 py-1 rounded bg-panel2 hairline text-muted">Downtime 14.5 h</span>
+                <span class="px-2.5 py-1 rounded bg-panel2 hairline text-muted">3 spares at risk</span>
+                <span class="px-2.5 py-1 rounded bg-panel2 hairline text-muted">2 compliance items</span>
+              </div>
+            </div>
+            <div class="rounded-lg bg-panel hairline p-5">
+              <div class="text-[11px] uppercase tracking-wide text-muted mb-3">Action list</div>
+              <div class="space-y-2 text-[12.5px]">
+                <label class="flex items-center gap-2.5 rounded bg-panel2 hairline px-3 py-2.5"><span class="w-4 h-4 rounded border border-risk grid place-items-center text-risk text-[10px]">!</span><span class="text-white flex-1">Expedite PO-10821</span><span class="text-[10px] text-muted">Supply Chain</span></label>
+                <label class="flex items-center gap-2.5 rounded bg-panel2 hairline px-3 py-2.5"><span class="w-4 h-4 rounded border border-warn grid place-items-center text-warn text-[10px]">!</span><span class="text-white flex-1">Approve belt segment supplier</span><span class="text-[10px] text-muted">Maintenance</span></label>
+                <label class="flex items-center gap-2.5 rounded bg-panel2 hairline px-3 py-2.5"><span class="w-4 h-4 rounded border border-accent grid place-items-center text-accent text-[10px]">·</span><span class="text-white flex-1">Reschedule PM — Truck 21</span><span class="text-[10px] text-muted">Maintenance</span></label>
+                <label class="flex items-center gap-2.5 rounded bg-panel2 hairline px-3 py-2.5"><span class="w-4 h-4 rounded border border-accent grid place-items-center text-accent text-[10px]">·</span><span class="text-white flex-1">Assign owner — permit task</span><span class="text-[10px] text-muted">HSE</span></label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PERSONAS ============ -->
+<section class="py-16 lg:py-24 border-b border-line bg-panel/30">
+  <div class="max-w-7xl mx-auto px-5 lg:px-8">
+    <div class="max-w-3xl">
+      <span class="text-[11px] font-semibold tracking-[0.16em] uppercase text-accent">Buyer Personas</span>
+      <h2 class="mt-3 text-2xl lg:text-[2rem] font-bold tracking-tight text-white leading-tight">Built for the people who run the mine</h2>
+    </div>
+    <div class="mt-10 grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="rounded-xl bg-panel hairline p-5">
+        <div class="w-10 h-10 rounded-lg bg-panel3 grid place-items-center text-accent mb-3"><svg viewBox="0 0 24 24" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 21h16M6 21V9l6-4 6 4v12M10 21v-5h4v5"/></svg></div>
+        <h3 class="text-[15px] font-semibold text-white">Mine General Manager</h3>
+        <ul class="mt-3 space-y-1.5 text-[12.5px] text-muted"><li class="flex gap-2"><span class="text-accent">·</span> One operating view</li><li class="flex gap-2"><span class="text-accent">·</span> Daily risk visibility</li><li class="flex gap-2"><span class="text-accent">·</span> Faster decisions</li><li class="flex gap-2"><span class="text-accent">·</span> Accountability</li></ul>
+      </div>
+      <div class="rounded-xl bg-panel hairline p-5">
+        <div class="w-10 h-10 rounded-lg bg-panel3 grid place-items-center text-accent mb-3"><svg viewBox="0 0 24 24" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4l-6 6 2 2 6-6a4 4 0 0 0 5.4-5.4l-2.3 2.3-1.4-1.4 2.3-2.3Z"/></svg></div>
+        <h3 class="text-[15px] font-semibold text-white">Maintenance Manager</h3>
+        <ul class="mt-3 space-y-1.5 text-[12.5px] text-muted"><li class="flex gap-2"><span class="text-accent">·</span> Prove downtime causes</li><li class="flex gap-2"><span class="text-accent">·</span> Prioritize critical repairs</li><li class="flex gap-2"><span class="text-accent">·</span> Justify spare parts</li><li class="flex gap-2"><span class="text-accent">·</span> Reduce repeat failures</li></ul>
+      </div>
+      <div class="rounded-xl bg-panel hairline p-5">
+        <div class="w-10 h-10 rounded-lg bg-panel3 grid place-items-center text-accent mb-3"><svg viewBox="0 0 24 24" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 17h4V5H2v12h3M15 17h6V9h-4M5 17a2 2 0 1 0 4 0M15 17a2 2 0 1 0 4 0"/></svg></div>
+        <h3 class="text-[15px] font-semibold text-white">Supply Chain Manager</h3>
+        <ul class="mt-3 space-y-1.5 text-[12.5px] text-muted"><li class="flex gap-2"><span class="text-accent">·</span> Identify high-impact PO delays</li><li class="flex gap-2"><span class="text-accent">·</span> Manage staging &amp; transport windows</li><li class="flex gap-2"><span class="text-accent">·</span> Reduce emergency freight</li></ul>
+      </div>
+      <div class="rounded-xl bg-panel hairline p-5">
+        <div class="w-10 h-10 rounded-lg bg-panel3 grid place-items-center text-accent mb-3"><svg viewBox="0 0 24 24" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+        <h3 class="text-[15px] font-semibold text-white">CFO</h3>
+        <ul class="mt-3 space-y-1.5 text-[12.5px] text-muted"><li class="flex gap-2"><span class="text-accent">·</span> Translate downtime into cash impact</li><li class="flex gap-2"><span class="text-accent">·</span> Reduce inventory waste</li><li class="flex gap-2"><span class="text-accent">·</span> Improve forecast accuracy</li><li class="flex gap-2"><span class="text-accent">·</span> Lower operating risk</li></ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FINAL CTA ============ -->
+<section id="cta" class="py-16 lg:py-24 relative overflow-hidden">
+  <div class="absolute inset-0 grid-bg opacity-50"></div>
+  <div class="absolute -bottom-40 left-1/2 -translate-x-1/2 w-[50rem] h-[40rem] rounded-full bg-accent/10 blur-3xl"></div>
+  <div class="relative max-w-4xl mx-auto px-5 lg:px-8 text-center">
+    <h2 class="text-2xl lg:text-4xl font-bold tracking-tight text-white leading-tight">Turn disconnected mine data into operating decisions.</h2>
+    <p class="mt-4 text-[15px] lg:text-base text-muted max-w-2xl mx-auto">Start with critical spares, downtime loss, and logistics readiness. Prove value in 90 days before expanding.</p>
+    <div class="mt-8 flex flex-wrap gap-3 justify-center">
+      <a href="#" class="inline-flex items-center gap-2 bg-accent hover:bg-accent2 text-base font-semibold text-[14px] px-6 py-3.5 rounded-md transition">Request Demo</a>
+      <a href="#pilot" class="inline-flex items-center gap-2 border border-line2 hover:border-steel text-white font-semibold text-[14px] px-6 py-3.5 rounded-md transition">
+        <svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+        Download Pilot Plan
+      </a>
+    </div>
+    <p class="mt-6 text-[12.5px] text-faint italic">"From work orders and purchase orders to production risk and management action."</p>
+  </div>
+</section>
+
+</main>
+
+<!-- ============ FOOTER ============ -->
+<footer class="border-t border-line bg-panel/50">
+  <div class="max-w-7xl mx-auto px-5 lg:px-8 py-10 grid md:grid-cols-[1.5fr_1fr_1fr] gap-8">
+    <div>
+      <div class="flex items-center gap-2.5">
+        <span class="w-8 h-8 rounded-md bg-gradient-to-br from-accent to-accent2 grid place-items-center"><svg viewBox="0 0 24 24" class="w-4 h-4 text-base" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6"/></svg></span>
+        <span class="text-[14px] font-semibold text-white">Remote Mine Operations Control Tower</span>
+      </div>
+      <p class="mt-3 text-[12.5px] text-muted max-w-sm">For Arctic and remote mining operations. Connect maintenance, critical spares, logistics, production losses, workforce readiness, and compliance into one operating view.</p>
+      <p class="mt-3 text-[11.5px] text-faint">We connect and enhance your existing CMMS, ERP, fleet, planning, and SCADA systems — we do not replace them.</p>
+    </div>
+    <div>
+      <div class="text-[11px] uppercase tracking-wide text-faint mb-3">Platform</div>
+      <ul class="space-y-2 text-[13px] text-muted">
+        <li><a href="#problem" class="hover:text-white transition">Problem</a></li>
+        <li><a href="#platform" class="hover:text-white transition">Platform</a></li>
+        <li><a href="#modules" class="hover:text-white transition">Modules</a></li>
+        <li><a href="#demo" class="hover:text-white transition">Demo Dashboard</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="text-[11px] uppercase tracking-wide text-faint mb-3">Engage</div>
+      <ul class="space-y-2 text-[13px] text-muted">
+        <li><a href="#roi" class="hover:text-white transition">ROI Calculator</a></li>
+        <li><a href="#pilot" class="hover:text-white transition">90-Day Pilot</a></li>
+        <li><a href="#cta" class="hover:text-white transition">Request Demo</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="border-t border-line">
+    <div class="max-w-7xl mx-auto px-5 lg:px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11.5px] text-faint">
+      <span>© 2026 Remote Mine Operations Control Tower. Demo interface — mock data only.</span>
+      <span>Operational · Precise · High-trust</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* mobile nav */
+const menuBtn=document.getElementById('menuBtn'), mobileNav=document.getElementById('mobileNav');
+menuBtn.addEventListener('click',()=>mobileNav.classList.toggle('hidden'));
+mobileNav.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>mobileNav.classList.add('hidden')));
+
+/* demo dashboard tabs */
+const tabs=document.querySelectorAll('.demo-tab');
+const panels=document.querySelectorAll('[data-panel]');
+tabs.forEach(t=>t.addEventListener('click',()=>{
+  tabs.forEach(x=>{x.classList.remove('text-white','bg-panel2','border','border-line','border-b-0');x.classList.add('text-muted');});
+  t.classList.add('text-white','bg-panel2','border','border-line','border-b-0');t.classList.remove('text-muted');
+  panels.forEach(p=>p.classList.toggle('hidden',p.dataset.panel!==t.dataset.tab));
+}));
+
+/* ROI calculator */
+const thru=document.getElementById('roiThru'), margin=document.getElementById('roiMargin'),
+      days=document.getElementById('roiDays'), pct=document.getElementById('roiPct');
+const usd=n=>'$'+Math.round(n).toLocaleString('en-US');
+function calcROI(){
+  const t=+thru.value, m=+margin.value, d=+days.value, p=+pct.value/100;
+  const avoided=d*p, perDay=t*m, value=perDay*avoided;
+  document.getElementById('roiThruVal').textContent=t.toLocaleString('en-US');
+  document.getElementById('roiMarginVal').textContent=m;
+  document.getElementById('roiDaysVal').textContent=d;
+  document.getElementById('roiPctVal').textContent=+pct.value;
+  document.getElementById('roiOutput').textContent=usd(value)+'/yr';
+  document.getElementById('roiAvoided').textContent=avoided.toFixed(1);
+  document.getElementById('roiAvoided2').textContent=avoided.toFixed(1)+' days';
+  document.getElementById('roiPerDay').textContent=usd(perDay);
+}
+[thru,margin,days,pct].forEach(el=>el.addEventListener('input',calcROI));
+calcROI();
+
+/* scroll reveal */
+const io=new IntersectionObserver((es)=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}}),{threshold:.12});
+document.querySelectorAll('.fade-up').forEach(el=>io.observe(el));
+</script>
+</body>
+</html>
